@@ -8,7 +8,7 @@ import java.util.Objects;
 
 @Getter
 @ToString
-@SuperBuilder
+@SuperBuilder(toBuilder = true)
 public abstract class User {
 
     private final String username;

@@ -8,7 +8,7 @@ import java.util.Objects;
 
 @Getter
 @ToString(callSuper = true)
-@SuperBuilder
+@SuperBuilder(toBuilder = true)
 public class Trainer extends User {
 
     private final Long userId;
