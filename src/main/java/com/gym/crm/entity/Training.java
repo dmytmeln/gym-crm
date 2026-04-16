@@ -8,7 +8,7 @@ import java.time.LocalDate;
 
 @Getter
 @ToString
-@Builder
+@Builder(toBuilder = true)
 public class Training {
 
     private final Long id;
