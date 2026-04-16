@@ -11,4 +11,11 @@ public class TraineeNamespaceStorage extends InMemoryNamespaceStorage<Trainee> {
         super(Namespace.TRAINEE);
     }
 
+    @Override
+    protected Trainee setId(Trainee entity, Long id) {
+        return entity.toBuilder()
+                .userId(id)
+                .build();
+    }
+
 }

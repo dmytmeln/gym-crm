@@ -9,13 +9,11 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Repository
 public class InMemoryTrainingDao implements TrainingDao {
 
     private Storage storage;
-    private final AtomicLong idCounter = new AtomicLong(1);
 
     @Autowired
     public void setStorage(Storage storage) {
@@ -24,12 +22,7 @@ public class InMemoryTrainingDao implements TrainingDao {
 
     @Override
     public Training create(Training entity) {
-        Long newId = idCounter.getAndIncrement();
-        Training trainingWithId = entity.toBuilder()
-                .id(newId)
-                .build();
-        storage.save(Namespace.TRAINING, newId, trainingWithId);
-        return trainingWithId;
+        return storage.save(Namespace.TRAINING, entity);
     }
 
     @Override
@@ -48,7 +41,9 @@ public class InMemoryTrainingDao implements TrainingDao {
         if (id == null) {
             throw new IllegalArgumentException("Cannot update entity without ID");
         }
-        storage.save(Namespace.TRAINING, id, entity);
+
+        storage.update(Namespace.TRAINING, id, entity);
+
         return entity;
     }
 

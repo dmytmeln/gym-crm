@@ -7,7 +7,9 @@ public interface NamespaceStorage<T> {
 
     Namespace<T> getNamespace();
 
-    void save(Long id, T entity);
+    T save(T entity);
+
+    void update(Long id, T entity);
 
     Optional<T> findById(Long id);
 

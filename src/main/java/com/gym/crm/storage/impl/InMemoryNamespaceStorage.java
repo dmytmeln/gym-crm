@@ -9,20 +9,34 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Getter
-public class InMemoryNamespaceStorage<T> implements NamespaceStorage<T> {
+public abstract class InMemoryNamespaceStorage<T> implements NamespaceStorage<T> {
 
     private final Namespace<T> namespace;
     private final Map<Long, T> storage;
+    private final AtomicLong idCounter = new AtomicLong(1);
 
     public InMemoryNamespaceStorage(Namespace<T> namespace) {
         this.namespace = namespace;
         this.storage = new HashMap<>();
     }
 
+    protected abstract T setId(T entity, Long id);
+
     @Override
-    public void save(Long id, T entity) {
+    public T save(T entity) {
+        Long newId = idCounter.getAndIncrement();
+        T entityWithId = setId(entity, newId);
+
+        storage.put(newId, entityWithId);
+
+        return entityWithId;
+    }
+
+    @Override
+    public void update(Long id, T entity) {
         storage.put(id, entity);
     }
 

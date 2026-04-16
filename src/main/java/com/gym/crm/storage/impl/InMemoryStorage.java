@@ -25,34 +25,42 @@ public class InMemoryStorage implements Storage {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public <T> void save(Namespace<T> namespace, Long id, T entity) {
-        if (id == null) {
-            throw new IllegalArgumentException("ID cannot be null");
-        }
-        NamespaceStorage<T> storage = (NamespaceStorage<T>) storageMap.get(namespace);
-        storage.save(id, entity);
+    public <T> T save(Namespace<T> namespace, T entity) {
+        NamespaceStorage<T> storage = getNamespaceStorage(namespace);
+        return storage.save(entity);
     }
 
     @Override
-    @SuppressWarnings("unchecked")
+    public <T> void update(Namespace<T> namespace, Long id, T entity) {
+        if (id == null) {
+            throw new IllegalArgumentException("ID cannot be null");
+        }
+
+        NamespaceStorage<T> storage = getNamespaceStorage(namespace);
+        storage.update(id, entity);
+    }
+
+    @Override
     public <T> Optional<T> findById(Namespace<T> namespace, Long id) {
-        NamespaceStorage<T> storage = (NamespaceStorage<T>) storageMap.get(namespace);
+        NamespaceStorage<T> storage = getNamespaceStorage(namespace);
         return storage.findById(id);
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public <T> List<T> findAll(Namespace<T> namespace) {
-        NamespaceStorage<T> storage = (NamespaceStorage<T>) storageMap.get(namespace);
+        NamespaceStorage<T> storage = getNamespaceStorage(namespace);
         return storage.findAll();
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public <T> boolean delete(Namespace<T> namespace, Long id) {
-        NamespaceStorage<T> storage = (NamespaceStorage<T>) storageMap.get(namespace);
+        NamespaceStorage<T> storage = getNamespaceStorage(namespace);
         return storage.delete(id);
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> NamespaceStorage<T> getNamespaceStorage(Namespace<T> namespace) {
+        return (NamespaceStorage<T>) storageMap.get(namespace);
     }
 
 }
