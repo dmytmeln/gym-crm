@@ -1,8 +1,5 @@
 package com.gym.crm.storage.init;
 
-import com.gym.crm.entity.Trainee;
-import com.gym.crm.entity.Trainer;
-import com.gym.crm.entity.Training;
 import com.gym.crm.storage.Namespace;
 import com.gym.crm.storage.Storage;
 import com.gym.crm.storage.csv.CsvEntityMapper;
@@ -16,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.function.Function;
 
 @Component
 public class StorageInitializer {
@@ -59,48 +57,19 @@ public class StorageInitializer {
 
     @PostConstruct
     public void initializeStorage() {
-        loadTraineeData();
-        loadTrainerData();
-        loadTrainingData();
+        loadData(traineeFilePath, TraineeCsvDto.class, mapper::toTrainee, Namespace.TRAINEE);
+        loadData(trainerFilePath, TrainerCsvDto.class, mapper::toTrainer, Namespace.TRAINER);
+        loadData(trainingFilePath, TrainingCsvDto.class, mapper::toTraining, Namespace.TRAINING);
     }
 
-    private void loadTraineeData() {
-        if (traineeFilePath == null) {
+    private <D, E> void loadData(String filePath, Class<D> dtoClass, Function<D, E> mapperFunction, Namespace<E> namespace) {
+        if (filePath == null) {
             return;
         }
 
-        List<TraineeCsvDto> dtos = csvParser.parseCsv(traineeFilePath, TraineeCsvDto.class);
-
-        for (TraineeCsvDto dto : dtos) {
-            Trainee trainee = mapper.toTrainee(dto);
-            storage.save(Namespace.TRAINEE, trainee);
-        }
-    }
-
-    private void loadTrainerData() {
-        if (trainerFilePath == null) {
-            return;
-        }
-
-        List<TrainerCsvDto> dtos = csvParser.parseCsv(trainerFilePath, TrainerCsvDto.class);
-
-        for (TrainerCsvDto dto : dtos) {
-            Trainer trainer = mapper.toTrainer(dto);
-            storage.save(Namespace.TRAINER, trainer);
-        }
-    }
-
-    private void loadTrainingData() {
-        if (trainingFilePath == null) {
-            return;
-        }
-
-        List<TrainingCsvDto> dtos = csvParser.parseCsv(trainingFilePath, TrainingCsvDto.class);
-
-        for (TrainingCsvDto dto : dtos) {
-            Training training = mapper.toTraining(dto);
-            storage.save(Namespace.TRAINING, training);
-        }
+        csvParser.parseCsv(filePath, dtoClass).stream()
+                .map(mapperFunction)
+                .forEach(entity -> storage.save(namespace, entity));
     }
 
 }
