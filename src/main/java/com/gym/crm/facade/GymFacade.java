@@ -61,7 +61,6 @@ public class GymFacade {
 
     public TraineeResponseDto createTrainee(TraineeCreateDto traineeCreateDto) {
         Trainee trainee = traineeMapper.toEntity(traineeCreateDto);
-
         Trainee createdTrainee = traineeService.createTrainee(trainee);
 
         return traineeMapper.toDto(createdTrainee);
@@ -69,7 +68,6 @@ public class GymFacade {
 
     public TraineeResponseDto updateTrainee(Long traineeId, TraineeUpdateDto traineeUpdateDto) {
         Trainee trainee = traineeMapper.toEntity(traineeUpdateDto, traineeId);
-
         Trainee updatedTrainee = traineeService.updateTrainee(trainee);
 
         return traineeMapper.toDto(updatedTrainee);
@@ -93,7 +91,6 @@ public class GymFacade {
 
     public TrainerResponseDto createTrainer(TrainerCreateDto trainerCreateDto) {
         Trainer trainer = trainerMapper.toEntity(trainerCreateDto);
-
         Trainer createdTrainer = trainerService.createTrainer(trainer);
 
         return trainerMapper.toDto(createdTrainer);
@@ -101,7 +98,6 @@ public class GymFacade {
 
     public TrainerResponseDto updateTrainer(Long trainerId, TrainerUpdateDto trainerUpdateDto) {
         Trainer trainer = trainerMapper.toEntity(trainerUpdateDto, trainerId);
-
         Trainer updatedTrainer = trainerService.updateTrainer(trainer);
 
         return trainerMapper.toDto(updatedTrainer);
@@ -121,7 +117,6 @@ public class GymFacade {
 
     public TrainingResponseDto createTraining(TrainingCreateDto trainingCreateDto) {
         Training training = trainingMapper.toEntity(trainingCreateDto);
-
         Training createdTraining = trainingService.createTraining(training);
 
         return trainingMapper.toDto(createdTraining);
