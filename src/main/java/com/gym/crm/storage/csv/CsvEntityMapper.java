@@ -10,7 +10,9 @@ import com.gym.crm.storage.csv.dto.TrainingCsvDto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring", imports = TrainingType.class)
+import static org.mapstruct.MappingConstants.ComponentModel.SPRING;
+
+@Mapper(componentModel = SPRING, imports = TrainingType.class)
 public interface CsvEntityMapper {
 
     @Mapping(target = "userId", ignore = true)
