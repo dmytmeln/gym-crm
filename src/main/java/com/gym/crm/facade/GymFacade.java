@@ -33,6 +33,7 @@ public class GymFacade {
     private TrainerMapper trainerMapper;
     private TrainingMapper trainingMapper;
 
+    @Autowired
     public GymFacade(
             TraineeService traineeService,
             TrainerService trainerService,
@@ -60,13 +61,17 @@ public class GymFacade {
 
     public TraineeResponseDto createTrainee(TraineeCreateDto traineeCreateDto) {
         Trainee trainee = traineeMapper.toEntity(traineeCreateDto);
+
         Trainee createdTrainee = traineeService.createTrainee(trainee);
+
         return traineeMapper.toDto(createdTrainee);
     }
 
     public TraineeResponseDto updateTrainee(Long traineeId, TraineeUpdateDto traineeUpdateDto) {
         Trainee trainee = traineeMapper.toEntity(traineeUpdateDto, traineeId);
+
         Trainee updatedTrainee = traineeService.updateTrainee(trainee);
+
         return traineeMapper.toDto(updatedTrainee);
     }
 
@@ -76,49 +81,61 @@ public class GymFacade {
 
     public TraineeResponseDto getTrainee(Long traineeId) {
         Trainee trainee = traineeService.getTrainee(traineeId);
+
         return traineeMapper.toDto(trainee);
     }
 
     public List<TraineeResponseDto> getAllTrainees() {
         List<Trainee> trainees = traineeService.getAllTrainees();
+
         return traineeMapper.toDtoList(trainees);
     }
 
     public TrainerResponseDto createTrainer(TrainerCreateDto trainerCreateDto) {
         Trainer trainer = trainerMapper.toEntity(trainerCreateDto);
+
         Trainer createdTrainer = trainerService.createTrainer(trainer);
+
         return trainerMapper.toDto(createdTrainer);
     }
 
     public TrainerResponseDto updateTrainer(Long trainerId, TrainerUpdateDto trainerUpdateDto) {
         Trainer trainer = trainerMapper.toEntity(trainerUpdateDto, trainerId);
+
         Trainer updatedTrainer = trainerService.updateTrainer(trainer);
+
         return trainerMapper.toDto(updatedTrainer);
     }
 
     public TrainerResponseDto getTrainer(Long trainerId) {
         Trainer trainer = trainerService.getTrainer(trainerId);
+
         return trainerMapper.toDto(trainer);
     }
 
     public List<TrainerResponseDto> getAllTrainers() {
         List<Trainer> trainers = trainerService.getAllTrainers();
+
         return trainerMapper.toDtoList(trainers);
     }
 
     public TrainingResponseDto createTraining(TrainingCreateDto trainingCreateDto) {
         Training training = trainingMapper.toEntity(trainingCreateDto);
+
         Training createdTraining = trainingService.createTraining(training);
+
         return trainingMapper.toDto(createdTraining);
     }
 
     public TrainingResponseDto getTraining(Long trainingId) {
         Training training = trainingService.getTraining(trainingId);
+
         return trainingMapper.toDto(training);
     }
 
     public List<TrainingResponseDto> getAllTrainings() {
         List<Training> trainings = trainingService.getAllTrainings();
+
         return trainingMapper.toDtoList(trainings);
     }
 

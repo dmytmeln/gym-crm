@@ -3,7 +3,7 @@ package com.gym.crm.exception;
 import lombok.Getter;
 
 @Getter
-public class EntityNotFoundException extends GymCrmException {
+public class EntityNotFoundException extends ServiceException {
 
     private final String entityType;
     private final Object entityId;
