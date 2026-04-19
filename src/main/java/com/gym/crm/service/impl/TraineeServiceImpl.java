@@ -3,6 +3,7 @@ package com.gym.crm.service.impl;
 import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.entity.Trainee;
 import com.gym.crm.exception.EntityNotFoundException;
+import com.gym.crm.service.ProfileCredentialService;
 import com.gym.crm.service.TraineeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,24 +14,46 @@ import java.util.List;
 public class TraineeServiceImpl implements TraineeService {
 
     private TraineeDao traineeDao;
+    private ProfileCredentialService credentialService;
 
     @Autowired
     public void setTraineeDao(TraineeDao traineeDao) {
         this.traineeDao = traineeDao;
     }
 
+    @Autowired
+    public void setCredentialService(ProfileCredentialService credentialService) {
+        this.credentialService = credentialService;
+    }
+
     @Override
     public Trainee createTrainee(Trainee trainee) {
-        return traineeDao.create(trainee);
+        String username = credentialService.generateUsername(trainee.getFirstName(), trainee.getLastName());
+        String password = credentialService.generatePassword();
+
+        Trainee traineeWithCredentials = trainee.toBuilder()
+                .username(username)
+                .password(password)
+                .build();
+
+        return traineeDao.create(traineeWithCredentials);
     }
 
     @Override
     public Trainee updateTrainee(Trainee trainee) {
-        if (traineeDao.findById(trainee.getUserId()).isEmpty()) {
-            throw new EntityNotFoundException("Trainee", trainee.getUserId());
-        }
+        Trainee existingTrainee = traineeDao.findById(trainee.getUserId())
+                .orElseThrow(() -> new EntityNotFoundException("Trainee", trainee.getUserId()));
 
-        return traineeDao.update(trainee);
+        Trainee mergedTrainee = existingTrainee.toBuilder()
+                .firstName(trainee.getFirstName())
+                .lastName(trainee.getLastName())
+                .password(trainee.getPassword())
+                .isActive(trainee.isActive())
+                .address(trainee.getAddress())
+                .dateOfBirth(trainee.getDateOfBirth())
+                .build();
+
+        return traineeDao.update(mergedTrainee);
     }
 
     @Override

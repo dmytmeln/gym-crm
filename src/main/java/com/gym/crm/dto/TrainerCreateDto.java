@@ -5,10 +5,8 @@ import lombok.Builder;
 
 @Builder
 public record TrainerCreateDto(
-        String username,
         String firstName,
         String lastName,
-        String password,
         boolean active,
         TrainingType specialization
 ) {

@@ -6,7 +6,6 @@ import java.time.LocalDate;
 
 @Builder
 public record TraineeUpdateDto(
-        String username,
         String firstName,
         String lastName,
         String password,
