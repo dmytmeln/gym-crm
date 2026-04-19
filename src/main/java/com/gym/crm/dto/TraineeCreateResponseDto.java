@@ -5,9 +5,12 @@ import lombok.Builder;
 import java.time.LocalDate;
 
 @Builder
-public record TraineeCreateDto(
+public record TraineeCreateResponseDto(
+        Long userId,
+        String username,
         String firstName,
         String lastName,
+        String password,
         boolean active,
         String address,
         LocalDate dateOfBirth

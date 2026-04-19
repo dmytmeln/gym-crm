@@ -4,7 +4,9 @@ import com.gym.crm.entity.TrainingType;
 import lombok.Builder;
 
 @Builder
-public record TrainerUpdateDto(
+public record TrainerCreateResponseDto(
+        Long userId,
+        String username,
         String firstName,
         String lastName,
         String password,

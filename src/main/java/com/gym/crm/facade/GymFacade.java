@@ -1,9 +1,11 @@
 package com.gym.crm.facade;
 
 import com.gym.crm.dto.TraineeCreateDto;
+import com.gym.crm.dto.TraineeCreateResponseDto;
 import com.gym.crm.dto.TraineeResponseDto;
 import com.gym.crm.dto.TraineeUpdateDto;
 import com.gym.crm.dto.TrainerCreateDto;
+import com.gym.crm.dto.TrainerCreateResponseDto;
 import com.gym.crm.dto.TrainerResponseDto;
 import com.gym.crm.dto.TrainerUpdateDto;
 import com.gym.crm.dto.TrainingCreateDto;
@@ -59,11 +61,11 @@ public class GymFacade {
         this.trainingMapper = trainingMapper;
     }
 
-    public TraineeResponseDto createTrainee(TraineeCreateDto traineeCreateDto) {
+    public TraineeCreateResponseDto createTrainee(TraineeCreateDto traineeCreateDto) {
         Trainee trainee = traineeMapper.toEntity(traineeCreateDto);
         Trainee createdTrainee = traineeService.createTrainee(trainee);
 
-        return traineeMapper.toDto(createdTrainee);
+        return traineeMapper.toCreateResponseDto(createdTrainee);
     }
 
     public TraineeResponseDto updateTrainee(Long traineeId, TraineeUpdateDto traineeUpdateDto) {
@@ -89,11 +91,11 @@ public class GymFacade {
         return traineeMapper.toDtoList(trainees);
     }
 
-    public TrainerResponseDto createTrainer(TrainerCreateDto trainerCreateDto) {
+    public TrainerCreateResponseDto createTrainer(TrainerCreateDto trainerCreateDto) {
         Trainer trainer = trainerMapper.toEntity(trainerCreateDto);
         Trainer createdTrainer = trainerService.createTrainer(trainer);
 
-        return trainerMapper.toDto(createdTrainer);
+        return trainerMapper.toCreateResponseDto(createdTrainer);
     }
 
     public TrainerResponseDto updateTrainer(Long trainerId, TrainerUpdateDto trainerUpdateDto) {
