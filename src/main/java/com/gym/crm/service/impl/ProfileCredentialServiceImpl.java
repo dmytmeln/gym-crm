@@ -52,6 +52,17 @@ public class ProfileCredentialServiceImpl implements ProfileCredentialService {
         return baseUsername + serialNumber;
     }
 
+    @Override
+    public String generatePassword() {
+        char[] password = new char[PASSWORD_LENGTH];
+        for (int i = 0; i < PASSWORD_LENGTH; i++) {
+            int alphabetIndex = secureRandom.nextInt(PASSWORD_ALPHABET.length());
+            password[i] = PASSWORD_ALPHABET.charAt(alphabetIndex);
+        }
+
+        return new String(password);
+    }
+
     private List<String> findUsernamesWithSameBase(String baseUsername) {
         return findAllUsernames()
                 .filter(username -> matchesBaseUsername(username, baseUsername))
@@ -95,20 +106,10 @@ public class ProfileCredentialServiceImpl implements ProfileCredentialService {
 
     private int extractSerialNumber(String username, String baseUsername) {
         String suffix = username.substring(baseUsername.length());
+
         return suffix.isEmpty()
                 ? 0
                 : Integer.parseInt(suffix);
-    }
-
-    @Override
-    public String generatePassword() {
-        char[] password = new char[PASSWORD_LENGTH];
-        for (int i = 0; i < PASSWORD_LENGTH; i++) {
-            int alphabetIndex = secureRandom.nextInt(PASSWORD_ALPHABET.length());
-            password[i] = PASSWORD_ALPHABET.charAt(alphabetIndex);
-        }
-
-        return new String(password);
     }
 
 }
