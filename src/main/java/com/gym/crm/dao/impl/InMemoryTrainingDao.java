@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Repository
@@ -22,11 +23,15 @@ public class InMemoryTrainingDao implements TrainingDao {
 
     @Override
     public Training create(Training entity) {
+        Objects.requireNonNull(entity, "Training cannot be null");
+
         return storage.save(Namespace.TRAINING, entity);
     }
 
     @Override
     public Optional<Training> findById(Long id) {
+        Objects.requireNonNull(id, "ID cannot be null");
+
         return storage.findById(Namespace.TRAINING, id);
     }
 
@@ -37,6 +42,8 @@ public class InMemoryTrainingDao implements TrainingDao {
 
     @Override
     public Training update(Training entity) {
+        Objects.requireNonNull(entity, "Training cannot be null");
+
         Long id = entity.getId();
         if (id == null) {
             throw new IllegalArgumentException("Cannot update entity without ID");
@@ -49,6 +56,8 @@ public class InMemoryTrainingDao implements TrainingDao {
 
     @Override
     public boolean delete(Long id) {
+        Objects.requireNonNull(id, "ID cannot be null");
+
         return storage.delete(Namespace.TRAINING, id);
     }
 

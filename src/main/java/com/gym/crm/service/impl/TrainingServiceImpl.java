@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class TrainingServiceImpl implements TrainingService {
@@ -35,6 +36,7 @@ public class TrainingServiceImpl implements TrainingService {
 
     @Override
     public Training createTraining(Training training) {
+        Objects.requireNonNull(training, "Training cannot be null");
         ensureTrainingParticipantsExist(training);
 
         return trainingDao.create(training);
@@ -42,6 +44,8 @@ public class TrainingServiceImpl implements TrainingService {
 
     @Override
     public Training getTraining(Long trainingId) {
+        Objects.requireNonNull(trainingId, "Training ID cannot be null");
+
         return trainingDao.findById(trainingId)
                 .orElseThrow(() -> new EntityNotFoundException("Training", trainingId));
     }

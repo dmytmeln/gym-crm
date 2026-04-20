@@ -5,7 +5,7 @@ import lombok.Builder;
 
 import java.time.LocalDate;
 
-@Builder
+@Builder(toBuilder = true)
 public record TrainingResponseDto(
         Long id,
         Long traineeId,

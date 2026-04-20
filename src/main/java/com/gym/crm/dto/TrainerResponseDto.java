@@ -3,7 +3,7 @@ package com.gym.crm.dto;
 import com.gym.crm.entity.TrainingType;
 import lombok.Builder;
 
-@Builder
+@Builder(toBuilder = true)
 public record TrainerResponseDto(
         Long userId,
         String username,

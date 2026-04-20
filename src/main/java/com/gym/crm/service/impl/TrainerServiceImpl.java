@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class TrainerServiceImpl implements TrainerService {
@@ -28,6 +29,8 @@ public class TrainerServiceImpl implements TrainerService {
 
     @Override
     public Trainer createTrainer(Trainer trainer) {
+        Objects.requireNonNull(trainer, "Trainer cannot be null");
+
         String username = credentialService.generateUsername(trainer.getFirstName(), trainer.getLastName());
         String password = credentialService.generatePassword();
 
@@ -41,6 +44,8 @@ public class TrainerServiceImpl implements TrainerService {
 
     @Override
     public Trainer updateTrainer(Trainer trainer) {
+        Objects.requireNonNull(trainer, "Trainer cannot be null");
+
         Trainer existingTrainer = trainerDao.findById(trainer.getUserId())
                 .orElseThrow(() -> new EntityNotFoundException("Trainer", trainer.getUserId()));
 
@@ -57,6 +62,8 @@ public class TrainerServiceImpl implements TrainerService {
 
     @Override
     public Trainer getTrainer(Long trainerId) {
+        Objects.requireNonNull(trainerId, "Trainer ID cannot be null");
+
         return trainerDao.findById(trainerId)
                 .orElseThrow(() -> new EntityNotFoundException("Trainer", trainerId));
     }
