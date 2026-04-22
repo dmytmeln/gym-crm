@@ -6,11 +6,11 @@ public class TrainingTypeTestFactory {
 
     public static final String STRENGTH = "Strength";
 
-    public static TrainingType strength() {
+    public static TrainingType buildStrength() {
         return new TrainingType(STRENGTH);
     }
 
-    public static TrainingType custom(String typeName) {
+    public static TrainingType buildCustom(String typeName) {
         return new TrainingType(typeName);
     }
 

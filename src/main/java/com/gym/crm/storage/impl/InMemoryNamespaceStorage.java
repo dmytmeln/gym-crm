@@ -55,9 +55,4 @@ public abstract class InMemoryNamespaceStorage<T> implements NamespaceStorage<T>
         return storage.remove(id) != null;
     }
 
-    public void clear() {
-        storage.clear();
-        idCounter.set(1);
-    }
-
 }

@@ -12,14 +12,14 @@ public class TrainerTestFactory {
     public static final Long DEFAULT_TRAINER_ID = 1L;
     public static final Long SECONDARY_TRAINER_ID = 2L;
     public static final Long NON_EXISTENT_TRAINER_ID = 999L;
-    public static final String DEFAULT_USERNAME = "mike.trainer";
-    public static final String DEFAULT_FIRST_NAME = "Mike";
-    public static final String DEFAULT_LAST_NAME = "Trainer";
+    public static final String DEFAULT_USERNAME = "marcus.stone";
+    public static final String DEFAULT_FIRST_NAME = "Marcus";
+    public static final String DEFAULT_LAST_NAME = "Stone";
     public static final String DEFAULT_PASSWORD = "password123";
     public static final boolean DEFAULT_ACTIVE = true;
     public static final String DEFAULT_SPECIALIZATION = "Cardio";
 
-    public static Trainer.TrainerBuilder<?, ?> defaultTrainer() {
+    public static Trainer.TrainerBuilder<?, ?> getDefaultTrainerBuilder() {
         return Trainer.builder()
                 .username(DEFAULT_USERNAME)
                 .firstName(DEFAULT_FIRST_NAME)
@@ -29,19 +29,19 @@ public class TrainerTestFactory {
                 .specialization(new TrainingType(DEFAULT_SPECIALIZATION));
     }
 
-    public static Trainer trainer() {
-        return defaultTrainer().build();
+    public static Trainer buildTrainer() {
+        return getDefaultTrainerBuilder().build();
     }
 
-    public static Trainer trainer(Long userId, String username) {
-        return defaultTrainer()
+    public static Trainer buildTrainer(Long userId, String username) {
+        return getDefaultTrainerBuilder()
                 .userId(userId)
                 .username(username)
                 .build();
     }
 
-    public static Trainer trainer(Long userId, String username, String firstName, String lastName) {
-        return defaultTrainer()
+    public static Trainer buildTrainer(Long userId, String username, String firstName, String lastName) {
+        return getDefaultTrainerBuilder()
                 .userId(userId)
                 .username(username)
                 .firstName(firstName)
@@ -49,8 +49,12 @@ public class TrainerTestFactory {
                 .build();
     }
 
-    public static Trainer trainer(Long userId, String username, String firstName, String lastName, String specializationType) {
-        return defaultTrainer()
+    public static Trainer buildTrainer(Long userId,
+                                       String username,
+                                       String firstName,
+                                       String lastName,
+                                       String specializationType) {
+        return getDefaultTrainerBuilder()
                 .userId(userId)
                 .username(username)
                 .firstName(firstName)
@@ -59,26 +63,26 @@ public class TrainerTestFactory {
                 .build();
     }
 
-    public static Trainer trainerWithId(Long userId) {
-        return defaultTrainer()
+    public static Trainer buildTrainerWithId(Long userId) {
+        return getDefaultTrainerBuilder()
                 .userId(userId)
                 .build();
     }
 
-    public static Trainer trainerWithUsername(String username) {
-        return defaultTrainer()
+    public static Trainer buildTrainerWithUsername(String username) {
+        return getDefaultTrainerBuilder()
                 .username(username)
                 .build();
     }
 
-    public static Trainer trainerWithoutCredentials() {
-        return defaultTrainer()
+    public static Trainer buildTrainerWithoutCredentials() {
+        return getDefaultTrainerBuilder()
                 .username(null)
                 .password(null)
                 .build();
     }
 
-    public static TrainerCreateDto.TrainerCreateDtoBuilder defaultTrainerCreateDto() {
+    public static TrainerCreateDto.TrainerCreateDtoBuilder getDefaultTrainerCreateDtoBuilder() {
         return TrainerCreateDto.builder()
                 .firstName(DEFAULT_FIRST_NAME)
                 .lastName(DEFAULT_LAST_NAME)
@@ -86,26 +90,26 @@ public class TrainerTestFactory {
                 .specialization(new TrainingType(DEFAULT_SPECIALIZATION));
     }
 
-    public static TrainerCreateDto trainerCreateDto() {
-        return defaultTrainerCreateDto().build();
+    public static TrainerCreateDto buildTrainerCreateDto() {
+        return getDefaultTrainerCreateDtoBuilder().build();
     }
 
 
-    public static TrainerUpdateDto.TrainerUpdateDtoBuilder defaultTrainerUpdateDto() {
+    public static TrainerUpdateDto.TrainerUpdateDtoBuilder getDefaultTrainerUpdateDtoBuilder() {
         return TrainerUpdateDto.builder()
-                .firstName("Michael")
-                .lastName("Coach")
+                .firstName("Elena")
+                .lastName("Rodriguez")
                 .password("newPassword")
                 .active(false)
                 .specialization(new TrainingType("Strength"));
     }
 
-    public static TrainerUpdateDto trainerUpdateDto() {
-        return defaultTrainerUpdateDto().build();
+    public static TrainerUpdateDto buildTrainerUpdateDto() {
+        return getDefaultTrainerUpdateDtoBuilder().build();
     }
 
 
-    public static TrainerResponseDto.TrainerResponseDtoBuilder defaultTrainerResponseDto() {
+    public static TrainerResponseDto.TrainerResponseDtoBuilder getDefaultTrainerResponseDtoBuilder() {
         return TrainerResponseDto.builder()
                 .userId(DEFAULT_TRAINER_ID)
                 .username(DEFAULT_USERNAME)
@@ -115,11 +119,11 @@ public class TrainerTestFactory {
                 .specialization(new TrainingType(DEFAULT_SPECIALIZATION));
     }
 
-    public static TrainerResponseDto trainerResponseDto() {
-        return defaultTrainerResponseDto().build();
+    public static TrainerResponseDto buildTrainerResponseDto() {
+        return getDefaultTrainerResponseDtoBuilder().build();
     }
 
-    public static TrainerCreateResponseDto.TrainerCreateResponseDtoBuilder defaultTrainerCreateResponseDto() {
+    public static TrainerCreateResponseDto.TrainerCreateResponseDtoBuilder getDefaultTrainerCreateResponseDtoBuilder() {
         return TrainerCreateResponseDto.builder()
                 .userId(DEFAULT_TRAINER_ID)
                 .username(DEFAULT_USERNAME)
@@ -130,8 +134,8 @@ public class TrainerTestFactory {
                 .specialization(new TrainingType(DEFAULT_SPECIALIZATION));
     }
 
-    public static TrainerCreateResponseDto trainerCreateResponseDto() {
-        return defaultTrainerCreateResponseDto().build();
+    public static TrainerCreateResponseDto buildTrainerCreateResponseDto() {
+        return getDefaultTrainerCreateResponseDtoBuilder().build();
     }
 
 }

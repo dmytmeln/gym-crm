@@ -3,6 +3,7 @@ package com.gym.crm.service.impl;
 import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.dao.TrainerDao;
 import com.gym.crm.service.ProfileCredentialService;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,8 +13,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Collections;
 import java.util.List;
 
-import static com.gym.crm.factory.TraineeTestFactory.traineeWithUsername;
-import static com.gym.crm.factory.TrainerTestFactory.trainerWithUsername;
+import static com.gym.crm.factory.TraineeTestFactory.buildTraineeWithUsername;
+import static com.gym.crm.factory.TrainerTestFactory.buildTrainerWithUsername;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -22,15 +23,15 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class ProfileCredentialServiceImplTest {
+class ProfileCredentialServiceImplTest {
 
     private static final String PASSWORD_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
 
     private static final int PASSWORD_LENGTH = 10;
 
-    private static final String FIRST_NAME = "John";
+    private static final String FIRST_NAME = "Liam";
 
-    private static final String LAST_NAME = "Doe";
+    private static final String LAST_NAME = "Miller";
 
     @Mock
     private TraineeDao traineeDao;
@@ -41,7 +42,7 @@ public class ProfileCredentialServiceImplTest {
     private ProfileCredentialService service;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         ProfileCredentialServiceImpl implementation = new ProfileCredentialServiceImpl();
         implementation.setTraineeDao(traineeDao);
         implementation.setTrainerDao(trainerDao);
@@ -49,162 +50,158 @@ public class ProfileCredentialServiceImplTest {
     }
 
     @Test
-    public void shouldGenerateUsernameWithoutSerialWhenNoExistingUsers() {
+    void shouldGenerateUsernameWithoutSerialWhenNoExistingUsers() {
         when(traineeDao.findAll()).thenReturn(Collections.emptyList());
         when(trainerDao.findAll()).thenReturn(Collections.emptyList());
 
-        String generatedUsername = service.generateUsername(FIRST_NAME, LAST_NAME);
+        String actual = service.generateUsername(FIRST_NAME, LAST_NAME);
 
-        assertEquals("John.Doe", generatedUsername);
+        assertEquals("Liam.Miller", actual);
         verify(traineeDao).findAll();
         verify(trainerDao).findAll();
     }
 
     @Test
-    public void shouldAppendNextSerialWhenBaseUsernameIsTaken() {
-        when(traineeDao.findAll()).thenReturn(List.of(traineeWithUsername("John.Doe")));
+    void shouldAppendNextSerialWhenBaseUsernameIsTaken() {
+        when(traineeDao.findAll()).thenReturn(List.of(buildTraineeWithUsername("Liam.Miller")));
         when(trainerDao.findAll()).thenReturn(Collections.emptyList());
 
-        String generatedUsername = service.generateUsername(FIRST_NAME, LAST_NAME);
+        String actual = service.generateUsername(FIRST_NAME, LAST_NAME);
 
-        assertEquals("John.Doe1", generatedUsername);
+        assertEquals("Liam.Miller1", actual);
     }
 
     @Test
-    public void shouldUseHighestSerialPlusOneWhenMatchingUsernamesExist() {
+    void shouldUseHighestSerialPlusOneWhenMatchingUsernamesExist() {
         when(traineeDao.findAll()).thenReturn(List.of(
-                traineeWithUsername("john.doe"),
-                traineeWithUsername("John.Doe1"),
-                traineeWithUsername("john.Doe2")
-        ));
+                buildTraineeWithUsername("liam.miller"),
+                buildTraineeWithUsername("Liam.Miller1"),
+                buildTraineeWithUsername("liam.Miller2")));
         when(trainerDao.findAll()).thenReturn(Collections.emptyList());
 
-        String generatedUsername = service.generateUsername(FIRST_NAME, LAST_NAME);
+        String actual = service.generateUsername(FIRST_NAME, LAST_NAME);
 
-        assertEquals("John.Doe3", generatedUsername);
+        assertEquals("Liam.Miller3", actual);
     }
 
     @Test
-    public void shouldUseHighestSerialPlusOneWhenSerialGapsExist() {
+    void shouldUseHighestSerialPlusOneWhenSerialGapsExist() {
         when(traineeDao.findAll()).thenReturn(List.of(
-                traineeWithUsername("John.Doe"),
-                traineeWithUsername("john.doe1"),
-                traineeWithUsername("John.doe2"),
-                traineeWithUsername("john.Doe5")
-        ));
+                buildTraineeWithUsername("Liam.Miller"),
+                buildTraineeWithUsername("liam.Miller2"),
+                buildTraineeWithUsername("Liam.miller2"),
+                buildTraineeWithUsername("liam.Miller5")));
         when(trainerDao.findAll()).thenReturn(Collections.emptyList());
 
-        String generatedUsername = service.generateUsername(FIRST_NAME, LAST_NAME);
+        String actual = service.generateUsername(FIRST_NAME, LAST_NAME);
 
-        assertEquals("John.Doe6", generatedUsername);
+        assertEquals("Liam.Miller6", actual);
     }
 
     @Test
-    public void shouldHandleUsersFromBothTraineeAndTrainerDaos() {
+    void shouldHandleUsersFromBothTraineeAndTrainerDaos() {
         when(traineeDao.findAll()).thenReturn(List.of(
-                traineeWithUsername("john.doe"),
-                traineeWithUsername("john.doe1")
-        ));
-        when(trainerDao.findAll()).thenReturn(List.of(trainerWithUsername("john.doe3")));
+                buildTraineeWithUsername("liam.miller"),
+                buildTraineeWithUsername("liam.miller1")));
+        when(trainerDao.findAll()).thenReturn(List.of(buildTrainerWithUsername("liam.miller3")));
 
-        String generatedUsername = service.generateUsername(FIRST_NAME, LAST_NAME);
+        String actual = service.generateUsername(FIRST_NAME, LAST_NAME);
 
-        assertEquals("John.Doe4", generatedUsername);
+        assertEquals("Liam.Miller4", actual);
         verify(traineeDao).findAll();
         verify(trainerDao).findAll();
     }
 
     @Test
-    public void shouldIgnoreUsersWithDifferentFirstName() {
-        when(traineeDao.findAll()).thenReturn(List.of(traineeWithUsername("jane.doe")));
+    void shouldIgnoreUsersWithDifferentFirstName() {
+        when(traineeDao.findAll()).thenReturn(List.of(buildTraineeWithUsername("sophia.miller")));
         when(trainerDao.findAll()).thenReturn(Collections.emptyList());
 
-        String generatedUsername = service.generateUsername(FIRST_NAME, LAST_NAME);
+        String actual = service.generateUsername(FIRST_NAME, LAST_NAME);
 
-        assertEquals("John.Doe", generatedUsername);
+        assertEquals("Liam.Miller", actual);
     }
 
     @Test
-    public void shouldIgnoreUsersWithDifferentLastName() {
-        when(traineeDao.findAll()).thenReturn(List.of(traineeWithUsername("john.smith")));
+    void shouldIgnoreUsersWithDifferentLastName() {
+        when(traineeDao.findAll()).thenReturn(List.of(buildTraineeWithUsername("liam.wilson")));
         when(trainerDao.findAll()).thenReturn(Collections.emptyList());
 
-        String generatedUsername = service.generateUsername(FIRST_NAME, LAST_NAME);
+        String actual = service.generateUsername(FIRST_NAME, LAST_NAME);
 
-        assertEquals("John.Doe", generatedUsername);
+        assertEquals("Liam.Miller", actual);
     }
 
     @Test
-    public void shouldIgnoreUsersWithDifferentFullName() {
+    void shouldIgnoreUsersWithDifferentFullName() {
         when(traineeDao.findAll()).thenReturn(Collections.emptyList());
-        when(trainerDao.findAll()).thenReturn(List.of(trainerWithUsername("jane.smith")));
+        when(trainerDao.findAll()).thenReturn(List.of(buildTrainerWithUsername("sophia.wilson")));
 
-        String generatedUsername = service.generateUsername(FIRST_NAME, LAST_NAME);
+        String actual = service.generateUsername(FIRST_NAME, LAST_NAME);
 
-        assertEquals("John.Doe", generatedUsername);
+        assertEquals("Liam.Miller", actual);
     }
 
     @Test
-    public void shouldMatchExistingUsernameCaseInsensitively() {
-        when(traineeDao.findAll()).thenReturn(List.of(traineeWithUsername("john.doe")));
+    void shouldMatchExistingUsernameCaseInsensitively() {
+        when(traineeDao.findAll()).thenReturn(List.of(buildTraineeWithUsername("liam.miller")));
         when(trainerDao.findAll()).thenReturn(Collections.emptyList());
 
-        String generatedUsername = service.generateUsername(FIRST_NAME, LAST_NAME);
+        String actual = service.generateUsername(FIRST_NAME, LAST_NAME);
 
-        assertEquals("John.Doe1", generatedUsername);
+        assertEquals("Liam.Miller1", actual);
     }
 
     @Test
-    public void shouldIgnoreUsernamesWithNonNumericSuffix() {
+    void shouldIgnoreUsernamesWithNonNumericSuffix() {
         when(traineeDao.findAll()).thenReturn(List.of(
-                traineeWithUsername("john.doeX"),
-                traineeWithUsername("john.doe_1")
-        ));
+                buildTraineeWithUsername("liam.millerX"),
+                buildTraineeWithUsername("liam.miller_1")));
         when(trainerDao.findAll()).thenReturn(Collections.emptyList());
 
-        String generatedUsername = service.generateUsername(FIRST_NAME, LAST_NAME);
+        String actual = service.generateUsername(FIRST_NAME, LAST_NAME);
 
-        assertEquals("John.Doe", generatedUsername);
+        assertEquals("Liam.Miller", actual);
     }
 
     @Test
-    public void shouldThrowNullPointerExceptionWhenFirstNameIsNull() {
-        assertThrows(NullPointerException.class, () -> service.generateUsername(null, LAST_NAME));
+    void shouldThrowNullPointerExceptionWhenFirstNameIsNull() {
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.generateUsername(null, LAST_NAME));
 
+        assertEquals("First Name cannot be null", exception.getMessage());
         verifyNoInteractions(traineeDao, trainerDao);
     }
 
     @Test
-    public void shouldThrowNullPointerExceptionWhenLastNameIsNull() {
-        assertThrows(NullPointerException.class, () -> service.generateUsername(FIRST_NAME, null));
+    void shouldThrowNullPointerExceptionWhenLastNameIsNull() {
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.generateUsername(FIRST_NAME, null));
 
+        assertEquals("Last Name cannot be null", exception.getMessage());
         verifyNoInteractions(traineeDao, trainerDao);
     }
 
     @Test
-    public void shouldThrowNullPointerExceptionWhenBothNamesAreNull() {
-        assertThrows(NullPointerException.class, () -> service.generateUsername(null, null));
+    void shouldThrowNullPointerExceptionWhenBothNamesAreNull() {
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.generateUsername(null, null));
 
+        assertEquals("First Name cannot be null", exception.getMessage());
         verifyNoInteractions(traineeDao, trainerDao);
     }
 
     @Test
-    public void shouldGeneratePasswordWithCorrectLength() {
-        String generatedPassword = service.generatePassword();
+    void shouldGeneratePasswordWithCorrectLength() {
+        String actual = service.generatePassword();
 
-        assertEquals(PASSWORD_LENGTH, generatedPassword.length());
+        assertEquals(PASSWORD_LENGTH, actual.length());
     }
 
     @Test
-    public void shouldGeneratePasswordWithValidCharactersOnly() {
-        String generatedPassword = service.generatePassword();
+    void shouldGeneratePasswordWithValidCharactersOnly() {
+        String actual = service.generatePassword();
 
-        for (char currentChar : generatedPassword.toCharArray()) {
-            assertTrue(
-                    PASSWORD_ALPHABET.indexOf(currentChar) >= 0,
-                    "Password contains invalid character: " + currentChar
-            );
-        }
+        assertTrue(
+                StringUtils.containsOnly(actual, PASSWORD_ALPHABET),
+                "Password contains invalid characters");
     }
 
 }

@@ -14,32 +14,32 @@ import static com.gym.crm.factory.TrainingTestFactory.DEFAULT_DATE;
 import static com.gym.crm.factory.TrainingTestFactory.DEFAULT_DURATION;
 import static com.gym.crm.factory.TrainingTestFactory.DEFAULT_TRAINEE_ID;
 import static com.gym.crm.factory.TrainingTestFactory.DEFAULT_TRAINER_ID;
+import static com.gym.crm.factory.TrainingTestFactory.DEFAULT_TRAINING_ID;
 import static com.gym.crm.factory.TrainingTestFactory.DEFAULT_TRAINING_NAME;
 import static com.gym.crm.factory.TrainingTestFactory.DEFAULT_TRAINING_TYPE;
-import static com.gym.crm.factory.TrainingTestFactory.trainingCreateDto;
-import static com.gym.crm.factory.TrainingTestFactory.trainingWithId;
-import static com.gym.crm.factory.TrainingTestFactory.trainingWithIdAndType;
-import static com.gym.crm.factory.TrainingTestFactory.DEFAULT_TRAINING_ID;
 import static com.gym.crm.factory.TrainingTestFactory.SECONDARY_TRAINING_ID;
+import static com.gym.crm.factory.TrainingTestFactory.buildTrainingCreateDto;
+import static com.gym.crm.factory.TrainingTestFactory.buildTrainingWithId;
+import static com.gym.crm.factory.TrainingTestFactory.buildTrainingWithIdAndType;
 import static com.gym.crm.factory.TrainingTypeTestFactory.STRENGTH;
-import static com.gym.crm.factory.TrainingTypeTestFactory.strength;
+import static com.gym.crm.factory.TrainingTypeTestFactory.buildStrength;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TrainingMapperTest {
+class TrainingMapperTest {
 
     private TrainingMapper mapper;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         mapper = Mappers.getMapper(TrainingMapper.class);
     }
 
     @Test
-    public void shouldMapAllFieldsCorrectlyWhenTrainingIsValid() {
-        Training training = trainingWithId(DEFAULT_TRAINING_ID);
+    void shouldMapAllFieldsCorrectlyWhenTrainingIsValid() {
+        Training training = buildTrainingWithId(DEFAULT_TRAINING_ID);
 
         TrainingResponseDto result = mapper.toDto(training);
 
@@ -54,15 +54,15 @@ public class TrainingMapperTest {
     }
 
     @Test
-    public void shouldReturnNullWhenTrainingIsNull() {
+    void shouldReturnNullWhenTrainingIsNull() {
         TrainingResponseDto result = mapper.toDto(null);
 
         assertNull(result);
     }
 
     @Test
-    public void shouldMapAllFieldsAndIgnoreIdWhenMappingFromCreateDto() {
-        TrainingCreateDto dto = trainingCreateDto();
+    void shouldMapAllFieldsAndIgnoreIdWhenMappingFromCreateDto() {
+        TrainingCreateDto dto = buildTrainingCreateDto();
 
         Training result = mapper.toEntity(dto);
 
@@ -75,16 +75,16 @@ public class TrainingMapperTest {
     }
 
     @Test
-    public void shouldReturnNullWhenCreateDtoIsNull() {
+    void shouldReturnNullWhenCreateDtoIsNull() {
         Training result = mapper.toEntity(null);
 
         assertNull(result);
     }
 
     @Test
-    public void shouldMapAllItemsWhenTrainingListIsValid() {
-        Training training1 = trainingWithId(DEFAULT_TRAINING_ID);
-        Training training2 = trainingWithIdAndType(SECONDARY_TRAINING_ID, strength());
+    void shouldMapAllItemsWhenTrainingListIsValid() {
+        Training training1 = buildTrainingWithId(DEFAULT_TRAINING_ID);
+        Training training2 = buildTrainingWithIdAndType(SECONDARY_TRAINING_ID, buildStrength());
         List<Training> trainings = List.of(training1, training2);
 
         List<TrainingResponseDto> result = mapper.toDtoList(trainings);
@@ -98,7 +98,7 @@ public class TrainingMapperTest {
     }
 
     @Test
-    public void shouldReturnEmptyListWhenTrainingListIsEmpty() {
+    void shouldReturnEmptyListWhenTrainingListIsEmpty() {
         List<Training> emptyList = Collections.emptyList();
 
         List<TrainingResponseDto> result = mapper.toDtoList(emptyList);
@@ -108,7 +108,7 @@ public class TrainingMapperTest {
     }
 
     @Test
-    public void shouldReturnNullWhenTrainingListIsNull() {
+    void shouldReturnNullWhenTrainingListIsNull() {
         List<TrainingResponseDto> result = mapper.toDtoList(null);
 
         assertNull(result);

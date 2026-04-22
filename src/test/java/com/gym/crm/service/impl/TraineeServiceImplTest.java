@@ -21,13 +21,12 @@ import static com.gym.crm.factory.TraineeTestFactory.DEFAULT_PASSWORD;
 import static com.gym.crm.factory.TraineeTestFactory.DEFAULT_TRAINEE_ID;
 import static com.gym.crm.factory.TraineeTestFactory.DEFAULT_USERNAME;
 import static com.gym.crm.factory.TraineeTestFactory.SECONDARY_TRAINEE_ID;
-import static com.gym.crm.factory.TraineeTestFactory.defaultTrainee;
-import static com.gym.crm.factory.TraineeTestFactory.traineeWithId;
-import static com.gym.crm.factory.TraineeTestFactory.traineeWithoutCredentials;
+import static com.gym.crm.factory.TraineeTestFactory.buildTraineeWithId;
+import static com.gym.crm.factory.TraineeTestFactory.buildTraineeWithoutCredentials;
+import static com.gym.crm.factory.TraineeTestFactory.getDefaultTraineeBuilder;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -35,7 +34,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class TraineeServiceImplTest {
+class TraineeServiceImplTest {
 
     @Mock
     private TraineeDao dao;
@@ -46,7 +45,7 @@ public class TraineeServiceImplTest {
     private TraineeService service;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         TraineeServiceImpl implementation = new TraineeServiceImpl();
         implementation.setTraineeDao(dao);
         implementation.setCredentialService(credentialService);
@@ -54,157 +53,164 @@ public class TraineeServiceImplTest {
     }
 
     @Test
-    public void shouldCreateTraineeWithGeneratedCredentials() {
-        Trainee traineeWithoutCredentials = traineeWithoutCredentials();
-        Trainee createdTrainee = traineeWithId(DEFAULT_TRAINEE_ID);
+    void shouldCreateTraineeWithGeneratedCredentials() {
+        Trainee traineeWithoutCredentials = buildTraineeWithoutCredentials();
+        Trainee expected = buildTraineeWithId(DEFAULT_TRAINEE_ID);
+
         when(credentialService.generateUsername(DEFAULT_FIRST_NAME, DEFAULT_LAST_NAME)).thenReturn(DEFAULT_USERNAME);
         when(credentialService.generatePassword()).thenReturn(DEFAULT_PASSWORD);
-        when(dao.create(any(Trainee.class))).thenReturn(createdTrainee);
+        when(dao.create(any(Trainee.class))).thenReturn(expected);
 
-        Trainee result = service.createTrainee(traineeWithoutCredentials);
+        Trainee actual = service.createTrainee(traineeWithoutCredentials);
 
-        assertCredentialsWereGeneratedForTrainee();
-        assertEquals(createdTrainee, result);
+        verify(credentialService).generateUsername(DEFAULT_FIRST_NAME, DEFAULT_LAST_NAME);
+        verify(credentialService).generatePassword();
+        ArgumentCaptor<Trainee> traineeCaptor = ArgumentCaptor.forClass(Trainee.class);
+        verify(dao).create(traineeCaptor.capture());
+        Trainee traineeWithCredentials = traineeCaptor.getValue();
+        assertEquals(DEFAULT_USERNAME, traineeWithCredentials.getUsername());
+        assertEquals(DEFAULT_PASSWORD, traineeWithCredentials.getPassword());
+        assertEquals(DEFAULT_FIRST_NAME, traineeWithCredentials.getFirstName());
+        assertEquals(DEFAULT_LAST_NAME, traineeWithCredentials.getLastName());
+        assertEquals(expected, actual);
     }
 
     @Test
-    public void shouldThrowNullPointerWhenCreatingNullTrainee() {
-        assertThrows(NullPointerException.class, () -> service.createTrainee(null));
+    void shouldThrowNullPointerWhenCreatingNullTrainee() {
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.createTrainee(null));
 
+        assertEquals("Trainee cannot be null", exception.getMessage());
         verifyNoInteractions(dao, credentialService);
     }
 
     @Test
-    public void shouldMergeUpdatedFieldsAndPreserveExistingUsernameWhenUpdatingTrainee() {
-        Trainee existingTrainee = traineeWithId(DEFAULT_TRAINEE_ID);
-        Trainee updateRequest = defaultTrainee()
+    void shouldMergeUpdatedFieldsAndPreserveExistingUsernameWhenUpdatingTrainee() {
+        Trainee existingTrainee = buildTraineeWithId(DEFAULT_TRAINEE_ID);
+        Trainee updateRequest = getDefaultTraineeBuilder()
                 .userId(DEFAULT_TRAINEE_ID)
-                .firstName("Jane")
-                .lastName("Smith")
+                .firstName("Sophia")
+                .lastName("Wilson")
                 .address("456 Oak Ave")
                 .build();
-        Trainee updatedTrainee = defaultTrainee()
+        Trainee expected = getDefaultTraineeBuilder()
                 .userId(DEFAULT_TRAINEE_ID)
-                .firstName("Jane")
-                .lastName("Smith")
+                .firstName("Sophia")
+                .lastName("Wilson")
                 .address("456 Oak Ave")
                 .build();
-        when(dao.findById(DEFAULT_TRAINEE_ID)).thenReturn(Optional.of(existingTrainee));
-        when(dao.update(any(Trainee.class))).thenReturn(updatedTrainee);
 
-        Trainee result = service.updateTrainee(updateRequest);
+        when(dao.findById(DEFAULT_TRAINEE_ID)).thenReturn(Optional.of(existingTrainee));
+        when(dao.update(any(Trainee.class))).thenReturn(expected);
+
+        Trainee actual = service.updateTrainee(updateRequest);
 
         verify(dao).findById(DEFAULT_TRAINEE_ID);
-        assertMergedTraineeHasCorrectFields("Jane", "Smith", "456 Oak Ave");
-        assertEquals(updatedTrainee, result);
+        ArgumentCaptor<Trainee> traineeCaptor = ArgumentCaptor.forClass(Trainee.class);
+        verify(dao).update(traineeCaptor.capture());
+        Trainee mergedTrainee = traineeCaptor.getValue();
+        assertEquals(DEFAULT_TRAINEE_ID, mergedTrainee.getUserId());
+        assertEquals(DEFAULT_USERNAME, mergedTrainee.getUsername());
+        assertEquals("Sophia", mergedTrainee.getFirstName());
+        assertEquals("Wilson", mergedTrainee.getLastName());
+        assertEquals("456 Oak Ave", mergedTrainee.getAddress());
+        assertEquals(expected, actual);
     }
 
     @Test
-    public void shouldThrowEntityNotFoundWhenUpdatingUnknownTrainee() {
-        Trainee updateRequest = traineeWithId(DEFAULT_TRAINEE_ID);
+    void shouldThrowEntityNotFoundWhenUpdatingUnknownTrainee() {
+        Trainee updateRequest = buildTraineeWithId(DEFAULT_TRAINEE_ID);
+
         when(dao.findById(DEFAULT_TRAINEE_ID)).thenReturn(Optional.empty());
 
-        assertThrows(EntityNotFoundException.class, () -> service.updateTrainee(updateRequest));
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> service.updateTrainee(updateRequest));
 
+        assertEquals("Trainee Not found with id: " + DEFAULT_TRAINEE_ID, exception.getMessage());
         verify(dao).findById(DEFAULT_TRAINEE_ID);
         verify(dao, never()).update(any(Trainee.class));
     }
 
     @Test
-    public void shouldThrowNullPointerWhenUpdatingNullTrainee() {
-        assertThrows(NullPointerException.class, () -> service.updateTrainee(null));
+    void shouldThrowNullPointerWhenUpdatingNullTrainee() {
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.updateTrainee(null));
 
+        assertEquals("Trainee cannot be null", exception.getMessage());
         verifyNoInteractions(dao, credentialService);
     }
 
     @Test
-    public void shouldDeleteTrainee() {
-        when(dao.delete(DEFAULT_TRAINEE_ID)).thenReturn(true);
+    void shouldDeleteTrainee() {
+        boolean expected = true;
 
-        boolean result = service.deleteTrainee(DEFAULT_TRAINEE_ID);
+        when(dao.delete(DEFAULT_TRAINEE_ID)).thenReturn(expected);
 
-        assertTrue(result);
+        boolean actual = service.deleteTrainee(DEFAULT_TRAINEE_ID);
+
+        assertEquals(expected, actual);
         verify(dao).delete(DEFAULT_TRAINEE_ID);
     }
 
     @Test
-    public void shouldThrowNullPointerWhenDeletingNullTraineeId() {
-        assertThrows(NullPointerException.class, () -> service.deleteTrainee(null));
+    void shouldThrowNullPointerWhenDeletingNullTraineeId() {
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.deleteTrainee(null));
 
+        assertEquals("Trainee ID cannot be null", exception.getMessage());
         verifyNoInteractions(dao, credentialService);
     }
 
     @Test
-    public void shouldReturnTraineeWhenGettingExistingTrainee() {
-        Trainee existingTrainee = traineeWithId(DEFAULT_TRAINEE_ID);
-        when(dao.findById(DEFAULT_TRAINEE_ID)).thenReturn(Optional.of(existingTrainee));
+    void shouldReturnTraineeWhenGettingExistingTrainee() {
+        Trainee expected = buildTraineeWithId(DEFAULT_TRAINEE_ID);
 
-        Trainee result = service.getTrainee(DEFAULT_TRAINEE_ID);
+        when(dao.findById(DEFAULT_TRAINEE_ID)).thenReturn(Optional.of(expected));
 
-        assertEquals(existingTrainee, result);
+        Trainee actual = service.getTrainee(DEFAULT_TRAINEE_ID);
+
+        assertEquals(expected, actual);
         verify(dao).findById(DEFAULT_TRAINEE_ID);
     }
 
     @Test
-    public void shouldThrowEntityNotFoundWhenGettingUnknownTrainee() {
+    void shouldThrowEntityNotFoundWhenGettingUnknownTrainee() {
         when(dao.findById(DEFAULT_TRAINEE_ID)).thenReturn(Optional.empty());
 
-        assertThrows(EntityNotFoundException.class, () -> service.getTrainee(DEFAULT_TRAINEE_ID));
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> service.getTrainee(DEFAULT_TRAINEE_ID));
 
+        assertEquals("Trainee Not found with id: " + DEFAULT_TRAINEE_ID, exception.getMessage());
         verify(dao).findById(DEFAULT_TRAINEE_ID);
     }
 
     @Test
-    public void shouldThrowNullPointerWhenGettingNullTraineeId() {
-        assertThrows(NullPointerException.class, () -> service.getTrainee(null));
+    void shouldThrowNullPointerWhenGettingNullTraineeId() {
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.getTrainee(null));
 
+        assertEquals("Trainee ID cannot be null", exception.getMessage());
         verifyNoInteractions(dao, credentialService);
     }
 
     @Test
-    public void shouldReturnAllTrainees() {
-        Trainee trainee1 = traineeWithId(DEFAULT_TRAINEE_ID);
-        Trainee trainee2 = traineeWithId(SECONDARY_TRAINEE_ID);
-        List<Trainee> trainees = List.of(trainee1, trainee2);
-        when(dao.findAll()).thenReturn(trainees);
+    void shouldReturnAllTrainees() {
+        Trainee trainee1 = buildTraineeWithId(DEFAULT_TRAINEE_ID);
+        Trainee trainee2 = buildTraineeWithId(SECONDARY_TRAINEE_ID);
+        List<Trainee> expected = List.of(trainee1, trainee2);
 
-        List<Trainee> result = service.getAllTrainees();
+        when(dao.findAll()).thenReturn(expected);
 
-        assertNotNull(result);
-        assertEquals(trainees, result);
+        List<Trainee> actual = service.getAllTrainees();
+
+        assertNotNull(actual);
+        assertEquals(expected, actual);
     }
 
     @Test
-    public void shouldReturnEmptyTrainees() {
-        when(dao.findAll()).thenReturn(List.of());
+    void shouldReturnEmptyTrainees() {
+        List<Trainee> expected = List.of();
 
-        List<Trainee> result = service.getAllTrainees();
+        when(dao.findAll()).thenReturn(expected);
 
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
-    }
+        List<Trainee> actual = service.getAllTrainees();
 
-    private void assertCredentialsWereGeneratedForTrainee() {
-        verify(credentialService).generateUsername(DEFAULT_FIRST_NAME, DEFAULT_LAST_NAME);
-        verify(credentialService).generatePassword();
-        ArgumentCaptor<Trainee> traineeCaptor = ArgumentCaptor.forClass(Trainee.class);
-        verify(dao).create(traineeCaptor.capture());
-        Trainee traineeToCreate = traineeCaptor.getValue();
-        assertEquals(DEFAULT_USERNAME, traineeToCreate.getUsername());
-        assertEquals(DEFAULT_PASSWORD, traineeToCreate.getPassword());
-        assertEquals(DEFAULT_FIRST_NAME, traineeToCreate.getFirstName());
-        assertEquals(DEFAULT_LAST_NAME, traineeToCreate.getLastName());
-    }
-
-    private void assertMergedTraineeHasCorrectFields(String firstName, String lastName, String address) {
-        ArgumentCaptor<Trainee> traineeCaptor = ArgumentCaptor.forClass(Trainee.class);
-        verify(dao).update(traineeCaptor.capture());
-        Trainee traineeToUpdate = traineeCaptor.getValue();
-        assertEquals(DEFAULT_TRAINEE_ID, traineeToUpdate.getUserId());
-        assertEquals(DEFAULT_USERNAME, traineeToUpdate.getUsername());
-        assertEquals(firstName, traineeToUpdate.getFirstName());
-        assertEquals(lastName, traineeToUpdate.getLastName());
-        assertEquals(address, traineeToUpdate.getAddress());
+        assertNotNull(actual);
+        assertEquals(expected, actual);
     }
 
 }

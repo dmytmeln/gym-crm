@@ -23,26 +23,26 @@ import static com.gym.crm.factory.CsvDtoTestFactory.DEFAULT_CSV_TRAINING_DURATIO
 import static com.gym.crm.factory.CsvDtoTestFactory.DEFAULT_CSV_TRAINING_NAME;
 import static com.gym.crm.factory.CsvDtoTestFactory.DEFAULT_CSV_TRAINING_TYPE;
 import static com.gym.crm.factory.CsvDtoTestFactory.DEFAULT_CSV_USERNAME;
-import static com.gym.crm.factory.CsvDtoTestFactory.traineeCsvDto;
-import static com.gym.crm.factory.CsvDtoTestFactory.trainerCsvDto;
-import static com.gym.crm.factory.CsvDtoTestFactory.trainingCsvDto;
+import static com.gym.crm.factory.CsvDtoTestFactory.buildTraineeCsvDto;
+import static com.gym.crm.factory.CsvDtoTestFactory.buildTrainerCsvDto;
+import static com.gym.crm.factory.CsvDtoTestFactory.buildTrainingCsvDto;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class CsvEntityMapperTest {
+class CsvEntityMapperTest {
 
     private CsvEntityMapper mapper;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         mapper = Mappers.getMapper(CsvEntityMapper.class);
     }
 
     @Test
-    public void shouldMapTraineeCsvDtoToEntity() {
-        TraineeCsvDto dto = traineeCsvDto();
+    void shouldMapTraineeCsvDtoToEntity() {
+        TraineeCsvDto dto = buildTraineeCsvDto();
 
         Trainee result = mapper.toTrainee(dto);
 
@@ -58,15 +58,15 @@ public class CsvEntityMapperTest {
     }
 
     @Test
-    public void shouldReturnNullWhenTraineeCsvDtoIsNull() {
+    void shouldReturnNullWhenTraineeCsvDtoIsNull() {
         Trainee result = mapper.toTrainee(null);
 
         assertNull(result);
     }
 
     @Test
-    public void shouldMapTrainerCsvDtoToEntity() {
-        TrainerCsvDto dto = trainerCsvDto();
+    void shouldMapTrainerCsvDtoToEntity() {
+        TrainerCsvDto dto = buildTrainerCsvDto();
 
         Trainer result = mapper.toTrainer(dto);
 
@@ -82,15 +82,15 @@ public class CsvEntityMapperTest {
     }
 
     @Test
-    public void shouldReturnNullWhenTrainerCsvDtoIsNull() {
+    void shouldReturnNullWhenTrainerCsvDtoIsNull() {
         Trainer result = mapper.toTrainer(null);
 
         assertNull(result);
     }
 
     @Test
-    public void shouldMapTrainingCsvDtoToEntity() {
-        TrainingCsvDto dto = trainingCsvDto();
+    void shouldMapTrainingCsvDtoToEntity() {
+        TrainingCsvDto dto = buildTrainingCsvDto();
 
         Training result = mapper.toTraining(dto);
 
@@ -106,7 +106,7 @@ public class CsvEntityMapperTest {
     }
 
     @Test
-    public void shouldReturnNullWhenTrainingCsvDtoIsNull() {
+    void shouldReturnNullWhenTrainingCsvDtoIsNull() {
         Training result = mapper.toTraining(null);
 
         assertNull(result);

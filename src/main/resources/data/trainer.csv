@@ -1,4 +1,4 @@
 username,firstName,lastName,password,isActive,specializationType
-mike.trainer,Mike,Trainer,trainerpass1,true,CARDIO
-sarah.coach,Sarah,Coach,trainerpass2,true,STRENGTH
-alex.fitness,Alex,Fitness,trainerpass3,true,YOGA
+marcus.stone,Marcus,Stone,trainerpass1,true,CARDIO
+sarah.adams,Sarah,Adams,trainerpass2,true,STRENGTH
+alex.morgan,Alex,Morgan,trainerpass3,true,YOGA

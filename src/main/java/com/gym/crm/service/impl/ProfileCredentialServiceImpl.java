@@ -38,8 +38,8 @@ public class ProfileCredentialServiceImpl implements ProfileCredentialService {
 
     @Override
     public String generateUsername(String firstName, String lastName) {
-        Objects.requireNonNull(firstName);
-        Objects.requireNonNull(lastName);
+        Objects.requireNonNull(firstName, "First Name cannot be null");
+        Objects.requireNonNull(lastName, "Last Name cannot be null");
 
         String baseUsername = firstName + USERNAME_SEPARATOR + lastName;
 

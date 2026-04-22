@@ -27,34 +27,35 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class CsvParserTest {
+class CsvParserTest {
 
     @Mock
     private ResourceLoader resourceLoader;
 
     @InjectMocks
-    private CsvParser csvParser;
+    private CsvParser parser;
 
     @BeforeEach
-    public void setUp() {
-        csvParser.setResourceLoader(resourceLoader);
+    void setUp() {
+        parser.setResourceLoader(resourceLoader);
     }
 
     @Test
-    public void shouldParseValidCsvFileWithSingleRow() throws IOException {
+    void shouldParseValidCsvFileWithSingleRow() throws IOException {
         String csvContent = """
                 username,firstName,lastName,password,isActive,address,dateOfBirth
-                john.doe,John,Doe,password123,true,123 Main St,1990-05-15""";
+                liam.miller,Liam,Miller,password123,true,123 Main St,1990-05-15""";
         Resource mockResource = createMockResource(csvContent);
+
         when(resourceLoader.getResource("classpath:trainee.csv")).thenReturn(mockResource);
 
-        List<TraineeCsvDto> result = csvParser.parseCsv("classpath:trainee.csv", TraineeCsvDto.class);
+        List<TraineeCsvDto> result = parser.parseCsv("classpath:trainee.csv", TraineeCsvDto.class);
 
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals("john.doe", result.get(0).getUsername());
-        assertEquals("John", result.get(0).getFirstName());
-        assertEquals("Doe", result.get(0).getLastName());
+        assertEquals("liam.miller", result.get(0).getUsername());
+        assertEquals("Liam", result.get(0).getFirstName());
+        assertEquals("Miller", result.get(0).getLastName());
         assertEquals("password123", result.get(0).getPassword());
         assertTrue(result.get(0).getIsActive());
         assertEquals("123 Main St", result.get(0).getAddress());
@@ -63,152 +64,157 @@ public class CsvParserTest {
     }
 
     @Test
-    public void shouldParseValidCsvFileWithMultipleRows() throws IOException {
+    void shouldParseValidCsvFileWithMultipleRows() throws IOException {
         String csvContent = """
                 username,firstName,lastName,password,isActive,address,dateOfBirth
-                john.doe,John,Doe,password123,true,123 Main St,1990-05-15
-                jane.smith,Jane,Smith,password456,true,456 Oak Ave,1985-08-20
+                liam.miller,Liam,Miller,password123,true,123 Main St,1990-05-15
+                sophia.wilson,Sophia,Wilson,password456,true,456 Oak Ave,1985-08-20
                 bob.wilson,Bob,Wilson,password789,false,789 Pine Rd,1992-11-30""";
         Resource mockResource = createMockResource(csvContent);
+
         when(resourceLoader.getResource("classpath:trainee.csv")).thenReturn(mockResource);
 
-        List<TraineeCsvDto> result = csvParser.parseCsv("classpath:trainee.csv", TraineeCsvDto.class);
+        List<TraineeCsvDto> result = parser.parseCsv("classpath:trainee.csv", TraineeCsvDto.class);
 
         assertNotNull(result);
         assertEquals(3, result.size());
-        assertEquals("john.doe", result.get(0).getUsername());
-        assertEquals("jane.smith", result.get(1).getUsername());
+        assertEquals("liam.miller", result.get(0).getUsername());
+        assertEquals("sophia.wilson", result.get(1).getUsername());
         assertEquals("bob.wilson", result.get(2).getUsername());
     }
 
     @Test
-    public void shouldParseTrainerCsvFile() throws IOException {
+    void shouldParseTrainerCsvFile() throws IOException {
         String csvContent = """
                 username,firstName,lastName,password,isActive,specializationType
-                mike.trainer,Mike,Trainer,trainerpass1,true,CARDIO""";
+                marcus.stone,Marcus,Stone,trainerpass1,true,CARDIO""";
         Resource mockResource = createMockResource(csvContent);
+
         when(resourceLoader.getResource("classpath:trainer.csv")).thenReturn(mockResource);
 
-        List<TrainerCsvDto> result = csvParser.parseCsv("classpath:trainer.csv", TrainerCsvDto.class);
+        List<TrainerCsvDto> result = parser.parseCsv("classpath:trainer.csv", TrainerCsvDto.class);
 
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals("mike.trainer", result.get(0).getUsername());
-        assertEquals("Mike", result.get(0).getFirstName());
+        assertEquals("marcus.stone", result.get(0).getUsername());
+        assertEquals("Marcus", result.get(0).getFirstName());
         assertEquals("CARDIO", result.get(0).getSpecializationType());
     }
 
     @Test
-    public void shouldParseEmptyCsvFileWithHeaderOnly() throws IOException {
+    void shouldParseEmptyCsvFileWithHeaderOnly() throws IOException {
         String csvContent = "username,firstName,lastName,password,isActive,address,dateOfBirth";
         Resource mockResource = createMockResource(csvContent);
+
         when(resourceLoader.getResource("classpath:empty.csv")).thenReturn(mockResource);
 
-        List<TraineeCsvDto> result = csvParser.parseCsv("classpath:empty.csv", TraineeCsvDto.class);
+        List<TraineeCsvDto> result = parser.parseCsv("classpath:empty.csv", TraineeCsvDto.class);
 
         assertNotNull(result);
         assertTrue(result.isEmpty());
     }
 
     @Test
-    public void shouldThrowIllegalStateExceptionWhenCsvFileIsEmpty() throws IOException {
+    void shouldThrowIllegalStateExceptionWhenCsvFileIsEmpty() throws IOException {
         Resource mockResource = createMockResource("");
+
         when(resourceLoader.getResource("classpath:empty.csv")).thenReturn(mockResource);
 
         assertThrows(
                 IllegalStateException.class,
-                () -> csvParser.parseCsv("classpath:emty.csv", TraineeCsvDto.class)
-        );
+                () -> parser.parseCsv("classpath:empty.csv", TraineeCsvDto.class));
     }
 
     @Test
-    public void shouldThrowIllegalStateExceptionWhenFileExtensionIsNotCsv() {
+    void shouldThrowIllegalStateExceptionWhenFileExtensionIsNotCsv() {
         assertThrows(
                 IllegalStateException.class,
-                () -> csvParser.parseCsv("classpath:data.txt", TraineeCsvDto.class)
-        );
+                () -> parser.parseCsv("classpath:data.txt", TraineeCsvDto.class));
     }
 
     @Test
-    public void shouldThrowIllegalStateExceptionWhenFileExtensionIsUpperCase() {
+    void shouldThrowIllegalStateExceptionWhenFileExtensionIsUpperCase() {
         assertThrows(
                 IllegalStateException.class,
-                () -> csvParser.parseCsv("classpath:data.CSV", TraineeCsvDto.class)
-        );
+                () -> parser.parseCsv("classpath:data.CSV", TraineeCsvDto.class));
     }
 
     @Test
-    public void shouldThrowIllegalStateExceptionWhenFileHasNoExtension() {
+    void shouldThrowIllegalStateExceptionWhenFileHasNoExtension() {
         assertThrows(
                 IllegalStateException.class,
-                () -> csvParser.parseCsv("classpath:data", TraineeCsvDto.class)
-        );
+                () -> parser.parseCsv("classpath:data", TraineeCsvDto.class));
     }
 
     @Test
-    public void shouldThrowIllegalStateExceptionWhenFileNotFound() {
+    void shouldThrowIllegalStateExceptionWhenFileNotFound() {
         Resource mockResource = mock(Resource.class);
+        String filePath = "classpath:nonexistent.csv";
+
         when(mockResource.exists()).thenReturn(false);
-        when(resourceLoader.getResource("classpath:nonexistent.csv")).thenReturn(mockResource);
+        when(resourceLoader.getResource(filePath)).thenReturn(mockResource);
 
         assertThrows(
                 IllegalStateException.class,
-                () -> csvParser.parseCsv("classpath:nonexistent.csv", TraineeCsvDto.class)
-        );
+                () -> parser.parseCsv(filePath, TraineeCsvDto.class));
 
-        verify(resourceLoader).getResource("classpath:nonexistent.csv");
+        verify(resourceLoader).getResource(filePath);
     }
 
     @Test
-    public void shouldThrowIllegalStateExceptionWhenResourceLoaderThrowsIOException() throws IOException {
+    void shouldThrowIllegalStateExceptionWhenResourceLoaderThrowsIOException() throws IOException {
         Resource mockResource = mock(Resource.class);
+        String filePath = "classpath:error.csv";
+
         when(mockResource.exists()).thenReturn(true);
         when(mockResource.getInputStream()).thenThrow(new IOException("Failed to read file"));
-        when(resourceLoader.getResource("classpath:error.csv")).thenReturn(mockResource);
+        when(resourceLoader.getResource(filePath)).thenReturn(mockResource);
 
         assertThrows(
                 IllegalStateException.class,
-                () -> csvParser.parseCsv("classpath:error.csv", TraineeCsvDto.class)
-        );
+                () -> parser.parseCsv(filePath, TraineeCsvDto.class));
     }
 
     @Test
-    public void shouldThrowIllegalStateExceptionWhenCsvDataIsMalformed() throws IOException {
+    void shouldThrowIllegalStateExceptionWhenCsvDataIsMalformed() throws IOException {
         String csvContent = """
                 username,firstName,lastName,password,isActive,address,dateOfBirth
-                john.doe,John,Doe,password123,INVALID_BOOLEAN,123 Main St,1990-05-15""";
+                liam.miller,Liam,Miller,password123,INVALID_BOOLEAN,123 Main St,1990-05-15""";
         Resource mockResource = createMockResource(csvContent);
-        when(resourceLoader.getResource("classpath:malformed.csv")).thenReturn(mockResource);
+        String filePath = "classpath:malformed.csv";
+
+        when(resourceLoader.getResource(filePath)).thenReturn(mockResource);
 
         assertThrows(
                 IllegalStateException.class,
-                () -> csvParser.parseCsv("classpath:malformed.csv", TraineeCsvDto.class)
-        );
+                () -> parser.parseCsv(filePath, TraineeCsvDto.class));
     }
 
     @Test
-    public void shouldThrowIllegalStateExceptionWhenCsvHasInvalidDateFormat() throws IOException {
+    void shouldThrowIllegalStateExceptionWhenCsvHasInvalidDateFormat() throws IOException {
         String csvContent = """
                 username,firstName,lastName,password,isActive,address,dateOfBirth
-                john.doe,John,Doe,password123,true,123 Main St,INVALID_DATE""";
+                liam.miller,Liam,Miller,password123,true,123 Main St,INVALID_DATE""";
         Resource mockResource = createMockResource(csvContent);
-        when(resourceLoader.getResource("classpath:invalid-date.csv")).thenReturn(mockResource);
+        String filePath = "classpath:invalid-date.csv";
+
+        when(resourceLoader.getResource(filePath)).thenReturn(mockResource);
 
         assertThrows(
                 IllegalStateException.class,
-                () -> csvParser.parseCsv("classpath:invalid-date.csv", TraineeCsvDto.class)
-        );
+                () -> parser.parseCsv(filePath, TraineeCsvDto.class));
     }
 
     @Test
-    public void shouldHandleDifferentFilePathFormats() throws IOException {
+    void shouldHandleDifferentFilePathFormats() throws IOException {
         String csvContent = """
                 username,firstName,lastName,password,isActive,address,dateOfBirth
-                john.doe,John,Doe,password123,true,123 Main St,1990-05-15""";
+                liam.miller,Liam,Miller,password123,true,123 Main St,1990-05-15""";
         Resource mockResource = createMockResource(csvContent);
+
         when(resourceLoader.getResource("file:/data/trainee.csv")).thenReturn(mockResource);
 
-        List<TraineeCsvDto> result = csvParser.parseCsv("file:/data/trainee.csv", TraineeCsvDto.class);
+        List<TraineeCsvDto> result = parser.parseCsv("file:/data/trainee.csv", TraineeCsvDto.class);
 
         assertNotNull(result);
         assertEquals(1, result.size());

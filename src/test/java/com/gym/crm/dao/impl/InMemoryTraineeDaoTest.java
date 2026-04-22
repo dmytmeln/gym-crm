@@ -16,19 +16,19 @@ import static com.gym.crm.factory.TraineeTestFactory.DEFAULT_FIRST_NAME;
 import static com.gym.crm.factory.TraineeTestFactory.DEFAULT_LAST_NAME;
 import static com.gym.crm.factory.TraineeTestFactory.DEFAULT_USERNAME;
 import static com.gym.crm.factory.TraineeTestFactory.NON_EXISTENT_TRAINEE_ID;
-import static com.gym.crm.factory.TraineeTestFactory.trainee;
+import static com.gym.crm.factory.TraineeTestFactory.buildTrainee;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class InMemoryTraineeDaoTest {
+class InMemoryTraineeDaoTest {
 
     private TraineeDao dao;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         TraineeNamespaceStorage traineeNamespaceStorage = new TraineeNamespaceStorage();
         TrainerNamespaceStorage trainerNamespaceStorage = new TrainerNamespaceStorage();
         TrainingNamespaceStorage trainingNamespaceStorage = new TrainingNamespaceStorage();
@@ -37,142 +37,151 @@ public class InMemoryTraineeDaoTest {
         storage.setNamespaceStorages(List.of(
                 traineeNamespaceStorage,
                 trainerNamespaceStorage,
-                trainingNamespaceStorage
-        ));
+                trainingNamespaceStorage));
 
         InMemoryTraineeDao implementation = new InMemoryTraineeDao();
         implementation.setStorage(storage);
         dao = implementation;
-
-        traineeNamespaceStorage.clear();
     }
 
     @Test
-    public void shouldCreateTraineeWithGeneratedId() {
-        Trainee trainee = trainee();
+    void shouldCreateTraineeWithGeneratedId() {
+        Trainee trainee = buildTrainee();
 
-        Trainee result = dao.create(trainee);
+        Trainee actual = dao.create(trainee);
 
-        assertNotNull(result);
-        assertNotNull(result.getUserId());
-        assertTrue(result.getUserId() > 0, "ID must be positive");
-        assertEquals(DEFAULT_USERNAME, result.getUsername());
-        assertEquals(DEFAULT_FIRST_NAME, result.getFirstName());
-        assertEquals(DEFAULT_LAST_NAME, result.getLastName());
+        assertNotNull(actual);
+        assertNotNull(actual.getUserId());
+        assertTrue(actual.getUserId() > 0, "ID must be positive");
+        assertEquals(DEFAULT_USERNAME, actual.getUsername());
+        assertEquals(DEFAULT_FIRST_NAME, actual.getFirstName());
+        assertEquals(DEFAULT_LAST_NAME, actual.getLastName());
     }
 
     @Test
-    public void shouldGenerateSequentialIds() {
-        Trainee trainee1 = trainee();
-        Trainee trainee2 = trainee();
+    void shouldGenerateSequentialIds() {
+        Trainee trainee1 = buildTrainee();
+        Trainee trainee2 = buildTrainee();
 
-        Trainee result1 = dao.create(trainee1);
-        Trainee result2 = dao.create(trainee2);
+        Trainee actual1 = dao.create(trainee1);
+        Trainee actual2 = dao.create(trainee2);
 
-        assertTrue(result2.getUserId() > result1.getUserId());
+        assertTrue(actual2.getUserId() > actual1.getUserId());
     }
 
     @Test
-    public void shouldThrowNullPointerExceptionWhenCreatingNullTrainee() {
-        assertThrows(NullPointerException.class, () -> dao.create(null));
+    void shouldThrowNullPointerExceptionWhenCreatingNullTrainee() {
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> dao.create(null));
+
+        assertEquals("Trainee cannot be null", exception.getMessage());
     }
 
     @Test
-    public void shouldFindTraineeByIdAfterCreation() {
-        Trainee trainee = trainee();
-        Trainee created = dao.create(trainee);
+    void shouldFindTraineeByIdAfterCreation() {
+        Trainee trainee = buildTrainee();
+        Trainee expected = dao.create(trainee);
 
-        Optional<Trainee> result = dao.findById(created.getUserId());
+        Optional<Trainee> actual = dao.findById(expected.getUserId());
 
-        assertTrue(result.isPresent());
-        assertEquals(created.getUserId(), result.get().getUserId());
-        assertEquals(DEFAULT_USERNAME, result.get().getUsername());
+        assertTrue(actual.isPresent());
+        assertEquals(expected.getUserId(), actual.get().getUserId());
+        assertEquals(DEFAULT_USERNAME, actual.get().getUsername());
     }
 
     @Test
-    public void shouldReturnEmptyOptionalWhenTraineeNotFound() {
-        Optional<Trainee> result = dao.findById(NON_EXISTENT_TRAINEE_ID);
+    void shouldReturnEmptyOptionalWhenTraineeNotFound() {
+        Optional<Trainee> actual = dao.findById(NON_EXISTENT_TRAINEE_ID);
 
-        assertFalse(result.isPresent());
+        assertFalse(actual.isPresent());
     }
 
     @Test
-    public void shouldThrowNullPointerExceptionWhenFindingByNullId() {
-        assertThrows(NullPointerException.class, () -> dao.findById(null));
+    void shouldThrowNullPointerExceptionWhenFindingByNullId() {
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> dao.findById(null));
+
+        assertEquals("ID cannot be null", exception.getMessage());
     }
 
     @Test
-    public void shouldFindAllTrainees() {
-        Trainee trainee1 = trainee();
-        Trainee trainee2 = trainee();
+    void shouldFindAllTrainees() {
+        Trainee trainee1 = buildTrainee();
+        Trainee trainee2 = buildTrainee();
         dao.create(trainee1);
         dao.create(trainee2);
 
-        List<Trainee> result = dao.findAll();
+        List<Trainee> actual = dao.findAll();
 
-        assertNotNull(result);
-        assertEquals(2, result.size());
+        assertNotNull(actual);
+        int expectedSize = 2;
+        assertEquals(expectedSize, actual.size());
     }
 
     @Test
-    public void shouldReturnEmptyListWhenNoTrainees() {
-        List<Trainee> result = dao.findAll();
+    void shouldReturnEmptyListWhenNoTrainees() {
+        List<Trainee> actual = dao.findAll();
 
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
+        assertNotNull(actual);
+        assertTrue(actual.isEmpty());
     }
 
     @Test
-    public void shouldUpdateExistingTrainee() {
-        Trainee trainee = trainee();
+    void shouldUpdateExistingTrainee() {
+        Trainee trainee = buildTrainee();
         Trainee created = dao.create(trainee);
-        Trainee updated = trainee(created.getUserId(), DEFAULT_USERNAME, "Johnny", DEFAULT_LAST_NAME);
+        String expectedFirstName = "Johnny";
+        Trainee updated = buildTrainee(created.getUserId(), DEFAULT_USERNAME, expectedFirstName, DEFAULT_LAST_NAME);
 
-        Trainee result = dao.update(updated);
+        Trainee actual = dao.update(updated);
 
-        assertEquals(created.getUserId(), result.getUserId());
-        assertEquals("Johnny", result.getFirstName());
-        assertEquals(DEFAULT_USERNAME, result.getUsername());
+        assertEquals(created.getUserId(), actual.getUserId());
+        assertEquals(expectedFirstName, actual.getFirstName());
+        assertEquals(DEFAULT_USERNAME, actual.getUsername());
 
         Optional<Trainee> found = dao.findById(created.getUserId());
         assertTrue(found.isPresent());
-        assertEquals("Johnny", found.get().getFirstName());
+        assertEquals(expectedFirstName, found.get().getFirstName());
         assertEquals(DEFAULT_USERNAME, found.get().getUsername());
     }
 
     @Test
-    public void shouldThrowIllegalArgumentExceptionWhenUpdatingWithoutId() {
-        Trainee trainee = trainee();
+    void shouldThrowIllegalArgumentExceptionWhenUpdatingWithoutId() {
+        Trainee trainee = buildTrainee();
 
-        assertThrows(IllegalArgumentException.class, () -> dao.update(trainee));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> dao.update(trainee));
+
+        assertEquals("Cannot update entity without ID", exception.getMessage());
     }
 
     @Test
-    public void shouldThrowNullPointerExceptionWhenUpdatingNullTrainee() {
-        assertThrows(NullPointerException.class, () -> dao.update(null));
+    void shouldThrowNullPointerExceptionWhenUpdatingNullTrainee() {
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> dao.update(null));
+
+        assertEquals("Trainee cannot be null", exception.getMessage());
     }
 
     @Test
-    public void shouldDeleteExistingTrainee() {
-        Trainee trainee = trainee();
+    void shouldDeleteExistingTrainee() {
+        Trainee trainee = buildTrainee();
         Trainee created = dao.create(trainee);
 
-        boolean result = dao.delete(created.getUserId());
+        boolean actual = dao.delete(created.getUserId());
 
-        assertTrue(result);
+        assertTrue(actual);
         assertFalse(dao.findById(created.getUserId()).isPresent());
     }
 
     @Test
-    public void shouldReturnFalseWhenDeletingNonExistentTrainee() {
-        boolean result = dao.delete(NON_EXISTENT_TRAINEE_ID);
+    void shouldReturnFalseWhenDeletingNonExistentTrainee() {
+        boolean actual = dao.delete(NON_EXISTENT_TRAINEE_ID);
 
-        assertFalse(result);
+        assertFalse(actual);
     }
 
     @Test
-    public void shouldThrowNullPointerExceptionWhenDeletingWithNullId() {
-        assertThrows(NullPointerException.class, () -> dao.delete(null));
+    void shouldThrowNullPointerExceptionWhenDeletingWithNullId() {
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> dao.delete(null));
+
+        assertEquals("ID cannot be null", exception.getMessage());
     }
 
 }

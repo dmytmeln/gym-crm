@@ -63,7 +63,7 @@ public class GymFacade {
     }
 
     public TraineeCreateResponseDto createTrainee(TraineeCreateDto traineeCreateDto) {
-        Objects.requireNonNull(traineeCreateDto, "traineeCreateDto must not be null");
+        Objects.requireNonNull(traineeCreateDto, "TraineeCreateDto cannot be null");
 
         Trainee trainee = traineeMapper.toEntity(traineeCreateDto);
         Trainee createdTrainee = traineeService.createTrainee(trainee);
@@ -72,8 +72,8 @@ public class GymFacade {
     }
 
     public TraineeResponseDto updateTrainee(Long traineeId, TraineeUpdateDto traineeUpdateDto) {
-        Objects.requireNonNull(traineeId, "traineeId must not be null");
-        Objects.requireNonNull(traineeUpdateDto, "traineeUpdateDto must not be null");
+        Objects.requireNonNull(traineeId, "Trainee ID cannot be null");
+        Objects.requireNonNull(traineeUpdateDto, "TraineeUpdateDto cannot be null");
 
         Trainee trainee = traineeMapper.toEntity(traineeUpdateDto, traineeId);
         Trainee updatedTrainee = traineeService.updateTrainee(trainee);
@@ -82,13 +82,13 @@ public class GymFacade {
     }
 
     public boolean deleteTrainee(Long traineeId) {
-        Objects.requireNonNull(traineeId, "traineeId must not be null");
+        Objects.requireNonNull(traineeId, "Trainee ID cannot be null");
 
         return traineeService.deleteTrainee(traineeId);
     }
 
     public TraineeResponseDto getTrainee(Long traineeId) {
-        Objects.requireNonNull(traineeId, "traineeId must not be null");
+        Objects.requireNonNull(traineeId, "Trainee ID cannot be null");
 
         Trainee trainee = traineeService.getTrainee(traineeId);
 
@@ -102,7 +102,7 @@ public class GymFacade {
     }
 
     public TrainerCreateResponseDto createTrainer(TrainerCreateDto trainerCreateDto) {
-        Objects.requireNonNull(trainerCreateDto, "trainerCreateDto must not be null");
+        Objects.requireNonNull(trainerCreateDto, "TrainerCreateDto cannot be null");
 
         Trainer trainer = trainerMapper.toEntity(trainerCreateDto);
         Trainer createdTrainer = trainerService.createTrainer(trainer);
@@ -111,8 +111,8 @@ public class GymFacade {
     }
 
     public TrainerResponseDto updateTrainer(Long trainerId, TrainerUpdateDto trainerUpdateDto) {
-        Objects.requireNonNull(trainerId, "trainerId must not be null");
-        Objects.requireNonNull(trainerUpdateDto, "trainerUpdateDto must not be null");
+        Objects.requireNonNull(trainerId, "Trainer ID cannot be null");
+        Objects.requireNonNull(trainerUpdateDto, "TrainerUpdateDto cannot be null");
 
         Trainer trainer = trainerMapper.toEntity(trainerUpdateDto, trainerId);
         Trainer updatedTrainer = trainerService.updateTrainer(trainer);
@@ -121,7 +121,7 @@ public class GymFacade {
     }
 
     public TrainerResponseDto getTrainer(Long trainerId) {
-        Objects.requireNonNull(trainerId, "trainerId must not be null");
+        Objects.requireNonNull(trainerId, "Trainer ID cannot be null");
 
         Trainer trainer = trainerService.getTrainer(trainerId);
 
@@ -135,7 +135,7 @@ public class GymFacade {
     }
 
     public TrainingResponseDto createTraining(TrainingCreateDto trainingCreateDto) {
-        Objects.requireNonNull(trainingCreateDto, "trainingCreateDto must not be null");
+        Objects.requireNonNull(trainingCreateDto, "TrainingCreateDto cannot be null");
 
         Training training = trainingMapper.toEntity(trainingCreateDto);
         Training createdTraining = trainingService.createTraining(training);
@@ -144,7 +144,7 @@ public class GymFacade {
     }
 
     public TrainingResponseDto getTraining(Long trainingId) {
-        Objects.requireNonNull(trainingId, "trainingId must not be null");
+        Objects.requireNonNull(trainingId, "Training ID cannot be null");
 
         Training training = trainingService.getTraining(trainingId);
 

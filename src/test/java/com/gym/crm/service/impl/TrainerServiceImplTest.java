@@ -22,14 +22,13 @@ import static com.gym.crm.factory.TrainerTestFactory.DEFAULT_PASSWORD;
 import static com.gym.crm.factory.TrainerTestFactory.DEFAULT_TRAINER_ID;
 import static com.gym.crm.factory.TrainerTestFactory.DEFAULT_USERNAME;
 import static com.gym.crm.factory.TrainerTestFactory.SECONDARY_TRAINER_ID;
-import static com.gym.crm.factory.TrainerTestFactory.defaultTrainer;
-import static com.gym.crm.factory.TrainerTestFactory.trainerWithId;
-import static com.gym.crm.factory.TrainerTestFactory.trainerWithoutCredentials;
-import static com.gym.crm.factory.TrainingTypeTestFactory.strength;
+import static com.gym.crm.factory.TrainerTestFactory.buildTrainerWithId;
+import static com.gym.crm.factory.TrainerTestFactory.buildTrainerWithoutCredentials;
+import static com.gym.crm.factory.TrainerTestFactory.getDefaultTrainerBuilder;
+import static com.gym.crm.factory.TrainingTypeTestFactory.buildStrength;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -37,7 +36,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class TrainerServiceImplTest {
+class TrainerServiceImplTest {
 
     @Mock
     private TrainerDao dao;
@@ -48,7 +47,7 @@ public class TrainerServiceImplTest {
     private TrainerService service;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         TrainerServiceImpl implementation = new TrainerServiceImpl();
         implementation.setTrainerDao(dao);
         implementation.setCredentialService(credentialService);
@@ -56,143 +55,145 @@ public class TrainerServiceImplTest {
     }
 
     @Test
-    public void shouldCreateTrainerWithGeneratedCredentials() {
-        Trainer trainerWithoutCredentials = trainerWithoutCredentials();
-        Trainer createdTrainer = trainerWithId(DEFAULT_TRAINER_ID);
+    void shouldCreateTrainerWithGeneratedCredentials() {
+        Trainer trainerWithoutCredentials = buildTrainerWithoutCredentials();
+        Trainer expected = buildTrainerWithId(DEFAULT_TRAINER_ID);
+
         when(credentialService.generateUsername(DEFAULT_FIRST_NAME, DEFAULT_LAST_NAME)).thenReturn(DEFAULT_USERNAME);
         when(credentialService.generatePassword()).thenReturn(DEFAULT_PASSWORD);
-        when(dao.create(any(Trainer.class))).thenReturn(createdTrainer);
+        when(dao.create(any(Trainer.class))).thenReturn(expected);
 
-        Trainer result = service.createTrainer(trainerWithoutCredentials);
+        Trainer actual = service.createTrainer(trainerWithoutCredentials);
 
-        assertCredentialsWereGeneratedForTrainer();
-        assertEquals(createdTrainer, result);
+        verify(credentialService).generateUsername(DEFAULT_FIRST_NAME, DEFAULT_LAST_NAME);
+        verify(credentialService).generatePassword();
+        ArgumentCaptor<Trainer> trainerCaptor = ArgumentCaptor.forClass(Trainer.class);
+        verify(dao).create(trainerCaptor.capture());
+        Trainer trainerWithCredentials = trainerCaptor.getValue();
+        assertEquals(DEFAULT_USERNAME, trainerWithCredentials.getUsername());
+        assertEquals(DEFAULT_PASSWORD, trainerWithCredentials.getPassword());
+        assertEquals(DEFAULT_FIRST_NAME, trainerWithCredentials.getFirstName());
+        assertEquals(DEFAULT_LAST_NAME, trainerWithCredentials.getLastName());
+        assertEquals(expected, actual);
     }
 
     @Test
-    public void shouldThrowNullPointerWhenCreatingNullTrainer() {
-        assertThrows(NullPointerException.class, () -> service.createTrainer(null));
+    void shouldThrowNullPointerWhenCreatingNullTrainer() {
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.createTrainer(null));
 
+        assertEquals("Trainer cannot be null", exception.getMessage());
         verifyNoInteractions(dao, credentialService);
     }
 
     @Test
-    public void shouldMergeUpdatedFieldsAndPreserveExistingUsernameWhenUpdatingTrainer() {
-        Trainer existingTrainer = trainerWithId(DEFAULT_TRAINER_ID);
-        Trainer updateRequest = defaultTrainer()
+    void shouldMergeUpdatedFieldsAndPreserveExistingUsernameWhenUpdatingTrainer() {
+        Trainer existingTrainer = buildTrainerWithId(DEFAULT_TRAINER_ID);
+        Trainer updateRequest = getDefaultTrainerBuilder()
                 .userId(DEFAULT_TRAINER_ID)
-                .firstName("Michael")
-                .lastName("Coach")
-                .specialization(strength())
+                .firstName("Elena")
+                .lastName("Rodriguez")
+                .specialization(buildStrength())
                 .build();
-        Trainer updatedTrainer = defaultTrainer()
+        Trainer expected = getDefaultTrainerBuilder()
                 .userId(DEFAULT_TRAINER_ID)
-                .firstName("Michael")
-                .lastName("Coach")
-                .specialization(strength())
+                .firstName("Elena")
+                .lastName("Rodriguez")
+                .specialization(buildStrength())
                 .build();
-        when(dao.findById(DEFAULT_TRAINER_ID)).thenReturn(Optional.of(existingTrainer));
-        when(dao.update(any(Trainer.class))).thenReturn(updatedTrainer);
 
-        Trainer result = service.updateTrainer(updateRequest);
+        when(dao.findById(DEFAULT_TRAINER_ID)).thenReturn(Optional.of(existingTrainer));
+        when(dao.update(any(Trainer.class))).thenReturn(expected);
+
+        Trainer actual = service.updateTrainer(updateRequest);
 
         verify(dao).findById(DEFAULT_TRAINER_ID);
-        assertMergedTrainerHasCorrectFields("Michael", "Coach", strength());
-        assertEquals(updatedTrainer, result);
+        TrainingType specialization = buildStrength();
+        ArgumentCaptor<Trainer> trainerCaptor = ArgumentCaptor.forClass(Trainer.class);
+        verify(dao).update(trainerCaptor.capture());
+        Trainer mergedTrainer = trainerCaptor.getValue();
+        assertEquals(DEFAULT_TRAINER_ID, mergedTrainer.getUserId());
+        assertEquals(DEFAULT_USERNAME, mergedTrainer.getUsername());
+        assertEquals("Elena", mergedTrainer.getFirstName());
+        assertEquals("Rodriguez", mergedTrainer.getLastName());
+        assertEquals(specialization, mergedTrainer.getSpecialization());
+        assertEquals(expected, actual);
     }
 
     @Test
-    public void shouldThrowEntityNotFoundWhenUpdatingUnknownTrainer() {
-        Trainer updateRequest = trainerWithId(DEFAULT_TRAINER_ID)
-                .toBuilder()
-                .firstName("Michael")
-                .lastName("Coach")
-                .build();
+    void shouldThrowEntityNotFoundWhenUpdatingUnknownTrainer() {
+        Trainer updateRequest = buildTrainerWithId(DEFAULT_TRAINER_ID);
+
         when(dao.findById(DEFAULT_TRAINER_ID)).thenReturn(Optional.empty());
 
-        assertThrows(EntityNotFoundException.class, () -> service.updateTrainer(updateRequest));
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> service.updateTrainer(updateRequest));
+
+        assertEquals("Trainer Not found with id: " + DEFAULT_TRAINER_ID, exception.getMessage());
         verify(dao).findById(DEFAULT_TRAINER_ID);
         verify(dao, never()).update(any(Trainer.class));
     }
 
     @Test
-    public void shouldThrowNullPointerWhenUpdatingNullTrainer() {
-        assertThrows(NullPointerException.class, () -> service.updateTrainer(null));
+    void shouldThrowNullPointerWhenUpdatingNullTrainer() {
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.updateTrainer(null));
 
+        assertEquals("Trainer cannot be null", exception.getMessage());
         verifyNoInteractions(dao, credentialService);
     }
 
     @Test
-    public void shouldReturnTrainerWhenGettingExistingTrainer() {
-        Trainer existingTrainer = trainerWithId(DEFAULT_TRAINER_ID);
-        when(dao.findById(DEFAULT_TRAINER_ID)).thenReturn(Optional.of(existingTrainer));
+    void shouldReturnTrainerWhenGettingExistingTrainer() {
+        Trainer expected = buildTrainerWithId(DEFAULT_TRAINER_ID);
 
-        Trainer result = service.getTrainer(DEFAULT_TRAINER_ID);
+        when(dao.findById(DEFAULT_TRAINER_ID)).thenReturn(Optional.of(expected));
 
-        assertEquals(existingTrainer, result);
+        Trainer actual = service.getTrainer(DEFAULT_TRAINER_ID);
+
+        assertEquals(expected, actual);
         verify(dao).findById(DEFAULT_TRAINER_ID);
     }
 
     @Test
-    public void shouldThrowEntityNotFoundWhenGettingUnknownTrainer() {
+    void shouldThrowEntityNotFoundWhenGettingUnknownTrainer() {
         when(dao.findById(DEFAULT_TRAINER_ID)).thenReturn(Optional.empty());
 
-        assertThrows(EntityNotFoundException.class, () -> service.getTrainer(DEFAULT_TRAINER_ID));
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> service.getTrainer(DEFAULT_TRAINER_ID));
 
+        assertEquals("Trainer Not found with id: " + DEFAULT_TRAINER_ID, exception.getMessage());
         verify(dao).findById(DEFAULT_TRAINER_ID);
     }
 
     @Test
-    public void shouldThrowNullPointerWhenGettingNullTrainerId() {
-        assertThrows(NullPointerException.class, () -> service.getTrainer(null));
+    void shouldThrowNullPointerWhenGettingNullTrainerId() {
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.getTrainer(null));
 
+        assertEquals("Trainer ID cannot be null", exception.getMessage());
         verifyNoInteractions(dao, credentialService);
     }
 
     @Test
-    public void shouldReturnAllTrainers() {
-        Trainer trainer1 = trainerWithId(DEFAULT_TRAINER_ID);
-        Trainer trainer2 = trainerWithId(SECONDARY_TRAINER_ID);
-        List<Trainer> trainers = List.of(trainer1, trainer2);
-        when(dao.findAll()).thenReturn(trainers);
+    void shouldReturnAllTrainers() {
+        Trainer trainer1 = buildTrainerWithId(DEFAULT_TRAINER_ID);
+        Trainer trainer2 = buildTrainerWithId(SECONDARY_TRAINER_ID);
+        List<Trainer> expected = List.of(trainer1, trainer2);
 
-        List<Trainer> result = service.getAllTrainers();
+        when(dao.findAll()).thenReturn(expected);
 
-        assertNotNull(result);
-        assertEquals(trainers, result);
+        List<Trainer> actual = service.getAllTrainers();
+
+        assertNotNull(actual);
+        assertEquals(expected, actual);
     }
 
     @Test
-    public void shouldReturnEmptyTrainers() {
-        when(dao.findAll()).thenReturn(List.of());
+    void shouldReturnEmptyTrainers() {
+        List<Trainer> expected = List.of();
 
-        List<Trainer> result = service.getAllTrainers();
+        when(dao.findAll()).thenReturn(expected);
 
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
-    }
+        List<Trainer> actual = service.getAllTrainers();
 
-    private void assertCredentialsWereGeneratedForTrainer() {
-        verify(credentialService).generateUsername(DEFAULT_FIRST_NAME, DEFAULT_LAST_NAME);
-        verify(credentialService).generatePassword();
-        ArgumentCaptor<Trainer> trainerCaptor = ArgumentCaptor.forClass(Trainer.class);
-        verify(dao).create(trainerCaptor.capture());
-        Trainer trainerToCreate = trainerCaptor.getValue();
-        assertEquals(DEFAULT_USERNAME, trainerToCreate.getUsername());
-        assertEquals(DEFAULT_PASSWORD, trainerToCreate.getPassword());
-        assertEquals(DEFAULT_FIRST_NAME, trainerToCreate.getFirstName());
-        assertEquals(DEFAULT_LAST_NAME, trainerToCreate.getLastName());
-    }
-
-    private void assertMergedTrainerHasCorrectFields(String firstName, String lastName, TrainingType specialization) {
-        ArgumentCaptor<Trainer> trainerCaptor = ArgumentCaptor.forClass(Trainer.class);
-        verify(dao).update(trainerCaptor.capture());
-        Trainer trainerToUpdate = trainerCaptor.getValue();
-        assertEquals(DEFAULT_TRAINER_ID, trainerToUpdate.getUserId());
-        assertEquals(DEFAULT_USERNAME, trainerToUpdate.getUsername());
-        assertEquals(firstName, trainerToUpdate.getFirstName());
-        assertEquals(lastName, trainerToUpdate.getLastName());
-        assertEquals(specialization, trainerToUpdate.getSpecialization());
+        assertNotNull(actual);
+        assertEquals(expected, actual);
     }
 
 }

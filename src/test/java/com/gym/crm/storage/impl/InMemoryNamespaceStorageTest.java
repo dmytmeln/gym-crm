@@ -11,21 +11,17 @@ import java.util.Optional;
 import static com.gym.crm.factory.TraineeTestFactory.DEFAULT_FIRST_NAME;
 import static com.gym.crm.factory.TraineeTestFactory.DEFAULT_USERNAME;
 import static com.gym.crm.factory.TraineeTestFactory.NON_EXISTENT_TRAINEE_ID;
-import static com.gym.crm.factory.TraineeTestFactory.trainee;
-import static com.gym.crm.factory.TraineeTestFactory.traineeWithUsername;
+import static com.gym.crm.factory.TraineeTestFactory.buildTrainee;
+import static com.gym.crm.factory.TraineeTestFactory.buildTraineeWithUsername;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class InMemoryNamespaceStorageTest {
+class InMemoryNamespaceStorageTest {
 
     private InMemoryNamespaceStorage<Trainee> storage;
 
-    /**
-     * Test-specific implementation of InMemoryNamespaceStorage.
-     * Used to test the abstract class logic without coupling to production implementations.
-     */
     private static class TestNamespaceStorage extends InMemoryNamespaceStorage<Trainee> {
         public TestNamespaceStorage() {
             super(Namespace.TRAINEE);
@@ -40,29 +36,29 @@ public class InMemoryNamespaceStorageTest {
     }
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         storage = new TestNamespaceStorage();
     }
 
     @Test
-    public void shouldSaveEntitySuccessfully() {
-        Trainee trainee = trainee();
+    void shouldSaveEntitySuccessfully() {
+        Trainee trainee = buildTrainee();
 
-        Trainee saved = storage.save(trainee);
-        Optional<Trainee> result = storage.findById(saved.getUserId());
+        Trainee result = storage.save(trainee);
+        Optional<Trainee> found = storage.findById(result.getUserId());
 
-        assertNotNull(saved.getUserId());
-        assertTrue(saved.getUserId() > 0, "ID must be positive");
-        assertTrue(result.isPresent());
-        assertEquals(saved.getUsername(), result.get().getUsername());
+        assertNotNull(result.getUserId());
+        assertTrue(result.getUserId() > 0, "ID must be positive");
+        assertTrue(found.isPresent());
+        assertEquals(result.getUsername(), found.get().getUsername());
     }
 
     @Test
-    public void shouldFindByIdWhenEntityExists() {
-        Trainee trainee = trainee();
-        Trainee saved = storage.save(trainee);
+    void shouldFindByIdWhenEntityExists() {
+        Trainee trainee = buildTrainee();
+        Trainee prepared = storage.save(trainee);
 
-        Optional<Trainee> result = storage.findById(saved.getUserId());
+        Optional<Trainee> result = storage.findById(prepared.getUserId());
 
         assertTrue(result.isPresent());
         assertEquals(DEFAULT_USERNAME, result.get().getUsername());
@@ -70,16 +66,16 @@ public class InMemoryNamespaceStorageTest {
     }
 
     @Test
-    public void shouldReturnEmptyOptionalWhenEntityNotFound() {
+    void shouldReturnEmptyOptionalWhenEntityNotFound() {
         Optional<Trainee> result = storage.findById(NON_EXISTENT_TRAINEE_ID);
 
         assertFalse(result.isPresent());
     }
 
     @Test
-    public void shouldFindAllEntitiesWhenStorageHasData() {
-        storage.save(traineeWithUsername("john.doe"));
-        storage.save(traineeWithUsername("jane.smith"));
+    void shouldFindAllEntitiesWhenStorageHasData() {
+        storage.save(buildTraineeWithUsername("liam.miller"));
+        storage.save(buildTraineeWithUsername("sophia.wilson"));
 
         List<Trainee> result = storage.findAll();
 
@@ -88,7 +84,7 @@ public class InMemoryNamespaceStorageTest {
     }
 
     @Test
-    public void shouldReturnEmptyListWhenStorageIsEmpty() {
+    void shouldReturnEmptyListWhenStorageIsEmpty() {
         List<Trainee> result = storage.findAll();
 
         assertNotNull(result);
@@ -96,43 +92,29 @@ public class InMemoryNamespaceStorageTest {
     }
 
     @Test
-    public void shouldDeleteEntityAndReturnTrueWhenExists() {
-        Trainee trainee = trainee();
-        Trainee saved = storage.save(trainee);
+    void shouldDeleteEntityAndReturnTrueWhenExists() {
+        Trainee trainee = buildTrainee();
+        Trainee prepared = storage.save(trainee);
 
-        boolean result = storage.delete(saved.getUserId());
+        boolean result = storage.delete(prepared.getUserId());
 
         assertTrue(result);
-        assertFalse(storage.findById(saved.getUserId()).isPresent());
+        assertFalse(storage.findById(prepared.getUserId()).isPresent());
     }
 
     @Test
-    public void shouldReturnFalseWhenDeletingNonExistentEntity() {
+    void shouldReturnFalseWhenDeletingNonExistentEntity() {
         boolean result = storage.delete(999L);
 
         assertFalse(result);
     }
 
     @Test
-    public void shouldClearStorageAndResetIdCounter() {
-        storage.save(traineeWithUsername("john.doe"));
-        storage.save(traineeWithUsername("jane.smith"));
+    void shouldReturnCorrectNamespace() {
+        Namespace<Trainee> result = storage.getNamespace();
 
-        storage.clear();
-
-        List<Trainee> result = storage.findAll();
-        Trainee savedAfterClear = storage.save(trainee());
         assertNotNull(result);
-        assertTrue(result.isEmpty());
-        assertEquals(1L, savedAfterClear.getUserId());
-    }
-
-    @Test
-    public void shouldReturnCorrectNamespace() {
-        Namespace<Trainee> namespace = storage.getNamespace();
-
-        assertNotNull(namespace);
-        assertEquals(Namespace.TRAINEE, namespace);
+        assertEquals(Namespace.TRAINEE, result);
     }
 
 }

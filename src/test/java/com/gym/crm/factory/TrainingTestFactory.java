@@ -19,7 +19,7 @@ public class TrainingTestFactory {
     public static final int DEFAULT_DURATION = 60;
     public static final LocalDate DEFAULT_DATE = LocalDate.of(2026, 4, 15);
 
-    public static Training.TrainingBuilder defaultTraining() {
+    public static Training.TrainingBuilder getDefaultTrainingBuilder() {
         return Training.builder()
                 .traineeId(DEFAULT_TRAINEE_ID)
                 .trainerId(DEFAULT_TRAINER_ID)
@@ -29,41 +29,41 @@ public class TrainingTestFactory {
                 .trainingDate(DEFAULT_DATE);
     }
 
-    public static Training training() {
-        return defaultTraining().build();
+    public static Training buildTraining() {
+        return getDefaultTrainingBuilder().build();
     }
 
-    public static Training training(Long id, Long traineeId, Long trainerId) {
-        return defaultTraining()
+    public static Training buildTraining(Long id, Long traineeId, Long trainerId) {
+        return getDefaultTrainingBuilder()
                 .id(id)
                 .traineeId(traineeId)
                 .trainerId(trainerId)
                 .build();
     }
 
-    public static Training training(Long id, String trainingName) {
-        return defaultTraining()
+    public static Training buildTraining(Long id, String trainingName) {
+        return getDefaultTrainingBuilder()
                 .id(id)
                 .trainingName(trainingName)
                 .build();
     }
 
-    public static Training trainingWithId(Long trainingId) {
-        return defaultTraining().id(trainingId).build();
+    public static Training buildTrainingWithId(Long trainingId) {
+        return getDefaultTrainingBuilder().id(trainingId).build();
     }
 
-    public static Training trainingWithIdAndType(Long trainingId, TrainingType trainingType) {
-        return defaultTraining().id(trainingId).trainingType(trainingType).build();
+    public static Training buildTrainingWithIdAndType(Long trainingId, TrainingType trainingType) {
+        return getDefaultTrainingBuilder().id(trainingId).trainingType(trainingType).build();
     }
 
-    public static Training trainingWithoutId(Long traineeId, Long trainerId) {
-        return defaultTraining()
+    public static Training buildTrainingWithoutId(Long traineeId, Long trainerId) {
+        return getDefaultTrainingBuilder()
                 .traineeId(traineeId)
                 .trainerId(trainerId)
                 .build();
     }
 
-    public static TrainingCreateDto.TrainingCreateDtoBuilder defaultTrainingCreateDto() {
+    public static TrainingCreateDto.TrainingCreateDtoBuilder getDefaultTrainingCreateDtoBuilder() {
         return TrainingCreateDto.builder()
                 .traineeId(DEFAULT_TRAINEE_ID)
                 .trainerId(DEFAULT_TRAINER_ID)
@@ -73,19 +73,18 @@ public class TrainingTestFactory {
                 .trainingDate(LocalDate.of(2026, 4, 17));
     }
 
-    public static TrainingCreateDto trainingCreateDto() {
-        return defaultTrainingCreateDto().build();
+    public static TrainingCreateDto buildTrainingCreateDto() {
+        return getDefaultTrainingCreateDtoBuilder().build();
     }
 
-    public static TrainingCreateDto trainingCreateDto(Long traineeId, Long trainerId) {
-        return defaultTrainingCreateDto()
+    public static TrainingCreateDto buildTrainingCreateDto(Long traineeId, Long trainerId) {
+        return getDefaultTrainingCreateDtoBuilder()
                 .traineeId(traineeId)
                 .trainerId(trainerId)
                 .build();
     }
 
-
-    public static TrainingResponseDto.TrainingResponseDtoBuilder defaultTrainingResponseDto() {
+    public static TrainingResponseDto.TrainingResponseDtoBuilder getDefaultTrainingResponseDtoBuilder() {
         return TrainingResponseDto.builder()
                 .id(DEFAULT_TRAINING_ID)
                 .traineeId(DEFAULT_TRAINEE_ID)
@@ -96,8 +95,8 @@ public class TrainingTestFactory {
                 .trainingDate(DEFAULT_DATE);
     }
 
-    public static TrainingResponseDto trainingResponseDto() {
-        return defaultTrainingResponseDto().build();
+    public static TrainingResponseDto buildTrainingResponseDto() {
+        return getDefaultTrainingResponseDtoBuilder().build();
     }
 
 }

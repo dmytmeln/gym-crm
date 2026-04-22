@@ -16,13 +16,13 @@ import static com.gym.crm.factory.TrainerTestFactory.DEFAULT_FIRST_NAME;
 import static com.gym.crm.factory.TrainerTestFactory.DEFAULT_LAST_NAME;
 import static com.gym.crm.factory.TrainerTestFactory.DEFAULT_PASSWORD;
 import static com.gym.crm.factory.TrainerTestFactory.DEFAULT_SPECIALIZATION;
-import static com.gym.crm.factory.TrainerTestFactory.DEFAULT_USERNAME;
-import static com.gym.crm.factory.TrainerTestFactory.trainer;
 import static com.gym.crm.factory.TrainerTestFactory.DEFAULT_TRAINER_ID;
+import static com.gym.crm.factory.TrainerTestFactory.DEFAULT_USERNAME;
 import static com.gym.crm.factory.TrainerTestFactory.SECONDARY_TRAINER_ID;
-import static com.gym.crm.factory.TrainerTestFactory.trainerCreateDto;
-import static com.gym.crm.factory.TrainerTestFactory.trainerUpdateDto;
-import static com.gym.crm.factory.TrainerTestFactory.trainerWithId;
+import static com.gym.crm.factory.TrainerTestFactory.buildTrainer;
+import static com.gym.crm.factory.TrainerTestFactory.buildTrainerCreateDto;
+import static com.gym.crm.factory.TrainerTestFactory.buildTrainerUpdateDto;
+import static com.gym.crm.factory.TrainerTestFactory.buildTrainerWithId;
 import static com.gym.crm.factory.TrainingTypeTestFactory.STRENGTH;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -30,18 +30,18 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TrainerMapperTest {
+class TrainerMapperTest {
 
     private TrainerMapper mapper;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         mapper = Mappers.getMapper(TrainerMapper.class);
     }
 
     @Test
-    public void shouldMapAllFieldsCorrectlyWhenTrainerIsValid() {
-        Trainer trainer = trainerWithId(DEFAULT_TRAINER_ID);
+    void shouldMapAllFieldsCorrectlyWhenTrainerIsValid() {
+        Trainer trainer = buildTrainerWithId(DEFAULT_TRAINER_ID);
 
         TrainerResponseDto result = mapper.toDto(trainer);
 
@@ -55,15 +55,15 @@ public class TrainerMapperTest {
     }
 
     @Test
-    public void shouldReturnNullWhenTrainerIsNull() {
+    void shouldReturnNullWhenTrainerIsNull() {
         TrainerResponseDto result = mapper.toDto(null);
 
         assertNull(result);
     }
 
     @Test
-    public void shouldMapAllFieldsCorrectlyWhenMappingToCreateResponseDto() {
-        Trainer trainer = trainerWithId(DEFAULT_TRAINER_ID);
+    void shouldMapAllFieldsCorrectlyWhenMappingToCreateResponseDto() {
+        Trainer trainer = buildTrainerWithId(DEFAULT_TRAINER_ID);
 
         TrainerCreateResponseDto result = mapper.toCreateResponseDto(trainer);
 
@@ -78,15 +78,15 @@ public class TrainerMapperTest {
     }
 
     @Test
-    public void shouldReturnNullWhenMappingNullTrainerToCreateResponseDto() {
+    void shouldReturnNullWhenMappingNullTrainerToCreateResponseDto() {
         TrainerCreateResponseDto result = mapper.toCreateResponseDto(null);
 
         assertNull(result);
     }
 
     @Test
-    public void shouldMapAllFieldsAndIgnoreUserIdUsernamePasswordWhenMappingFromCreateDto() {
-        TrainerCreateDto dto = trainerCreateDto();
+    void shouldMapAllFieldsAndIgnoreUserIdUsernamePasswordWhenMappingFromCreateDto() {
+        TrainerCreateDto dto = buildTrainerCreateDto();
 
         Trainer result = mapper.toEntity(dto);
 
@@ -101,15 +101,15 @@ public class TrainerMapperTest {
     }
 
     @Test
-    public void shouldReturnNullWhenCreateDtoIsNull() {
-        Trainer result = mapper.toEntity((TrainerCreateDto) null);
+    void shouldReturnNullWhenCreateDtoIsNull() {
+        Trainer result = mapper.toEntity(null);
 
         assertNull(result);
     }
 
     @Test
-    public void shouldMapAllFieldsCorrectlyWhenMappingFromUpdateDtoWithUserId() {
-        TrainerUpdateDto dto = trainerUpdateDto();
+    void shouldMapAllFieldsCorrectlyWhenMappingFromUpdateDtoWithUserId() {
+        TrainerUpdateDto dto = buildTrainerUpdateDto();
 
         Trainer result = mapper.toEntity(dto, DEFAULT_TRAINER_ID);
 
@@ -121,7 +121,7 @@ public class TrainerMapperTest {
     }
 
     @Test
-    public void shouldCreateEntityWithOnlyUserIdWhenUpdateDtoIsNullButUserIdProvided() {
+    void shouldCreateEntityWithOnlyUserIdWhenUpdateDtoIsNullButUserIdProvided() {
         Trainer result = mapper.toEntity(null, DEFAULT_TRAINER_ID);
 
         assertNotNull(result);
@@ -135,15 +135,15 @@ public class TrainerMapperTest {
     }
 
     @Test
-    public void shouldReturnNullWhenBothUpdateDtoAndUserIdAreNull() {
+    void shouldReturnNullWhenBothUpdateDtoAndUserIdAreNull() {
         Trainer result = mapper.toEntity(null, null);
 
         assertNull(result);
     }
 
     @Test
-    public void shouldMapFieldsAndLeaveUserIdNullWhenUpdateDtoIsValidButUserIdIsNull() {
-        TrainerUpdateDto dto = trainerUpdateDto();
+    void shouldMapFieldsAndLeaveUserIdNullWhenUpdateDtoIsValidButUserIdIsNull() {
+        TrainerUpdateDto dto = buildTrainerUpdateDto();
 
         Trainer result = mapper.toEntity(dto, null);
 
@@ -155,9 +155,9 @@ public class TrainerMapperTest {
     }
 
     @Test
-    public void shouldMapAllItemsWhenTrainerListIsValid() {
-        Trainer trainer1 = trainerWithId(DEFAULT_TRAINER_ID);
-        Trainer trainer2 = trainer(SECONDARY_TRAINER_ID, "jane.smith");
+    void shouldMapAllItemsWhenTrainerListIsValid() {
+        Trainer trainer1 = buildTrainerWithId(DEFAULT_TRAINER_ID);
+        Trainer trainer2 = buildTrainer(SECONDARY_TRAINER_ID, "sarah.adams");
         List<Trainer> trainers = List.of(trainer1, trainer2);
 
         List<TrainerResponseDto> result = mapper.toDtoList(trainers);
@@ -167,11 +167,11 @@ public class TrainerMapperTest {
         assertEquals(DEFAULT_TRAINER_ID, result.get(0).userId());
         assertEquals(DEFAULT_USERNAME, result.get(0).username());
         assertEquals(SECONDARY_TRAINER_ID, result.get(1).userId());
-        assertEquals("jane.smith", result.get(1).username());
+        assertEquals("sarah.adams", result.get(1).username());
     }
 
     @Test
-    public void shouldReturnEmptyListWhenTrainerListIsEmpty() {
+    void shouldReturnEmptyListWhenTrainerListIsEmpty() {
         List<Trainer> emptyList = Collections.emptyList();
 
         List<TrainerResponseDto> result = mapper.toDtoList(emptyList);
@@ -181,7 +181,7 @@ public class TrainerMapperTest {
     }
 
     @Test
-    public void shouldReturnNullWhenTrainerListIsNull() {
+    void shouldReturnNullWhenTrainerListIsNull() {
         List<TrainerResponseDto> result = mapper.toDtoList(null);
 
         assertNull(result);

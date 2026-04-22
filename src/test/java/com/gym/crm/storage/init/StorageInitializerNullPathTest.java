@@ -16,23 +16,23 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringJUnitConfig(GymCrmApplication.class)
-public class StorageInitializerNullPathTest {
+class StorageInitializerNullPathTest {
 
     @Autowired
     private Storage storage;
 
     @Test
-    public void shouldHandleNullPathsGracefullyWithoutLoadingData() {
-        List<Trainee> trainees = storage.findAll(Namespace.TRAINEE);
-        List<Training> trainings = storage.findAll(Namespace.TRAINING);
-        List<Trainer> trainers = storage.findAll(Namespace.TRAINER);
+    void shouldHandleNullPathsGracefullyWithoutLoadingData() {
+        List<Trainee> traineesResult = storage.findAll(Namespace.TRAINEE);
+        List<Training> trainingsResult = storage.findAll(Namespace.TRAINING);
+        List<Trainer> trainersResult = storage.findAll(Namespace.TRAINER);
 
-        assertNotNull(trainees);
-        assertNotNull(trainings);
-        assertNotNull(trainers);
-        assertTrue(trainees.isEmpty());
-        assertTrue(trainings.isEmpty());
-        assertTrue(trainers.isEmpty());
+        assertNotNull(traineesResult);
+        assertNotNull(trainingsResult);
+        assertNotNull(trainersResult);
+        assertTrue(traineesResult.isEmpty());
+        assertTrue(trainingsResult.isEmpty());
+        assertTrue(trainersResult.isEmpty());
     }
 
 }

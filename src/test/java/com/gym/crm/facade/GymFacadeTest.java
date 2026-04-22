@@ -28,21 +28,21 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 
 import static com.gym.crm.factory.TraineeTestFactory.DEFAULT_TRAINEE_ID;
-import static com.gym.crm.factory.TraineeTestFactory.traineeCreateDto;
-import static com.gym.crm.factory.TraineeTestFactory.traineeCreateResponseDto;
-import static com.gym.crm.factory.TraineeTestFactory.traineeResponseDto;
-import static com.gym.crm.factory.TraineeTestFactory.traineeUpdateDto;
-import static com.gym.crm.factory.TraineeTestFactory.traineeWithId;
+import static com.gym.crm.factory.TraineeTestFactory.buildTraineeCreateDto;
+import static com.gym.crm.factory.TraineeTestFactory.buildTraineeCreateResponseDto;
+import static com.gym.crm.factory.TraineeTestFactory.buildTraineeResponseDto;
+import static com.gym.crm.factory.TraineeTestFactory.buildTraineeUpdateDto;
+import static com.gym.crm.factory.TraineeTestFactory.buildTraineeWithId;
 import static com.gym.crm.factory.TrainerTestFactory.DEFAULT_TRAINER_ID;
-import static com.gym.crm.factory.TrainerTestFactory.trainerCreateDto;
-import static com.gym.crm.factory.TrainerTestFactory.trainerCreateResponseDto;
-import static com.gym.crm.factory.TrainerTestFactory.trainerResponseDto;
-import static com.gym.crm.factory.TrainerTestFactory.trainerUpdateDto;
-import static com.gym.crm.factory.TrainerTestFactory.trainerWithId;
+import static com.gym.crm.factory.TrainerTestFactory.buildTrainerCreateDto;
+import static com.gym.crm.factory.TrainerTestFactory.buildTrainerCreateResponseDto;
+import static com.gym.crm.factory.TrainerTestFactory.buildTrainerResponseDto;
+import static com.gym.crm.factory.TrainerTestFactory.buildTrainerUpdateDto;
+import static com.gym.crm.factory.TrainerTestFactory.buildTrainerWithId;
 import static com.gym.crm.factory.TrainingTestFactory.DEFAULT_TRAINING_ID;
-import static com.gym.crm.factory.TrainingTestFactory.trainingCreateDto;
-import static com.gym.crm.factory.TrainingTestFactory.trainingResponseDto;
-import static com.gym.crm.factory.TrainingTestFactory.trainingWithId;
+import static com.gym.crm.factory.TrainingTestFactory.buildTrainingCreateDto;
+import static com.gym.crm.factory.TrainingTestFactory.buildTrainingResponseDto;
+import static com.gym.crm.factory.TrainingTestFactory.buildTrainingWithId;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -52,7 +52,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class GymFacadeTest {
+class GymFacadeTest {
 
     @Mock
     private TraineeService traineeService;
@@ -72,286 +72,318 @@ public class GymFacadeTest {
     @Mock
     private TrainingMapper trainingMapper;
 
-    private GymFacade gymFacade;
+    private GymFacade facade;
 
     @BeforeEach
-    public void setUp() {
-        gymFacade = new GymFacade(traineeService, trainerService, trainingService);
-        gymFacade.setTraineeMapper(traineeMapper);
-        gymFacade.setTrainerMapper(trainerMapper);
-        gymFacade.setTrainingMapper(trainingMapper);
+    void setUp() {
+        facade = new GymFacade(traineeService, trainerService, trainingService);
+        facade.setTraineeMapper(traineeMapper);
+        facade.setTrainerMapper(trainerMapper);
+        facade.setTrainingMapper(trainingMapper);
     }
 
     @Test
-    public void shouldCreateTraineeAndReturnResponseDto() {
-        TraineeCreateDto createDto = traineeCreateDto();
-        Trainee trainee = traineeWithId(DEFAULT_TRAINEE_ID);
-        TraineeCreateResponseDto responseDto = traineeCreateResponseDto();
+    void shouldCreateTraineeAndReturnResponseDto() {
+        TraineeCreateDto createDto = buildTraineeCreateDto();
+        Trainee trainee = buildTraineeWithId(DEFAULT_TRAINEE_ID);
+        TraineeCreateResponseDto expected = buildTraineeCreateResponseDto();
+
         when(traineeMapper.toEntity(createDto)).thenReturn(trainee);
         when(traineeService.createTrainee(trainee)).thenReturn(trainee);
-        when(traineeMapper.toCreateResponseDto(trainee)).thenReturn(responseDto);
+        when(traineeMapper.toCreateResponseDto(trainee)).thenReturn(expected);
 
-        TraineeCreateResponseDto result = gymFacade.createTrainee(createDto);
+        TraineeCreateResponseDto actual = facade.createTrainee(createDto);
 
-        assertNotNull(result);
-        assertEquals(responseDto, result);
+        assertNotNull(actual);
+        assertEquals(expected, actual);
         verify(traineeMapper).toEntity(createDto);
         verify(traineeService).createTrainee(trainee);
         verify(traineeMapper).toCreateResponseDto(trainee);
     }
 
     @Test
-    public void shouldThrowNullPointerWhenCreatingNullTraineeDto() {
-        assertThrows(NullPointerException.class, () -> gymFacade.createTrainee(null));
+    void shouldThrowNullPointerWhenCreatingNullTraineeDto() {
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.createTrainee(null));
+
+        assertEquals("TraineeCreateDto cannot be null", exception.getMessage());
 
         verifyNoInteractions(traineeMapper, traineeService);
     }
 
     @Test
-    public void shouldUpdateTraineeAndMapToDto() {
-        TraineeUpdateDto updateDto = traineeUpdateDto();
-        Trainee trainee = traineeWithId(DEFAULT_TRAINEE_ID);
-        TraineeResponseDto responseDto = traineeResponseDto();
+    void shouldUpdateTraineeAndMapToDto() {
+        TraineeUpdateDto updateDto = buildTraineeUpdateDto();
+        Trainee trainee = buildTraineeWithId(DEFAULT_TRAINEE_ID);
+        TraineeResponseDto expected = buildTraineeResponseDto();
+
         when(traineeMapper.toEntity(updateDto, DEFAULT_TRAINEE_ID)).thenReturn(trainee);
         when(traineeService.updateTrainee(trainee)).thenReturn(trainee);
-        when(traineeMapper.toDto(trainee)).thenReturn(responseDto);
+        when(traineeMapper.toDto(trainee)).thenReturn(expected);
 
-        TraineeResponseDto result = gymFacade.updateTrainee(DEFAULT_TRAINEE_ID, updateDto);
+        TraineeResponseDto actual = facade.updateTrainee(DEFAULT_TRAINEE_ID, updateDto);
 
-        assertNotNull(result);
-        assertEquals(responseDto, result);
+        assertNotNull(actual);
+        assertEquals(expected, actual);
         verify(traineeMapper).toEntity(updateDto, DEFAULT_TRAINEE_ID);
         verify(traineeService).updateTrainee(trainee);
         verify(traineeMapper).toDto(trainee);
     }
 
     @Test
-    public void shouldThrowNullPointerWhenUpdatingWithNullTraineeId() {
-        assertThrows(NullPointerException.class, () -> gymFacade.updateTrainee(null, traineeUpdateDto()));
+    void shouldThrowNullPointerWhenUpdatingWithNullTraineeId() {
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.updateTrainee(null, buildTraineeUpdateDto()));
+
+        assertEquals("Trainee ID cannot be null", exception.getMessage());
 
         verifyNoInteractions(traineeMapper, traineeService);
     }
 
     @Test
-    public void shouldThrowNullPointerWhenUpdatingWithNullTraineeDto() {
-        assertThrows(NullPointerException.class, () -> gymFacade.updateTrainee(DEFAULT_TRAINEE_ID, null));
+    void shouldThrowNullPointerWhenUpdatingWithNullTraineeDto() {
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.updateTrainee(DEFAULT_TRAINEE_ID, null));
+
+        assertEquals("TraineeUpdateDto cannot be null", exception.getMessage());
 
         verifyNoInteractions(traineeMapper, traineeService);
     }
 
     @Test
-    public void shouldDeleteTrainee() {
+    void shouldDeleteTrainee() {
         when(traineeService.deleteTrainee(DEFAULT_TRAINEE_ID)).thenReturn(true);
 
-        boolean result = gymFacade.deleteTrainee(DEFAULT_TRAINEE_ID);
+        boolean actual = facade.deleteTrainee(DEFAULT_TRAINEE_ID);
 
-        assertTrue(result);
+        assertTrue(actual);
         verify(traineeService).deleteTrainee(DEFAULT_TRAINEE_ID);
     }
 
     @Test
-    public void shouldThrowNullPointerWhenDeletingNullTraineeId() {
-        assertThrows(NullPointerException.class, () -> gymFacade.deleteTrainee(null));
+    void shouldThrowNullPointerWhenDeletingNullTraineeId() {
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.deleteTrainee(null));
+
+        assertEquals("Trainee ID cannot be null", exception.getMessage());
 
         verifyNoInteractions(traineeService);
     }
 
     @Test
-    public void shouldGetTraineeAndMapToDto() {
-        Trainee trainee = traineeWithId(DEFAULT_TRAINEE_ID);
-        TraineeResponseDto responseDto = traineeResponseDto();
+    void shouldGetTraineeAndMapToDto() {
+        Trainee trainee = buildTraineeWithId(DEFAULT_TRAINEE_ID);
+        TraineeResponseDto expected = buildTraineeResponseDto();
 
         when(traineeService.getTrainee(DEFAULT_TRAINEE_ID)).thenReturn(trainee);
-        when(traineeMapper.toDto(trainee)).thenReturn(responseDto);
+        when(traineeMapper.toDto(trainee)).thenReturn(expected);
 
-        TraineeResponseDto result = gymFacade.getTrainee(DEFAULT_TRAINEE_ID);
+        TraineeResponseDto actual = facade.getTrainee(DEFAULT_TRAINEE_ID);
 
-        assertNotNull(result);
-        assertEquals(responseDto, result);
+        assertNotNull(actual);
+        assertEquals(expected, actual);
         verify(traineeService).getTrainee(DEFAULT_TRAINEE_ID);
         verify(traineeMapper).toDto(trainee);
     }
 
     @Test
-    public void shouldThrowNullPointerWhenGettingNullTraineeId() {
-        assertThrows(NullPointerException.class, () -> gymFacade.getTrainee(null));
+    void shouldThrowNullPointerWhenGettingNullTraineeId() {
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.getTrainee(null));
+
+        assertEquals("Trainee ID cannot be null", exception.getMessage());
 
         verifyNoInteractions(traineeMapper, traineeService);
     }
 
     @Test
-    public void shouldGetAllTraineesAndMapToDtoList() {
-        Trainee trainee = traineeWithId(DEFAULT_TRAINEE_ID);
-        TraineeResponseDto responseDto = traineeResponseDto();
+    void shouldGetAllTraineesAndMapToDtoList() {
+        Trainee trainee = buildTraineeWithId(DEFAULT_TRAINEE_ID);
+        TraineeResponseDto responseDto = buildTraineeResponseDto();
         List<Trainee> trainees = List.of(trainee);
-        List<TraineeResponseDto> traineeDtos = List.of(responseDto);
+        List<TraineeResponseDto> expected = List.of(responseDto);
+
         when(traineeService.getAllTrainees()).thenReturn(trainees);
-        when(traineeMapper.toDtoList(trainees)).thenReturn(traineeDtos);
+        when(traineeMapper.toDtoList(trainees)).thenReturn(expected);
 
-        List<TraineeResponseDto> result = gymFacade.getAllTrainees();
+        List<TraineeResponseDto> actual = facade.getAllTrainees();
 
-        assertNotNull(result);
-        assertEquals(traineeDtos, result);
+        assertNotNull(actual);
+        assertEquals(expected, actual);
         verify(traineeService).getAllTrainees();
         verify(traineeMapper).toDtoList(trainees);
     }
 
     @Test
-    public void shouldCreateTrainerAndReturnResponseDto() {
-        TrainerCreateDto createDto = trainerCreateDto();
-        Trainer trainer = trainerWithId(DEFAULT_TRAINER_ID);
-        TrainerCreateResponseDto responseDto = trainerCreateResponseDto();
+    void shouldCreateTrainerAndReturnResponseDto() {
+        TrainerCreateDto createDto = buildTrainerCreateDto();
+        Trainer trainer = buildTrainerWithId(DEFAULT_TRAINER_ID);
+        TrainerCreateResponseDto expected = buildTrainerCreateResponseDto();
+
         when(trainerMapper.toEntity(createDto)).thenReturn(trainer);
         when(trainerService.createTrainer(trainer)).thenReturn(trainer);
-        when(trainerMapper.toCreateResponseDto(trainer)).thenReturn(responseDto);
+        when(trainerMapper.toCreateResponseDto(trainer)).thenReturn(expected);
 
-        TrainerCreateResponseDto result = gymFacade.createTrainer(createDto);
+        TrainerCreateResponseDto actual = facade.createTrainer(createDto);
 
-        assertNotNull(result);
-        assertEquals(responseDto, result);
+        assertNotNull(actual);
+        assertEquals(expected, actual);
         verify(trainerMapper).toEntity(createDto);
         verify(trainerService).createTrainer(trainer);
         verify(trainerMapper).toCreateResponseDto(trainer);
     }
 
     @Test
-    public void shouldThrowNullPointerWhenCreatingNullTrainerDto() {
-        assertThrows(NullPointerException.class, () -> gymFacade.createTrainer(null));
+    void shouldThrowNullPointerWhenCreatingNullTrainerDto() {
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.createTrainer(null));
+
+        assertEquals("TrainerCreateDto cannot be null", exception.getMessage());
 
         verifyNoInteractions(trainerMapper, trainerService);
     }
 
     @Test
-    public void shouldUpdateTrainerAndMapToDto() {
-        TrainerUpdateDto updateDto = trainerUpdateDto();
-        Trainer trainer = trainerWithId(DEFAULT_TRAINER_ID);
-        TrainerResponseDto responseDto = trainerResponseDto();
+    void shouldUpdateTrainerAndMapToDto() {
+        TrainerUpdateDto updateDto = buildTrainerUpdateDto();
+        Trainer trainer = buildTrainerWithId(DEFAULT_TRAINER_ID);
+        TrainerResponseDto expected = buildTrainerResponseDto();
+
         when(trainerMapper.toEntity(updateDto, DEFAULT_TRAINER_ID)).thenReturn(trainer);
         when(trainerService.updateTrainer(trainer)).thenReturn(trainer);
-        when(trainerMapper.toDto(trainer)).thenReturn(responseDto);
+        when(trainerMapper.toDto(trainer)).thenReturn(expected);
 
-        TrainerResponseDto result = gymFacade.updateTrainer(DEFAULT_TRAINER_ID, updateDto);
+        TrainerResponseDto actual = facade.updateTrainer(DEFAULT_TRAINER_ID, updateDto);
 
-        assertNotNull(result);
-        assertEquals(responseDto, result);
+        assertNotNull(actual);
+        assertEquals(expected, actual);
         verify(trainerMapper).toEntity(updateDto, DEFAULT_TRAINER_ID);
         verify(trainerService).updateTrainer(trainer);
         verify(trainerMapper).toDto(trainer);
     }
 
     @Test
-    public void shouldThrowNullPointerWhenUpdatingWithNullTrainerId() {
-        assertThrows(NullPointerException.class, () -> gymFacade.updateTrainer(null, trainerUpdateDto()));
+    void shouldThrowNullPointerWhenUpdatingWithNullTrainerId() {
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.updateTrainer(null, buildTrainerUpdateDto()));
+
+        assertEquals("Trainer ID cannot be null", exception.getMessage());
 
         verifyNoInteractions(trainerMapper, trainerService);
     }
 
     @Test
-    public void shouldThrowNullPointerWhenUpdatingWithNullTrainerDto() {
-        assertThrows(NullPointerException.class, () -> gymFacade.updateTrainer(DEFAULT_TRAINER_ID, null));
+    void shouldThrowNullPointerWhenUpdatingWithNullTrainerDto() {
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.updateTrainer(DEFAULT_TRAINER_ID, null));
+
+        assertEquals("TrainerUpdateDto cannot be null", exception.getMessage());
 
         verifyNoInteractions(trainerMapper, trainerService);
     }
 
     @Test
-    public void shouldGetTrainerAndMapToDto() {
-        Trainer trainer = trainerWithId(DEFAULT_TRAINER_ID);
-        TrainerResponseDto responseDto = trainerResponseDto();
+    void shouldGetTrainerAndMapToDto() {
+        Trainer trainer = buildTrainerWithId(DEFAULT_TRAINER_ID);
+        TrainerResponseDto expected = buildTrainerResponseDto();
+
         when(trainerService.getTrainer(DEFAULT_TRAINER_ID)).thenReturn(trainer);
-        when(trainerMapper.toDto(trainer)).thenReturn(responseDto);
+        when(trainerMapper.toDto(trainer)).thenReturn(expected);
 
-        TrainerResponseDto result = gymFacade.getTrainer(DEFAULT_TRAINER_ID);
+        TrainerResponseDto actual = facade.getTrainer(DEFAULT_TRAINER_ID);
 
-        assertNotNull(result);
-        assertEquals(responseDto, result);
+        assertNotNull(actual);
+        assertEquals(expected, actual);
         verify(trainerService).getTrainer(DEFAULT_TRAINER_ID);
         verify(trainerMapper).toDto(trainer);
     }
 
     @Test
-    public void shouldThrowNullPointerWhenGettingNullTrainerId() {
-        assertThrows(NullPointerException.class, () -> gymFacade.getTrainer(null));
+    void shouldThrowNullPointerWhenGettingNullTrainerId() {
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.getTrainer(null));
+
+        assertEquals("Trainer ID cannot be null", exception.getMessage());
 
         verifyNoInteractions(trainerMapper, trainerService);
     }
 
     @Test
-    public void shouldGetAllTrainersAndMapToDtoList() {
-        Trainer trainer = trainerWithId(DEFAULT_TRAINER_ID);
-        TrainerResponseDto responseDto = trainerResponseDto();
+    void shouldGetAllTrainersAndMapToDtoList() {
+        Trainer trainer = buildTrainerWithId(DEFAULT_TRAINER_ID);
+        TrainerResponseDto responseDto = buildTrainerResponseDto();
         List<Trainer> trainers = List.of(trainer);
-        List<TrainerResponseDto> trainerDtos = List.of(responseDto);
+        List<TrainerResponseDto> expected = List.of(responseDto);
+
         when(trainerService.getAllTrainers()).thenReturn(trainers);
-        when(trainerMapper.toDtoList(trainers)).thenReturn(trainerDtos);
+        when(trainerMapper.toDtoList(trainers)).thenReturn(expected);
 
-        List<TrainerResponseDto> result = gymFacade.getAllTrainers();
+        List<TrainerResponseDto> actual = facade.getAllTrainers();
 
-        assertNotNull(result);
-        assertEquals(trainerDtos, result);
+        assertNotNull(actual);
+        assertEquals(expected, actual);
         verify(trainerService).getAllTrainers();
         verify(trainerMapper).toDtoList(trainers);
     }
 
     @Test
-    public void shouldCreateTrainingAndReturnResponseDto() {
-        TrainingCreateDto createDto = trainingCreateDto();
-        Training training = trainingWithId(DEFAULT_TRAINING_ID);
-        TrainingResponseDto responseDto = trainingResponseDto();
+    void shouldCreateTrainingAndReturnResponseDto() {
+        TrainingCreateDto createDto = buildTrainingCreateDto();
+        Training training = buildTrainingWithId(DEFAULT_TRAINING_ID);
+        TrainingResponseDto expected = buildTrainingResponseDto();
+
         when(trainingMapper.toEntity(createDto)).thenReturn(training);
         when(trainingService.createTraining(training)).thenReturn(training);
-        when(trainingMapper.toDto(training)).thenReturn(responseDto);
+        when(trainingMapper.toDto(training)).thenReturn(expected);
 
-        TrainingResponseDto result = gymFacade.createTraining(createDto);
+        TrainingResponseDto actual = facade.createTraining(createDto);
 
-        assertNotNull(result);
-        assertEquals(responseDto, result);
+        assertNotNull(actual);
+        assertEquals(expected, actual);
         verify(trainingMapper).toEntity(createDto);
         verify(trainingService).createTraining(training);
         verify(trainingMapper).toDto(training);
     }
 
     @Test
-    public void shouldThrowNullPointerWhenCreatingNullTrainingDto() {
-        assertThrows(NullPointerException.class, () -> gymFacade.createTraining(null));
+    void shouldThrowNullPointerWhenCreatingNullTrainingDto() {
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.createTraining(null));
+
+        assertEquals("TrainingCreateDto cannot be null", exception.getMessage());
 
         verifyNoInteractions(trainingMapper, trainingService);
     }
 
     @Test
-    public void shouldGetTrainingAndMapToDto() {
-        Training training = trainingWithId(DEFAULT_TRAINING_ID);
-        TrainingResponseDto responseDto = trainingResponseDto();
+    void shouldGetTrainingAndMapToDto() {
+        Training training = buildTrainingWithId(DEFAULT_TRAINING_ID);
+        TrainingResponseDto expected = buildTrainingResponseDto();
+
         when(trainingService.getTraining(DEFAULT_TRAINING_ID)).thenReturn(training);
-        when(trainingMapper.toDto(training)).thenReturn(responseDto);
+        when(trainingMapper.toDto(training)).thenReturn(expected);
 
-        TrainingResponseDto result = gymFacade.getTraining(DEFAULT_TRAINING_ID);
+        TrainingResponseDto actual = facade.getTraining(DEFAULT_TRAINING_ID);
 
-        assertNotNull(result);
-        assertEquals(responseDto, result);
+        assertNotNull(actual);
+        assertEquals(expected, actual);
         verify(trainingService).getTraining(DEFAULT_TRAINING_ID);
         verify(trainingMapper).toDto(training);
     }
 
     @Test
-    public void shouldThrowNullPointerWhenGettingNullTrainingId() {
-        assertThrows(NullPointerException.class, () -> gymFacade.getTraining(null));
+    void shouldThrowNullPointerWhenGettingNullTrainingId() {
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.getTraining(null));
+
+        assertEquals("Training ID cannot be null", exception.getMessage());
 
         verifyNoInteractions(trainingMapper, trainingService);
     }
 
     @Test
-    public void shouldGetAllTrainingsAndMapToDtoList() {
-        Training training = trainingWithId(DEFAULT_TRAINING_ID);
-        TrainingResponseDto responseDto = trainingResponseDto();
+    void shouldGetAllTrainingsAndMapToDtoList() {
+        Training training = buildTrainingWithId(DEFAULT_TRAINING_ID);
+        TrainingResponseDto responseDto = buildTrainingResponseDto();
         List<Training> trainings = List.of(training);
-        List<TrainingResponseDto> trainingDtos = List.of(responseDto);
+        List<TrainingResponseDto> expected = List.of(responseDto);
+
         when(trainingService.getAllTrainings()).thenReturn(trainings);
-        when(trainingMapper.toDtoList(trainings)).thenReturn(trainingDtos);
+        when(trainingMapper.toDtoList(trainings)).thenReturn(expected);
 
-        List<TrainingResponseDto> result = gymFacade.getAllTrainings();
+        List<TrainingResponseDto> actual = facade.getAllTrainings();
 
-        assertNotNull(result);
-        assertEquals(trainingDtos, result);
+        assertNotNull(actual);
+        assertEquals(expected, actual);
         verify(trainingService).getAllTrainings();
         verify(trainingMapper).toDtoList(trainings);
     }

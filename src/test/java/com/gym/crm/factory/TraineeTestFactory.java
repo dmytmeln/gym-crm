@@ -13,15 +13,15 @@ public class TraineeTestFactory {
     public static final Long DEFAULT_TRAINEE_ID = 1L;
     public static final Long SECONDARY_TRAINEE_ID = 2L;
     public static final Long NON_EXISTENT_TRAINEE_ID = 999L;
-    public static final String DEFAULT_USERNAME = "john.doe";
-    public static final String DEFAULT_FIRST_NAME = "John";
-    public static final String DEFAULT_LAST_NAME = "Doe";
+    public static final String DEFAULT_USERNAME = "liam.miller";
+    public static final String DEFAULT_FIRST_NAME = "Liam";
+    public static final String DEFAULT_LAST_NAME = "Miller";
     public static final String DEFAULT_PASSWORD = "password123";
     public static final boolean DEFAULT_ACTIVE = true;
     public static final String DEFAULT_ADDRESS = "123 Main St";
     public static final LocalDate DEFAULT_DATE_OF_BIRTH = LocalDate.of(1990, 1, 1);
 
-    public static Trainee.TraineeBuilder<?, ?> defaultTrainee() {
+    public static Trainee.TraineeBuilder<?, ?> getDefaultTraineeBuilder() {
         return Trainee.builder()
                 .username(DEFAULT_USERNAME)
                 .firstName(DEFAULT_FIRST_NAME)
@@ -32,19 +32,19 @@ public class TraineeTestFactory {
                 .dateOfBirth(DEFAULT_DATE_OF_BIRTH);
     }
 
-    public static Trainee trainee(Long userId, String username) {
-        return defaultTrainee()
+    public static Trainee buildTrainee(Long userId, String username) {
+        return getDefaultTraineeBuilder()
                 .userId(userId)
                 .username(username)
                 .build();
     }
 
-    public static Trainee trainee() {
-        return defaultTrainee().build();
+    public static Trainee buildTrainee() {
+        return getDefaultTraineeBuilder().build();
     }
 
-    public static Trainee trainee(Long userId, String username, String firstName, String lastName) {
-        return defaultTrainee()
+    public static Trainee buildTrainee(Long userId, String username, String firstName, String lastName) {
+        return getDefaultTraineeBuilder()
                 .userId(userId)
                 .username(username)
                 .firstName(firstName)
@@ -52,26 +52,26 @@ public class TraineeTestFactory {
                 .build();
     }
 
-    public static Trainee traineeWithId(Long userId) {
-        return defaultTrainee()
+    public static Trainee buildTraineeWithId(Long userId) {
+        return getDefaultTraineeBuilder()
                 .userId(userId)
                 .build();
     }
 
-    public static Trainee traineeWithUsername(String username) {
-        return defaultTrainee()
+    public static Trainee buildTraineeWithUsername(String username) {
+        return getDefaultTraineeBuilder()
                 .username(username)
                 .build();
     }
 
-    public static Trainee traineeWithoutCredentials() {
-        return defaultTrainee()
+    public static Trainee buildTraineeWithoutCredentials() {
+        return getDefaultTraineeBuilder()
                 .username(null)
                 .password(null)
                 .build();
     }
 
-    public static TraineeCreateDto.TraineeCreateDtoBuilder defaultTraineeCreateDto() {
+    public static TraineeCreateDto.TraineeCreateDtoBuilder getDefaultTraineeCreateDtoBuilder() {
         return TraineeCreateDto.builder()
                 .firstName(DEFAULT_FIRST_NAME)
                 .lastName(DEFAULT_LAST_NAME)
@@ -80,25 +80,25 @@ public class TraineeTestFactory {
                 .dateOfBirth(DEFAULT_DATE_OF_BIRTH);
     }
 
-    public static TraineeCreateDto traineeCreateDto() {
-        return defaultTraineeCreateDto().build();
+    public static TraineeCreateDto buildTraineeCreateDto() {
+        return getDefaultTraineeCreateDtoBuilder().build();
     }
 
-    public static TraineeUpdateDto.TraineeUpdateDtoBuilder defaultTraineeUpdateDto() {
+    public static TraineeUpdateDto.TraineeUpdateDtoBuilder getDefaultTraineeUpdateDtoBuilder() {
         return TraineeUpdateDto.builder()
-                .firstName("Jane")
-                .lastName("Smith")
+                .firstName("Sophia")
+                .lastName("Wilson")
                 .password("newPassword")
                 .active(false)
                 .address("456 Oak Ave")
                 .dateOfBirth(LocalDate.of(1995, 5, 15));
     }
 
-    public static TraineeUpdateDto traineeUpdateDto() {
-        return defaultTraineeUpdateDto().build();
+    public static TraineeUpdateDto buildTraineeUpdateDto() {
+        return getDefaultTraineeUpdateDtoBuilder().build();
     }
 
-    public static TraineeResponseDto.TraineeResponseDtoBuilder defaultTraineeResponseDto() {
+    public static TraineeResponseDto.TraineeResponseDtoBuilder getDefaultTraineeResponseDtoBuilder() {
         return TraineeResponseDto.builder()
                 .userId(DEFAULT_TRAINEE_ID)
                 .username(DEFAULT_USERNAME)
@@ -109,11 +109,11 @@ public class TraineeTestFactory {
                 .dateOfBirth(DEFAULT_DATE_OF_BIRTH);
     }
 
-    public static TraineeResponseDto traineeResponseDto() {
-        return defaultTraineeResponseDto().build();
+    public static TraineeResponseDto buildTraineeResponseDto() {
+        return getDefaultTraineeResponseDtoBuilder().build();
     }
 
-    public static TraineeCreateResponseDto.TraineeCreateResponseDtoBuilder defaultTraineeCreateResponseDto() {
+    public static TraineeCreateResponseDto.TraineeCreateResponseDtoBuilder getDefaultTraineeCreateResponseDtoBuilder() {
         return TraineeCreateResponseDto.builder()
                 .userId(DEFAULT_TRAINEE_ID)
                 .username(DEFAULT_USERNAME)
@@ -125,8 +125,8 @@ public class TraineeTestFactory {
                 .dateOfBirth(DEFAULT_DATE_OF_BIRTH);
     }
 
-    public static TraineeCreateResponseDto traineeCreateResponseDto() {
-        return defaultTraineeCreateResponseDto().build();
+    public static TraineeCreateResponseDto buildTraineeCreateResponseDto() {
+        return getDefaultTraineeCreateResponseDtoBuilder().build();
     }
 
 }
