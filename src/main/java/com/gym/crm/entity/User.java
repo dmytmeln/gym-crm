@@ -7,7 +7,7 @@ import lombok.experimental.SuperBuilder;
 import java.util.Objects;
 
 @Getter
-@ToString
+@ToString(exclude = "password")
 @SuperBuilder(toBuilder = true)
 public abstract class User {
 

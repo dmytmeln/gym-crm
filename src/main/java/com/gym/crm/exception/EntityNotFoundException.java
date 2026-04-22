@@ -5,7 +5,7 @@ import lombok.Getter;
 @Getter
 public class EntityNotFoundException extends ServiceException {
 
-    private static final String ERROR_MESSAGE_TEMPLATE = "%s not found with id: %s";
+    private static final String ERROR_MESSAGE_TEMPLATE = "%s Not found with id: %s";
 
     private final String entityType;
     private final Object entityId;

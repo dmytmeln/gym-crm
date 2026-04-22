@@ -4,6 +4,7 @@ import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.dao.TrainerDao;
 import com.gym.crm.entity.User;
 import com.gym.crm.service.ProfileCredentialService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +15,7 @@ import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
 
+@Slf4j
 @Service
 public class ProfileCredentialServiceImpl implements ProfileCredentialService {
 
@@ -42,14 +44,19 @@ public class ProfileCredentialServiceImpl implements ProfileCredentialService {
         Objects.requireNonNull(lastName, "Last Name cannot be null");
 
         String baseUsername = firstName + USERNAME_SEPARATOR + lastName;
+        log.debug("Generating username for base: {}", baseUsername);
 
         List<String> takenUsernames = findUsernamesWithSameBase(baseUsername);
         if (takenUsernames.isEmpty()) {
             return baseUsername;
         }
 
+        log.debug("Found {} existing usernames for base: {}", takenUsernames.size(), baseUsername);
         int serialNumber = nextSerialNumber(baseUsername, takenUsernames);
-        return baseUsername + serialNumber;
+        String finalUsername = baseUsername + serialNumber;
+        log.debug("Generated username with serial number: {}", finalUsername);
+
+        return finalUsername;
     }
 
     @Override

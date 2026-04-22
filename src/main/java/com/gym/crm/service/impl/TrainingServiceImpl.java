@@ -6,12 +6,14 @@ import com.gym.crm.dao.TrainingDao;
 import com.gym.crm.entity.Training;
 import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.service.TrainingService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Objects;
 
+@Slf4j
 @Service
 public class TrainingServiceImpl implements TrainingService {
 
@@ -37,9 +39,14 @@ public class TrainingServiceImpl implements TrainingService {
     @Override
     public Training createTraining(Training training) {
         Objects.requireNonNull(training, "Training cannot be null");
+        log.debug("Creating training: {}", training.getTrainingName());
         ensureTrainingParticipantsExist(training);
 
-        return trainingDao.create(training);
+        Training createdTraining = trainingDao.create(training);
+        log.info("Training created with ID: {} for trainee ID: {} and trainer ID: {}",
+                createdTraining.getId(), createdTraining.getTraineeId(), createdTraining.getTrainerId());
+
+        return createdTraining;
     }
 
     @Override

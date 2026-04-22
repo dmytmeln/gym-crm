@@ -5,12 +5,14 @@ import com.gym.crm.entity.Trainee;
 import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.service.ProfileCredentialService;
 import com.gym.crm.service.TraineeService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Objects;
 
+@Slf4j
 @Service
 public class TraineeServiceImpl implements TraineeService {
 
@@ -30,21 +32,28 @@ public class TraineeServiceImpl implements TraineeService {
     @Override
     public Trainee createTrainee(Trainee trainee) {
         Objects.requireNonNull(trainee, "Trainee cannot be null");
+        log.debug("Creating trainee: {} {}", trainee.getFirstName(), trainee.getLastName());
 
         String username = credentialService.generateUsername(trainee.getFirstName(), trainee.getLastName());
         String password = credentialService.generatePassword();
+        log.debug("Generated credentials for {}: username={}, password=[PROTECTED]",
+                trainee.getFirstName() + " " + trainee.getLastName(), username);
 
         Trainee traineeWithCredentials = trainee.toBuilder()
                 .username(username)
                 .password(password)
                 .build();
 
-        return traineeDao.create(traineeWithCredentials);
+        Trainee createdTrainee = traineeDao.create(traineeWithCredentials);
+        log.info("Trainee created with ID: {} and username: {}", createdTrainee.getUserId(), createdTrainee.getUsername());
+
+        return createdTrainee;
     }
 
     @Override
     public Trainee updateTrainee(Trainee trainee) {
         Objects.requireNonNull(trainee, "Trainee cannot be null");
+        log.debug("Updating trainee with ID: {}", trainee.getUserId());
 
         Trainee existingTrainee = traineeDao.findById(trainee.getUserId())
                 .orElseThrow(() -> new EntityNotFoundException("Trainee", trainee.getUserId()));
@@ -58,14 +67,26 @@ public class TraineeServiceImpl implements TraineeService {
                 .dateOfBirth(trainee.getDateOfBirth())
                 .build();
 
-        return traineeDao.update(mergedTrainee);
+        Trainee updatedTrainee = traineeDao.update(mergedTrainee);
+        log.info("Trainee with ID: {} and username: {} updated successfully",
+                updatedTrainee.getUserId(), updatedTrainee.getUsername());
+
+        return updatedTrainee;
     }
 
     @Override
     public boolean deleteTrainee(Long traineeId) {
         Objects.requireNonNull(traineeId, "Trainee ID cannot be null");
+        log.debug("Deleting trainee with ID: {}", traineeId);
 
-        return traineeDao.delete(traineeId);
+        boolean deleted = traineeDao.delete(traineeId);
+        if (deleted) {
+            log.info("Trainee with ID: {} deleted successfully", traineeId);
+        } else {
+            log.warn("Trainee with ID: {} not found for deletion", traineeId);
+        }
+
+        return deleted;
     }
 
     @Override

@@ -5,12 +5,14 @@ import com.gym.crm.entity.Trainer;
 import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.service.ProfileCredentialService;
 import com.gym.crm.service.TrainerService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Objects;
 
+@Slf4j
 @Service
 public class TrainerServiceImpl implements TrainerService {
 
@@ -30,21 +32,29 @@ public class TrainerServiceImpl implements TrainerService {
     @Override
     public Trainer createTrainer(Trainer trainer) {
         Objects.requireNonNull(trainer, "Trainer cannot be null");
+        log.debug("Creating trainer: {} {}", trainer.getFirstName(), trainer.getLastName());
 
         String username = credentialService.generateUsername(trainer.getFirstName(), trainer.getLastName());
         String password = credentialService.generatePassword();
+        log.debug("Generated credentials for {}: username={}, password=[PROTECTED]", 
+                trainer.getFirstName() + " " + trainer.getLastName(), username);
 
         Trainer trainerWithCredentials = trainer.toBuilder()
                 .username(username)
                 .password(password)
                 .build();
 
-        return trainerDao.create(trainerWithCredentials);
+        Trainer createdTrainer = trainerDao.create(trainerWithCredentials);
+        log.info("Trainer created with ID: {} and username: {}",
+                createdTrainer.getUserId(), createdTrainer.getUsername());
+
+        return createdTrainer;
     }
 
     @Override
     public Trainer updateTrainer(Trainer trainer) {
         Objects.requireNonNull(trainer, "Trainer cannot be null");
+        log.debug("Updating trainer with ID: {}", trainer.getUserId());
 
         Trainer existingTrainer = trainerDao.findById(trainer.getUserId())
                 .orElseThrow(() -> new EntityNotFoundException("Trainer", trainer.getUserId()));
@@ -57,7 +67,11 @@ public class TrainerServiceImpl implements TrainerService {
                 .specialization(trainer.getSpecialization())
                 .build();
 
-        return trainerDao.update(mergedTrainer);
+        Trainer updatedTrainer = trainerDao.update(mergedTrainer);
+        log.info("Trainer with ID: {} and username: {} updated successfully",
+                updatedTrainer.getUserId(), updatedTrainer.getUsername());
+
+        return updatedTrainer;
     }
 
     @Override

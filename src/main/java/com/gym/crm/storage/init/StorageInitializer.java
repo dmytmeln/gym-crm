@@ -8,12 +8,15 @@ import com.gym.crm.storage.csv.dto.TraineeCsvDto;
 import com.gym.crm.storage.csv.dto.TrainerCsvDto;
 import com.gym.crm.storage.csv.dto.TrainingCsvDto;
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.function.Function;
 
+@Slf4j
 @Component
 public class StorageInitializer {
 
@@ -56,9 +59,11 @@ public class StorageInitializer {
 
     @PostConstruct
     public void initializeStorage() {
+        log.info("Starting storage initialization...");
         loadData(traineeFilePath, TraineeCsvDto.class, mapper::toTrainee, Namespace.TRAINEE);
         loadData(trainerFilePath, TrainerCsvDto.class, mapper::toTrainer, Namespace.TRAINER);
         loadData(trainingFilePath, TrainingCsvDto.class, mapper::toTraining, Namespace.TRAINING);
+        log.info("Storage initialization completed.");
     }
 
     private <D, E> void loadData(String filePath,
@@ -66,12 +71,20 @@ public class StorageInitializer {
                                  Function<D, E> mapperFunction,
                                  Namespace<E> namespace) {
         if (filePath == null) {
+            log.warn("File path for namespace {} is not provided. Skipping initialization.", namespace);
             return;
         }
 
-        csvParser.parseCsv(filePath, dtoClass).stream()
-                .map(mapperFunction)
-                .forEach(entity -> storage.save(namespace, entity));
+        try {
+            List<D> dtos = csvParser.parseCsv(filePath, dtoClass);
+            log.debug("Parsed {} records from {} for namespace {}.", dtos.size(), filePath, namespace);
+
+            dtos.stream()
+                    .map(mapperFunction)
+                    .forEach(entity -> storage.save(namespace, entity));
+        } catch (Exception e) {
+            log.error("Failed to load data for namespace {} from file {}", namespace, filePath, e);
+        }
     }
 
 }
