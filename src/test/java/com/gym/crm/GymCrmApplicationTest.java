@@ -7,14 +7,14 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringJUnitConfig(GymCrmApplication.class)
-public class GymCrmApplicationTest {
+class GymCrmApplicationTest {
 
     @Autowired
-    private GymCrmApplication gymCrmApplication;
+    private GymCrmApplication app;
 
     @Test
-    public void shouldInitializeGymCrmApplicationInSpringContext() {
-        assertNotNull(gymCrmApplication, "The Spring Context should have initialized GymCrmApplication");
+    void shouldInitializeGymCrmApplicationInSpringContext() {
+        assertNotNull(app, "The Spring Context should have initialized GymCrmApplication");
     }
 
 }

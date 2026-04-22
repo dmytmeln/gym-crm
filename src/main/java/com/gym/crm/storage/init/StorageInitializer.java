@@ -61,7 +61,10 @@ public class StorageInitializer {
         loadData(trainingFilePath, TrainingCsvDto.class, mapper::toTraining, Namespace.TRAINING);
     }
 
-    private <D, E> void loadData(String filePath, Class<D> dtoClass, Function<D, E> mapperFunction, Namespace<E> namespace) {
+    private <D, E> void loadData(String filePath,
+                                 Class<D> dtoClass,
+                                 Function<D, E> mapperFunction,
+                                 Namespace<E> namespace) {
         if (filePath == null) {
             return;
         }
