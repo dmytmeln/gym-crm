@@ -127,7 +127,7 @@ class TrainerServiceImplTest {
 
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> service.updateTrainer(updateRequest));
 
-        assertEquals("Trainer Not found with id: " + DEFAULT_TRAINER_ID, exception.getMessage());
+        assertEquals("Trainer not found with id: " + DEFAULT_TRAINER_ID, exception.getMessage());
         verify(dao).findById(DEFAULT_TRAINER_ID);
         verify(dao, never()).update(any(Trainer.class));
     }
@@ -158,7 +158,7 @@ class TrainerServiceImplTest {
 
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> service.getTrainer(DEFAULT_TRAINER_ID));
 
-        assertEquals("Trainer Not found with id: " + DEFAULT_TRAINER_ID, exception.getMessage());
+        assertEquals("Trainer not found with id: " + DEFAULT_TRAINER_ID, exception.getMessage());
         verify(dao).findById(DEFAULT_TRAINER_ID);
     }
 
