@@ -32,12 +32,10 @@ public class TrainerServiceImpl implements TrainerService {
     @Override
     public Trainer createTrainer(Trainer trainer) {
         Objects.requireNonNull(trainer, "Trainer cannot be null");
-        log.debug("Creating trainer: {} {}", trainer.getFirstName(), trainer.getLastName());
+        log.info("Creating trainer: {} {}", trainer.getFirstName(), trainer.getLastName());
 
         String username = credentialService.generateUsername(trainer.getFirstName(), trainer.getLastName());
         String password = credentialService.generatePassword();
-        log.debug("Generated credentials for {}: username={}, password=[PROTECTED]", 
-                trainer.getFirstName() + " " + trainer.getLastName(), username);
 
         Trainer trainerWithCredentials = trainer.toBuilder()
                 .username(username)
@@ -54,7 +52,7 @@ public class TrainerServiceImpl implements TrainerService {
     @Override
     public Trainer updateTrainer(Trainer trainer) {
         Objects.requireNonNull(trainer, "Trainer cannot be null");
-        log.debug("Updating trainer with ID: {}", trainer.getUserId());
+        log.info("Updating trainer with ID: {}", trainer.getUserId());
 
         Trainer existingTrainer = trainerDao.findById(trainer.getUserId())
                 .orElseThrow(() -> new EntityNotFoundException("Trainer", trainer.getUserId()));

@@ -32,12 +32,10 @@ public class TraineeServiceImpl implements TraineeService {
     @Override
     public Trainee createTrainee(Trainee trainee) {
         Objects.requireNonNull(trainee, "Trainee cannot be null");
-        log.debug("Creating trainee: {} {}", trainee.getFirstName(), trainee.getLastName());
+        log.info("Creating trainee: {} {}", trainee.getFirstName(), trainee.getLastName());
 
         String username = credentialService.generateUsername(trainee.getFirstName(), trainee.getLastName());
         String password = credentialService.generatePassword();
-        log.debug("Generated credentials for {}: username={}, password=[PROTECTED]",
-                trainee.getFirstName() + " " + trainee.getLastName(), username);
 
         Trainee traineeWithCredentials = trainee.toBuilder()
                 .username(username)
@@ -53,7 +51,7 @@ public class TraineeServiceImpl implements TraineeService {
     @Override
     public Trainee updateTrainee(Trainee trainee) {
         Objects.requireNonNull(trainee, "Trainee cannot be null");
-        log.debug("Updating trainee with ID: {}", trainee.getUserId());
+        log.info("Updating trainee with ID: {}", trainee.getUserId());
 
         Trainee existingTrainee = traineeDao.findById(trainee.getUserId())
                 .orElseThrow(() -> new EntityNotFoundException("Trainee", trainee.getUserId()));
@@ -77,16 +75,16 @@ public class TraineeServiceImpl implements TraineeService {
     @Override
     public boolean deleteTrainee(Long traineeId) {
         Objects.requireNonNull(traineeId, "Trainee ID cannot be null");
-        log.debug("Deleting trainee with ID: {}", traineeId);
+        log.info("Deleting trainee with ID: {}", traineeId);
 
         boolean deleted = traineeDao.delete(traineeId);
-        if (deleted) {
-            log.info("Trainee with ID: {} deleted successfully", traineeId);
-        } else {
+        if (!deleted) {
             log.warn("Trainee with ID: {} not found for deletion", traineeId);
+            return false;
         }
 
-        return deleted;
+        log.info("Trainee with ID: {} deleted successfully", traineeId);
+        return true;
     }
 
     @Override

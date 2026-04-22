@@ -148,7 +148,7 @@ class GymFacadeIntegrationTest {
 
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> facade.getTrainee(created.userId()));
 
-        assertEquals("Trainee Not found with id: " + created.userId(), exception.getMessage());
+        assertEquals("Trainee not found with id: " + created.userId(), exception.getMessage());
     }
 
     @Test

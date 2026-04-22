@@ -68,8 +68,7 @@ class LoggingTest {
         String filePath = "invalid/path.csv";
         storageInitializer.setTraineeFilePath(filePath);
 
-        when(parser.parseCsv(eq(filePath), eq(TraineeCsvDto.class)))
-                .thenThrow(new RuntimeException("Parsing failed"));
+        when(parser.parseCsv(eq(filePath), eq(TraineeCsvDto.class))).thenThrow(new RuntimeException("Parsing failed"));
 
         storageInitializer.initializeStorage();
 

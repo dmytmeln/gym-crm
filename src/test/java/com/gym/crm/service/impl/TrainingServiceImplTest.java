@@ -92,7 +92,7 @@ class TrainingServiceImplTest {
 
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> service.createTraining(training));
 
-        assertEquals("Trainee Not found with id: " + DEFAULT_TRAINEE_ID, exception.getMessage());
+        assertEquals("Trainee not found with id: " + DEFAULT_TRAINEE_ID, exception.getMessage());
         verify(traineeDao).findById(DEFAULT_TRAINEE_ID);
         verify(trainerDao, never()).findById(DEFAULT_TRAINER_ID);
         verify(trainingDao, never()).create(training);
@@ -108,7 +108,7 @@ class TrainingServiceImplTest {
 
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> service.createTraining(training));
 
-        assertEquals("Trainer Not found with id: " + DEFAULT_TRAINER_ID, exception.getMessage());
+        assertEquals("Trainer not found with id: " + DEFAULT_TRAINER_ID, exception.getMessage());
         verify(traineeDao).findById(DEFAULT_TRAINEE_ID);
         verify(trainerDao).findById(DEFAULT_TRAINER_ID);
         verify(trainingDao, never()).create(training);
@@ -132,7 +132,7 @@ class TrainingServiceImplTest {
 
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> service.getTraining(DEFAULT_TRAINING_ID));
 
-        assertEquals("Training Not found with id: " + DEFAULT_TRAINING_ID, exception.getMessage());
+        assertEquals("Training not found with id: " + DEFAULT_TRAINING_ID, exception.getMessage());
         verify(trainingDao).findById(DEFAULT_TRAINING_ID);
     }
 

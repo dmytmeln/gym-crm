@@ -17,7 +17,6 @@ public class GymCrmApplication {
             context.registerShutdownHook();
         } catch (Exception e) {
             log.error("Fatal error during application context startup", e);
-            System.exit(1);
         }
     }
 }

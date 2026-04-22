@@ -39,7 +39,7 @@ public class TrainingServiceImpl implements TrainingService {
     @Override
     public Training createTraining(Training training) {
         Objects.requireNonNull(training, "Training cannot be null");
-        log.debug("Creating training: {}", training.getTrainingName());
+        log.info("Creating training: {}", training.getTrainingName());
         ensureTrainingParticipantsExist(training);
 
         Training createdTraining = trainingDao.create(training);
