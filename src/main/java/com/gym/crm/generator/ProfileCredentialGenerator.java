@@ -1,6 +1,6 @@
-package com.gym.crm.service;
+package com.gym.crm.generator;
 
-public interface ProfileCredentialService {
+public interface ProfileCredentialGenerator {
 
     String generateUsername(String firstName, String lastName);
 

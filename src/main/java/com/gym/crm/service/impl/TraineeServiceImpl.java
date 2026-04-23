@@ -3,7 +3,7 @@ package com.gym.crm.service.impl;
 import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.entity.Trainee;
 import com.gym.crm.exception.EntityNotFoundException;
-import com.gym.crm.service.ProfileCredentialService;
+import com.gym.crm.generator.ProfileCredentialGenerator;
 import com.gym.crm.service.TraineeService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +17,7 @@ import java.util.Objects;
 public class TraineeServiceImpl implements TraineeService {
 
     private TraineeDao traineeDao;
-    private ProfileCredentialService credentialService;
+    private ProfileCredentialGenerator credentialGenerator;
 
     @Autowired
     public void setTraineeDao(TraineeDao traineeDao) {
@@ -25,8 +25,8 @@ public class TraineeServiceImpl implements TraineeService {
     }
 
     @Autowired
-    public void setCredentialService(ProfileCredentialService credentialService) {
-        this.credentialService = credentialService;
+    public void setCredentialGenerator(ProfileCredentialGenerator credentialGenerator) {
+        this.credentialGenerator = credentialGenerator;
     }
 
     @Override
@@ -34,8 +34,8 @@ public class TraineeServiceImpl implements TraineeService {
         Objects.requireNonNull(trainee, "Trainee cannot be null");
         log.info("Creating trainee: {} {}", trainee.getFirstName(), trainee.getLastName());
 
-        String username = credentialService.generateUsername(trainee.getFirstName(), trainee.getLastName());
-        String password = credentialService.generatePassword();
+        String username = credentialGenerator.generateUsername(trainee.getFirstName(), trainee.getLastName());
+        String password = credentialGenerator.generatePassword();
 
         Trainee traineeWithCredentials = trainee.toBuilder()
                 .username(username)

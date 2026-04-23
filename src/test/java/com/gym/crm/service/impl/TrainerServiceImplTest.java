@@ -4,7 +4,7 @@ import com.gym.crm.dao.TrainerDao;
 import com.gym.crm.entity.Trainer;
 import com.gym.crm.entity.TrainingType;
 import com.gym.crm.exception.EntityNotFoundException;
-import com.gym.crm.service.ProfileCredentialService;
+import com.gym.crm.generator.ProfileCredentialGenerator;
 import com.gym.crm.service.TrainerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,7 +42,7 @@ class TrainerServiceImplTest {
     private TrainerDao dao;
 
     @Mock
-    private ProfileCredentialService credentialService;
+    private ProfileCredentialGenerator generator;
 
     private TrainerService service;
 
@@ -50,7 +50,7 @@ class TrainerServiceImplTest {
     void setUp() {
         TrainerServiceImpl implementation = new TrainerServiceImpl();
         implementation.setTrainerDao(dao);
-        implementation.setCredentialService(credentialService);
+        implementation.setCredentialGenerator(generator);
         service = implementation;
     }
 
@@ -59,14 +59,14 @@ class TrainerServiceImplTest {
         Trainer trainerWithoutCredentials = buildTrainerWithoutCredentials();
         Trainer expected = buildTrainerWithId(DEFAULT_TRAINER_ID);
 
-        when(credentialService.generateUsername(DEFAULT_FIRST_NAME, DEFAULT_LAST_NAME)).thenReturn(DEFAULT_USERNAME);
-        when(credentialService.generatePassword()).thenReturn(DEFAULT_PASSWORD);
+        when(generator.generateUsername(DEFAULT_FIRST_NAME, DEFAULT_LAST_NAME)).thenReturn(DEFAULT_USERNAME);
+        when(generator.generatePassword()).thenReturn(DEFAULT_PASSWORD);
         when(dao.create(any(Trainer.class))).thenReturn(expected);
 
         Trainer actual = service.createTrainer(trainerWithoutCredentials);
 
-        verify(credentialService).generateUsername(DEFAULT_FIRST_NAME, DEFAULT_LAST_NAME);
-        verify(credentialService).generatePassword();
+        verify(generator).generateUsername(DEFAULT_FIRST_NAME, DEFAULT_LAST_NAME);
+        verify(generator).generatePassword();
         ArgumentCaptor<Trainer> trainerCaptor = ArgumentCaptor.forClass(Trainer.class);
         verify(dao).create(trainerCaptor.capture());
         Trainer trainerWithCredentials = trainerCaptor.getValue();
@@ -82,7 +82,7 @@ class TrainerServiceImplTest {
         NullPointerException exception = assertThrows(NullPointerException.class, () -> service.createTrainer(null));
 
         assertEquals("Trainer cannot be null", exception.getMessage());
-        verifyNoInteractions(dao, credentialService);
+        verifyNoInteractions(dao, generator);
     }
 
     @Test
@@ -137,7 +137,7 @@ class TrainerServiceImplTest {
         NullPointerException exception = assertThrows(NullPointerException.class, () -> service.updateTrainer(null));
 
         assertEquals("Trainer cannot be null", exception.getMessage());
-        verifyNoInteractions(dao, credentialService);
+        verifyNoInteractions(dao, generator);
     }
 
     @Test
@@ -167,7 +167,7 @@ class TrainerServiceImplTest {
         NullPointerException exception = assertThrows(NullPointerException.class, () -> service.getTrainer(null));
 
         assertEquals("Trainer ID cannot be null", exception.getMessage());
-        verifyNoInteractions(dao, credentialService);
+        verifyNoInteractions(dao, generator);
     }
 
     @Test

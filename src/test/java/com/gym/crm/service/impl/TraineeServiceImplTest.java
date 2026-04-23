@@ -3,7 +3,7 @@ package com.gym.crm.service.impl;
 import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.entity.Trainee;
 import com.gym.crm.exception.EntityNotFoundException;
-import com.gym.crm.service.ProfileCredentialService;
+import com.gym.crm.generator.ProfileCredentialGenerator;
 import com.gym.crm.service.TraineeService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,7 +40,7 @@ class TraineeServiceImplTest {
     private TraineeDao dao;
 
     @Mock
-    private ProfileCredentialService credentialService;
+    private ProfileCredentialGenerator generator;
 
     private TraineeService service;
 
@@ -48,7 +48,7 @@ class TraineeServiceImplTest {
     void setUp() {
         TraineeServiceImpl implementation = new TraineeServiceImpl();
         implementation.setTraineeDao(dao);
-        implementation.setCredentialService(credentialService);
+        implementation.setCredentialGenerator(generator);
         service = implementation;
     }
 
@@ -57,14 +57,14 @@ class TraineeServiceImplTest {
         Trainee traineeWithoutCredentials = buildTraineeWithoutCredentials();
         Trainee expected = buildTraineeWithId(DEFAULT_TRAINEE_ID);
 
-        when(credentialService.generateUsername(DEFAULT_FIRST_NAME, DEFAULT_LAST_NAME)).thenReturn(DEFAULT_USERNAME);
-        when(credentialService.generatePassword()).thenReturn(DEFAULT_PASSWORD);
+        when(generator.generateUsername(DEFAULT_FIRST_NAME, DEFAULT_LAST_NAME)).thenReturn(DEFAULT_USERNAME);
+        when(generator.generatePassword()).thenReturn(DEFAULT_PASSWORD);
         when(dao.create(any(Trainee.class))).thenReturn(expected);
 
         Trainee actual = service.createTrainee(traineeWithoutCredentials);
 
-        verify(credentialService).generateUsername(DEFAULT_FIRST_NAME, DEFAULT_LAST_NAME);
-        verify(credentialService).generatePassword();
+        verify(generator).generateUsername(DEFAULT_FIRST_NAME, DEFAULT_LAST_NAME);
+        verify(generator).generatePassword();
         ArgumentCaptor<Trainee> traineeCaptor = ArgumentCaptor.forClass(Trainee.class);
         verify(dao).create(traineeCaptor.capture());
         Trainee traineeWithCredentials = traineeCaptor.getValue();
@@ -80,7 +80,7 @@ class TraineeServiceImplTest {
         NullPointerException exception = assertThrows(NullPointerException.class, () -> service.createTrainee(null));
 
         assertEquals("Trainee cannot be null", exception.getMessage());
-        verifyNoInteractions(dao, credentialService);
+        verifyNoInteractions(dao, generator);
     }
 
     @Test
@@ -134,7 +134,7 @@ class TraineeServiceImplTest {
         NullPointerException exception = assertThrows(NullPointerException.class, () -> service.updateTrainee(null));
 
         assertEquals("Trainee cannot be null", exception.getMessage());
-        verifyNoInteractions(dao, credentialService);
+        verifyNoInteractions(dao, generator);
     }
 
     @Test
@@ -154,7 +154,7 @@ class TraineeServiceImplTest {
         NullPointerException exception = assertThrows(NullPointerException.class, () -> service.deleteTrainee(null));
 
         assertEquals("Trainee ID cannot be null", exception.getMessage());
-        verifyNoInteractions(dao, credentialService);
+        verifyNoInteractions(dao, generator);
     }
 
     @Test
@@ -184,7 +184,7 @@ class TraineeServiceImplTest {
         NullPointerException exception = assertThrows(NullPointerException.class, () -> service.getTrainee(null));
 
         assertEquals("Trainee ID cannot be null", exception.getMessage());
-        verifyNoInteractions(dao, credentialService);
+        verifyNoInteractions(dao, generator);
     }
 
     @Test

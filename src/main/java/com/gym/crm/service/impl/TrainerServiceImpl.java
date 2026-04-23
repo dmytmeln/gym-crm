@@ -3,7 +3,7 @@ package com.gym.crm.service.impl;
 import com.gym.crm.dao.TrainerDao;
 import com.gym.crm.entity.Trainer;
 import com.gym.crm.exception.EntityNotFoundException;
-import com.gym.crm.service.ProfileCredentialService;
+import com.gym.crm.generator.ProfileCredentialGenerator;
 import com.gym.crm.service.TrainerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +17,7 @@ import java.util.Objects;
 public class TrainerServiceImpl implements TrainerService {
 
     private TrainerDao trainerDao;
-    private ProfileCredentialService credentialService;
+    private ProfileCredentialGenerator credentialGenerator;
 
     @Autowired
     public void setTrainerDao(TrainerDao trainerDao) {
@@ -25,8 +25,8 @@ public class TrainerServiceImpl implements TrainerService {
     }
 
     @Autowired
-    public void setCredentialService(ProfileCredentialService credentialService) {
-        this.credentialService = credentialService;
+    public void setCredentialGenerator(ProfileCredentialGenerator credentialGenerator) {
+        this.credentialGenerator = credentialGenerator;
     }
 
     @Override
@@ -34,8 +34,8 @@ public class TrainerServiceImpl implements TrainerService {
         Objects.requireNonNull(trainer, "Trainer cannot be null");
         log.info("Creating trainer: {} {}", trainer.getFirstName(), trainer.getLastName());
 
-        String username = credentialService.generateUsername(trainer.getFirstName(), trainer.getLastName());
-        String password = credentialService.generatePassword();
+        String username = credentialGenerator.generateUsername(trainer.getFirstName(), trainer.getLastName());
+        String password = credentialGenerator.generatePassword();
 
         Trainer trainerWithCredentials = trainer.toBuilder()
                 .username(username)

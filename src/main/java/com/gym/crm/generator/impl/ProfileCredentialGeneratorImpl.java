@@ -1,12 +1,12 @@
-package com.gym.crm.service.impl;
+package com.gym.crm.generator.impl;
 
 import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.dao.TrainerDao;
 import com.gym.crm.entity.User;
-import com.gym.crm.service.ProfileCredentialService;
+import com.gym.crm.generator.ProfileCredentialGenerator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.security.SecureRandom;
 import java.util.List;
@@ -16,8 +16,8 @@ import java.util.stream.Stream;
 import static java.util.stream.Collectors.toList;
 
 @Slf4j
-@Service
-public class ProfileCredentialServiceImpl implements ProfileCredentialService {
+@Component
+public class ProfileCredentialGeneratorImpl implements ProfileCredentialGenerator {
 
     private static final String PASSWORD_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
     private static final int PASSWORD_LENGTH = 10;

@@ -2,7 +2,8 @@ package com.gym.crm.service.impl;
 
 import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.dao.TrainerDao;
-import com.gym.crm.service.ProfileCredentialService;
+import com.gym.crm.generator.ProfileCredentialGenerator;
+import com.gym.crm.generator.impl.ProfileCredentialGeneratorImpl;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,7 +24,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class ProfileCredentialServiceImplTest {
+class ProfileCredentialGeneratorImplTest {
 
     private static final String PASSWORD_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
 
@@ -39,14 +40,14 @@ class ProfileCredentialServiceImplTest {
     @Mock
     private TrainerDao trainerDao;
 
-    private ProfileCredentialService service;
+    private ProfileCredentialGenerator generator;
 
     @BeforeEach
     void setUp() {
-        ProfileCredentialServiceImpl implementation = new ProfileCredentialServiceImpl();
+        ProfileCredentialGeneratorImpl implementation = new ProfileCredentialGeneratorImpl();
         implementation.setTraineeDao(traineeDao);
         implementation.setTrainerDao(trainerDao);
-        service = implementation;
+        generator = implementation;
     }
 
     @Test
@@ -54,7 +55,7 @@ class ProfileCredentialServiceImplTest {
         when(traineeDao.findAll()).thenReturn(Collections.emptyList());
         when(trainerDao.findAll()).thenReturn(Collections.emptyList());
 
-        String actual = service.generateUsername(FIRST_NAME, LAST_NAME);
+        String actual = generator.generateUsername(FIRST_NAME, LAST_NAME);
 
         assertEquals("Liam.Miller", actual);
         verify(traineeDao).findAll();
@@ -66,7 +67,7 @@ class ProfileCredentialServiceImplTest {
         when(traineeDao.findAll()).thenReturn(List.of(buildTraineeWithUsername("Liam.Miller")));
         when(trainerDao.findAll()).thenReturn(Collections.emptyList());
 
-        String actual = service.generateUsername(FIRST_NAME, LAST_NAME);
+        String actual = generator.generateUsername(FIRST_NAME, LAST_NAME);
 
         assertEquals("Liam.Miller1", actual);
     }
@@ -79,7 +80,7 @@ class ProfileCredentialServiceImplTest {
                 buildTraineeWithUsername("liam.Miller2")));
         when(trainerDao.findAll()).thenReturn(Collections.emptyList());
 
-        String actual = service.generateUsername(FIRST_NAME, LAST_NAME);
+        String actual = generator.generateUsername(FIRST_NAME, LAST_NAME);
 
         assertEquals("Liam.Miller3", actual);
     }
@@ -93,7 +94,7 @@ class ProfileCredentialServiceImplTest {
                 buildTraineeWithUsername("liam.Miller5")));
         when(trainerDao.findAll()).thenReturn(Collections.emptyList());
 
-        String actual = service.generateUsername(FIRST_NAME, LAST_NAME);
+        String actual = generator.generateUsername(FIRST_NAME, LAST_NAME);
 
         assertEquals("Liam.Miller6", actual);
     }
@@ -105,7 +106,7 @@ class ProfileCredentialServiceImplTest {
                 buildTraineeWithUsername("liam.miller1")));
         when(trainerDao.findAll()).thenReturn(List.of(buildTrainerWithUsername("liam.miller3")));
 
-        String actual = service.generateUsername(FIRST_NAME, LAST_NAME);
+        String actual = generator.generateUsername(FIRST_NAME, LAST_NAME);
 
         assertEquals("Liam.Miller4", actual);
         verify(traineeDao).findAll();
@@ -117,7 +118,7 @@ class ProfileCredentialServiceImplTest {
         when(traineeDao.findAll()).thenReturn(List.of(buildTraineeWithUsername("sophia.miller")));
         when(trainerDao.findAll()).thenReturn(Collections.emptyList());
 
-        String actual = service.generateUsername(FIRST_NAME, LAST_NAME);
+        String actual = generator.generateUsername(FIRST_NAME, LAST_NAME);
 
         assertEquals("Liam.Miller", actual);
     }
@@ -127,7 +128,7 @@ class ProfileCredentialServiceImplTest {
         when(traineeDao.findAll()).thenReturn(List.of(buildTraineeWithUsername("liam.wilson")));
         when(trainerDao.findAll()).thenReturn(Collections.emptyList());
 
-        String actual = service.generateUsername(FIRST_NAME, LAST_NAME);
+        String actual = generator.generateUsername(FIRST_NAME, LAST_NAME);
 
         assertEquals("Liam.Miller", actual);
     }
@@ -137,7 +138,7 @@ class ProfileCredentialServiceImplTest {
         when(traineeDao.findAll()).thenReturn(Collections.emptyList());
         when(trainerDao.findAll()).thenReturn(List.of(buildTrainerWithUsername("sophia.wilson")));
 
-        String actual = service.generateUsername(FIRST_NAME, LAST_NAME);
+        String actual = generator.generateUsername(FIRST_NAME, LAST_NAME);
 
         assertEquals("Liam.Miller", actual);
     }
@@ -147,7 +148,7 @@ class ProfileCredentialServiceImplTest {
         when(traineeDao.findAll()).thenReturn(List.of(buildTraineeWithUsername("liam.miller")));
         when(trainerDao.findAll()).thenReturn(Collections.emptyList());
 
-        String actual = service.generateUsername(FIRST_NAME, LAST_NAME);
+        String actual = generator.generateUsername(FIRST_NAME, LAST_NAME);
 
         assertEquals("Liam.Miller1", actual);
     }
@@ -159,14 +160,14 @@ class ProfileCredentialServiceImplTest {
                 buildTraineeWithUsername("liam.miller_1")));
         when(trainerDao.findAll()).thenReturn(Collections.emptyList());
 
-        String actual = service.generateUsername(FIRST_NAME, LAST_NAME);
+        String actual = generator.generateUsername(FIRST_NAME, LAST_NAME);
 
         assertEquals("Liam.Miller", actual);
     }
 
     @Test
     void shouldThrowNullPointerExceptionWhenFirstNameIsNull() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.generateUsername(null, LAST_NAME));
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> generator.generateUsername(null, LAST_NAME));
 
         assertEquals("First Name cannot be null", exception.getMessage());
         verifyNoInteractions(traineeDao, trainerDao);
@@ -174,7 +175,7 @@ class ProfileCredentialServiceImplTest {
 
     @Test
     void shouldThrowNullPointerExceptionWhenLastNameIsNull() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.generateUsername(FIRST_NAME, null));
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> generator.generateUsername(FIRST_NAME, null));
 
         assertEquals("Last Name cannot be null", exception.getMessage());
         verifyNoInteractions(traineeDao, trainerDao);
@@ -182,7 +183,7 @@ class ProfileCredentialServiceImplTest {
 
     @Test
     void shouldThrowNullPointerExceptionWhenBothNamesAreNull() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.generateUsername(null, null));
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> generator.generateUsername(null, null));
 
         assertEquals("First Name cannot be null", exception.getMessage());
         verifyNoInteractions(traineeDao, trainerDao);
@@ -190,14 +191,14 @@ class ProfileCredentialServiceImplTest {
 
     @Test
     void shouldGeneratePasswordWithCorrectLength() {
-        String actual = service.generatePassword();
+        String actual = generator.generatePassword();
 
         assertEquals(PASSWORD_LENGTH, actual.length());
     }
 
     @Test
     void shouldGeneratePasswordWithValidCharactersOnly() {
-        String actual = service.generatePassword();
+        String actual = generator.generatePassword();
 
         assertTrue(
                 StringUtils.containsOnly(actual, PASSWORD_ALPHABET),
