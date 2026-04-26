@@ -3,7 +3,7 @@ package com.gym.crm.service.impl;
 import com.gym.crm.dao.TrainerDao;
 import com.gym.crm.entity.Trainer;
 import com.gym.crm.exception.EntityNotFoundException;
-import com.gym.crm.generator.ProfileCredentialGenerator;
+import com.gym.crm.service.helper.ProfileCredentialGenerator;
 import com.gym.crm.service.TrainerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

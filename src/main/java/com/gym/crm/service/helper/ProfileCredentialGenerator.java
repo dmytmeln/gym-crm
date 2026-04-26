@@ -1,9 +1,8 @@
-package com.gym.crm.generator.impl;
+package com.gym.crm.service.helper;
 
 import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.dao.TrainerDao;
 import com.gym.crm.entity.User;
-import com.gym.crm.generator.ProfileCredentialGenerator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -17,7 +16,7 @@ import static java.util.stream.Collectors.toList;
 
 @Slf4j
 @Component
-public class ProfileCredentialGeneratorImpl implements ProfileCredentialGenerator {
+public class ProfileCredentialGenerator {
 
     private static final String PASSWORD_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
     private static final int PASSWORD_LENGTH = 10;
@@ -38,7 +37,6 @@ public class ProfileCredentialGeneratorImpl implements ProfileCredentialGenerato
         this.trainerDao = trainerDao;
     }
 
-    @Override
     public String generateUsername(String firstName, String lastName) {
         Objects.requireNonNull(firstName, "First Name cannot be null");
         Objects.requireNonNull(lastName, "Last Name cannot be null");
@@ -59,7 +57,6 @@ public class ProfileCredentialGeneratorImpl implements ProfileCredentialGenerato
         return finalUsername;
     }
 
-    @Override
     public String generatePassword() {
         char[] password = new char[PASSWORD_LENGTH];
         for (int i = 0; i < PASSWORD_LENGTH; i++) {

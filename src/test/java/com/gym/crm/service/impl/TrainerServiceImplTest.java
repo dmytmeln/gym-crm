@@ -4,7 +4,7 @@ import com.gym.crm.dao.TrainerDao;
 import com.gym.crm.entity.Trainer;
 import com.gym.crm.entity.TrainingType;
 import com.gym.crm.exception.EntityNotFoundException;
-import com.gym.crm.generator.ProfileCredentialGenerator;
+import com.gym.crm.service.helper.ProfileCredentialGenerator;
 import com.gym.crm.service.TrainerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
