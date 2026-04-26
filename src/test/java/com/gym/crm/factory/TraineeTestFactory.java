@@ -4,7 +4,7 @@ import com.gym.crm.dto.TraineeCreateDto;
 import com.gym.crm.dto.TraineeCreateResponseDto;
 import com.gym.crm.dto.TraineeResponseDto;
 import com.gym.crm.dto.TraineeUpdateDto;
-import com.gym.crm.entity.Trainee;
+import com.gym.crm.model.Trainee;
 
 import java.time.LocalDate;
 

@@ -1,7 +1,7 @@
 package com.gym.crm.dao.impl;
 
 import com.gym.crm.dao.TrainerDao;
-import com.gym.crm.entity.Trainer;
+import com.gym.crm.model.Trainer;
 import com.gym.crm.storage.impl.InMemoryStorage;
 import com.gym.crm.storage.impl.TraineeNamespaceStorage;
 import com.gym.crm.storage.impl.TrainerNamespaceStorage;

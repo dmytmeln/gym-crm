@@ -1,6 +1,6 @@
 package com.gym.crm.factory;
 
-import com.gym.crm.entity.TrainingType;
+import com.gym.crm.model.TrainingType;
 
 public class TrainingTypeTestFactory {
 

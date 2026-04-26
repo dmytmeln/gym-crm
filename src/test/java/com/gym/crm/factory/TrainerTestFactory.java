@@ -4,8 +4,8 @@ import com.gym.crm.dto.TrainerCreateDto;
 import com.gym.crm.dto.TrainerCreateResponseDto;
 import com.gym.crm.dto.TrainerResponseDto;
 import com.gym.crm.dto.TrainerUpdateDto;
-import com.gym.crm.entity.Trainer;
-import com.gym.crm.entity.TrainingType;
+import com.gym.crm.model.Trainer;
+import com.gym.crm.model.TrainingType;
 
 public class TrainerTestFactory {
 
