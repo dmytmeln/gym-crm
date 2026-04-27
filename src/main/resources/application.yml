@@ -1,0 +1,22 @@
+storage:
+  init:
+    trainee: classpath:data/trainee.csv
+    trainer: classpath:data/trainer.csv
+    training: classpath:data/training.csv
+
+datasource:
+  jdbc-url: ${DB_URL:jdbc:mysql://localhost:3306/gym_db}
+  username: ${DB_USERNAME:gym}
+  password: ${DB_PASSWORD:gym}
+
+  hikari:
+    max-pool-size: 10
+    min-idle: 2
+    connection-timeout: 30000
+    idle-timeout: 600000
+    max-lifetime: 1800000
+
+hibernate:
+  hbm2ddl-auto: none
+  show-sql: false
+  format-sql: false

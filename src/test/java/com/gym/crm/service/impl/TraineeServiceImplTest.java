@@ -3,7 +3,7 @@ package com.gym.crm.service.impl;
 import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.entity.Trainee;
 import com.gym.crm.exception.EntityNotFoundException;
-import com.gym.crm.generator.ProfileCredentialGenerator;
+import com.gym.crm.service.helper.ProfileCredentialGenerator;
 import com.gym.crm.service.TraineeService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

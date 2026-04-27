@@ -1,0 +1,16 @@
+datasource:
+  jdbc-url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1
+  username: sa
+  password: ""
+
+  hikari:
+    max-pool-size: 5
+    min-idle: 2
+    connection-timeout: 30000
+    idle-timeout: 600000
+    max-lifetime: 1800000
+
+hibernate:
+  hbm2ddl-auto: none
+  show-sql: false
+  format-sql: false

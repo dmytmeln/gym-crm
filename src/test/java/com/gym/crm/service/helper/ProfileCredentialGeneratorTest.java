@@ -1,13 +1,11 @@
-package com.gym.crm.service.impl;
+package com.gym.crm.service.helper;
 
 import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.dao.TrainerDao;
-import com.gym.crm.generator.ProfileCredentialGenerator;
-import com.gym.crm.generator.impl.ProfileCredentialGeneratorImpl;
 import org.apache.commons.lang3.StringUtils;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -24,7 +22,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class ProfileCredentialGeneratorImplTest {
+class ProfileCredentialGeneratorTest {
 
     private static final String PASSWORD_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
 
@@ -40,15 +38,8 @@ class ProfileCredentialGeneratorImplTest {
     @Mock
     private TrainerDao trainerDao;
 
+    @InjectMocks
     private ProfileCredentialGenerator generator;
-
-    @BeforeEach
-    void setUp() {
-        ProfileCredentialGeneratorImpl implementation = new ProfileCredentialGeneratorImpl();
-        implementation.setTraineeDao(traineeDao);
-        implementation.setTrainerDao(trainerDao);
-        generator = implementation;
-    }
 
     @Test
     void shouldGenerateUsernameWithoutSerialWhenNoExistingUsers() {
