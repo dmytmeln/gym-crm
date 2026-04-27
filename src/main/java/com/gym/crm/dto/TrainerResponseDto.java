@@ -1,6 +1,6 @@
 package com.gym.crm.dto;
 
-import com.gym.crm.entity.TrainingType;
+import com.gym.crm.model.TrainingType;
 import lombok.Builder;
 
 @Builder(toBuilder = true)

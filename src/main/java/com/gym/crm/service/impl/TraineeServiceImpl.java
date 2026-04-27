@@ -1,7 +1,7 @@
 package com.gym.crm.service.impl;
 
 import com.gym.crm.dao.TraineeDao;
-import com.gym.crm.entity.Trainee;
+import com.gym.crm.model.Trainee;
 import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.service.helper.ProfileCredentialGenerator;
 import com.gym.crm.service.TraineeService;

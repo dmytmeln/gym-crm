@@ -2,8 +2,8 @@ package com.gym.crm.factory;
 
 import com.gym.crm.dto.TrainingCreateDto;
 import com.gym.crm.dto.TrainingResponseDto;
-import com.gym.crm.entity.Training;
-import com.gym.crm.entity.TrainingType;
+import com.gym.crm.model.Training;
+import com.gym.crm.model.TrainingType;
 
 import java.time.LocalDate;
 

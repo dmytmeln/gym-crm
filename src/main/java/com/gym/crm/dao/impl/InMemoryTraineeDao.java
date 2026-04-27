@@ -1,7 +1,7 @@
 package com.gym.crm.dao.impl;
 
 import com.gym.crm.dao.TraineeDao;
-import com.gym.crm.entity.Trainee;
+import com.gym.crm.model.Trainee;
 import com.gym.crm.storage.Namespace;
 import com.gym.crm.storage.Storage;
 import org.springframework.beans.factory.annotation.Autowired;

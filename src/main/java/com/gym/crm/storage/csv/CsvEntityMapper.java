@@ -1,9 +1,9 @@
 package com.gym.crm.storage.csv;
 
-import com.gym.crm.entity.Trainee;
-import com.gym.crm.entity.Trainer;
-import com.gym.crm.entity.Training;
-import com.gym.crm.entity.TrainingType;
+import com.gym.crm.model.Trainee;
+import com.gym.crm.model.Trainer;
+import com.gym.crm.model.Training;
+import com.gym.crm.model.TrainingType;
 import com.gym.crm.storage.csv.dto.TraineeCsvDto;
 import com.gym.crm.storage.csv.dto.TrainerCsvDto;
 import com.gym.crm.storage.csv.dto.TrainingCsvDto;

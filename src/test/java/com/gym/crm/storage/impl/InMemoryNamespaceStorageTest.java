@@ -1,6 +1,6 @@
 package com.gym.crm.storage.impl;
 
-import com.gym.crm.entity.Trainee;
+import com.gym.crm.model.Trainee;
 import com.gym.crm.storage.Namespace;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

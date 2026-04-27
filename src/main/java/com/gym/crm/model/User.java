@@ -1,4 +1,4 @@
-package com.gym.crm.entity;
+package com.gym.crm.model;
 
 import lombok.Getter;
 import lombok.ToString;
