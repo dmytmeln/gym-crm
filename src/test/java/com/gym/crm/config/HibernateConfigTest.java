@@ -10,7 +10,7 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringJUnitConfig({HibernateConfig.class, DatasourceConfig.class})
-@TestPropertySource(locations = "classpath:application-test.properties")
+@TestPropertySource(locations = "classpath:application-test.yml", factory = YamlPropertySourceFactory.class)
 class HibernateConfigTest {
 
     @Autowired

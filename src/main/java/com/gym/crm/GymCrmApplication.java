@@ -1,5 +1,6 @@
 package com.gym.crm;
 
+import com.gym.crm.config.YamlPropertySourceFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
@@ -9,7 +10,7 @@ import org.springframework.context.annotation.PropertySource;
 @Slf4j
 @Configuration
 @ComponentScan("com.gym.crm")
-@PropertySource("classpath:application.properties")
+@PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
 public class GymCrmApplication {
     public static void main(String[] args) {
         try {
