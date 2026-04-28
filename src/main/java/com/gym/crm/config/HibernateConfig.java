@@ -1,5 +1,10 @@
 package com.gym.crm.config;
 
+import com.gym.crm.entity.Trainee;
+import com.gym.crm.entity.Trainer;
+import com.gym.crm.entity.Training;
+import com.gym.crm.entity.TrainingType;
+import com.gym.crm.entity.User;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
@@ -44,6 +49,11 @@ public class HibernateConfig {
                 .build();
 
         Metadata metadata = new MetadataSources(registry)
+                .addAnnotatedClass(Trainee.class)
+                .addAnnotatedClass(Trainer.class)
+                .addAnnotatedClass(Training.class)
+                .addAnnotatedClass(TrainingType.class)
+                .addAnnotatedClass(User.class)
                 .buildMetadata();
 
         return metadata.buildSessionFactory();
