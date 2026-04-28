@@ -17,7 +17,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.ToString;
 
 import java.time.LocalDate;
@@ -30,7 +29,6 @@ import java.util.Set;
 @Entity
 @Table(name = "trainee")
 @Getter
-@Setter
 @ToString(exclude = {"user", "trainings", "trainers"})
 @NoArgsConstructor
 @AllArgsConstructor
@@ -41,10 +39,10 @@ public class Trainee {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "date_of_birth")
+    @Column(name = "date_of_birth", nullable = true)
     private LocalDate dateOfBirth;
 
-    @Column(name = "address")
+    @Column(name = "address", nullable = true, length = 100)
     private String address;
 
     @OneToOne(fetch = FetchType.LAZY)
@@ -88,6 +86,7 @@ public class Trainee {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Trainee other)) return false;
+
         return id != null && Objects.equals(this.getId(), other.getId());
     }
 

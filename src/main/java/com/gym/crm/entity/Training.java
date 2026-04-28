@@ -22,7 +22,6 @@ import java.util.Objects;
 @Entity
 @Table(name = "training")
 @Getter
-@Setter
 @ToString(exclude = {"trainee", "trainer", "trainingType"})
 @NoArgsConstructor
 @AllArgsConstructor
@@ -35,29 +34,33 @@ public class Training {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "trainee_id", nullable = false)
+    @Setter
     private Trainee trainee;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "trainer_id", nullable = false)
+    @Setter
     private Trainer trainer;
 
-    @Column(name = "training_name", nullable = false)
+    @Column(name = "training_name", nullable = false, length = 100)
     private String trainingName;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "training_type_id", nullable = false)
     private TrainingType trainingType;
 
+    @Column(name = "training_date", nullable = false)
+    private LocalDate trainingDate;
+
     @Column(name = "training_duration", nullable = false)
     private Integer trainingDuration;
 
-    @Column(name = "training_date", nullable = false)
-    private LocalDate trainingDate;
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Training other)) return false;
+
         return id != null && Objects.equals(this.getId(), other.getId());
     }
 

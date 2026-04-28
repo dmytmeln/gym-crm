@@ -10,15 +10,15 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.Immutable;
 
 import java.util.Objects;
 
 @Entity
 @Table(name = "training_type")
+@Immutable
 @Getter
-@Setter
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
@@ -29,13 +29,14 @@ public class TrainingType {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "training_type_name", nullable = false, unique = true)
+    @Column(name = "training_type_name", nullable = false, unique = true, length = 100)
     private String trainingTypeName;
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof TrainingType that)) return false;
+
         return Objects.equals(this.getTrainingTypeName(), that.getTrainingTypeName());
     }
 

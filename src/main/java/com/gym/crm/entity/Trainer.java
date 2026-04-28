@@ -15,7 +15,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.ToString;
 
 import java.util.ArrayList;
@@ -27,7 +26,6 @@ import java.util.Set;
 @Entity
 @Table(name = "trainer")
 @Getter
-@Setter
 @ToString(exclude = {"user", "specialization", "trainings", "trainees"})
 @NoArgsConstructor
 @AllArgsConstructor
@@ -68,6 +66,7 @@ public class Trainer {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Trainer other)) return false;
+
         return id != null && Objects.equals(this.getId(), other.getId());
     }
 
