@@ -6,12 +6,7 @@
             http://www.liquibase.org/xml/ns/dbchangelog
             https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
-    <include file="changelog-tables/001-user-table-create.xml" relativeToChangelogFile="true"/>
-    <include file="changelog-tables/002-training-type-table-create.xml" relativeToChangelogFile="true"/>
-    <include file="changelog-tables/003-trainee-table-create.xml" relativeToChangelogFile="true"/>
-    <include file="changelog-tables/004-trainer-table-create.xml" relativeToChangelogFile="true"/>
-    <include file="changelog-tables/005-trainee-trainer-table-create.xml" relativeToChangelogFile="true"/>
-    <include file="changelog-tables/006-training-table-create.xml" relativeToChangelogFile="true"/>
+    <include file="changelog-tables/001-init-schema.xml" relativeToChangelogFile="true"/>
     <include file="changelog-tables/data-load.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>
