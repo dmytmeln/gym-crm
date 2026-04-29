@@ -13,8 +13,8 @@ Run the following script to create the database and user:
 
 ```sql
 CREATE DATABASE gym_db;
-CREATE USER gym WITH PASSWORD 'gym';
-GRANT ALL PRIVILEGES ON DATABASE gym_db TO gym;
+CREATE USER 'gym'@'localhost' WITH IDENTIFIED BY 'gym';
+GRANT ALL PRIVILEGES ON gym_db.* TO 'gym'@'localhost';
 ```
 
 ## Running the Application

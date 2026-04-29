@@ -1,0 +1,7 @@
+first_name,last_name,username,password,is_active
+Liam,Miller,liam.miller,password123,true
+Sophia,Wilson,sophia.wilson,password456,true
+Bob,Wilson,bob.wilson,password789,false
+Marcus,Stone,marcus.stone,trainerpass1,true
+Sarah,Adams,sarah.adams,trainerpass2,true
+Alex,Morgan,alex.morgan,trainerpass3,true

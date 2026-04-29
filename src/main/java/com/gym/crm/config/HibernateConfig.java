@@ -14,6 +14,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
 
 import javax.sql.DataSource;
 
@@ -40,6 +41,7 @@ public class HibernateConfig {
     }
 
     @Bean(destroyMethod = "close")
+    @DependsOn("liquibase")
     public SessionFactory sessionFactory(DataSource dataSource) {
         ServiceRegistry registry = new StandardServiceRegistryBuilder()
                 .applySetting(AvailableSettings.JAKARTA_JTA_DATASOURCE, dataSource)

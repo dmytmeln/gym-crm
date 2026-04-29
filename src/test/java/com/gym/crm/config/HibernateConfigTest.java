@@ -1,10 +1,10 @@
 package com.gym.crm.config;
 
+import com.gym.crm.entity.Trainee;
 import com.gym.crm.entity.Trainer;
 import com.gym.crm.entity.Training;
 import com.gym.crm.entity.TrainingType;
 import com.gym.crm.entity.User;
-import com.gym.crm.model.Trainee;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.junit.jupiter.api.Test;
@@ -14,7 +14,7 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringJUnitConfig({HibernateConfig.class, DatasourceConfig.class})
+@SpringJUnitConfig({HibernateConfig.class, DatasourceConfig.class, LiquibaseConfig.class})
 @TestPropertySource(locations = "classpath:application-test.yml", factory = YamlPropertySourceFactory.class)
 class HibernateConfigTest {
 
