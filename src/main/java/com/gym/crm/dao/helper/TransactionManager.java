@@ -1,22 +1,18 @@
 package com.gym.crm.dao.helper;
 
+import lombok.RequiredArgsConstructor;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 @Component
+@RequiredArgsConstructor
 public class TransactionManager {
 
-    private SessionFactory sessionFactory;
-
-    @Autowired
-    public void setSessionFactory(SessionFactory sessionFactory) {
-        this.sessionFactory = sessionFactory;
-    }
+    private final SessionFactory sessionFactory;
 
     public void executeWithinTx(Consumer<Session> sessionConsumer) {
         Session session = sessionFactory.openSession();

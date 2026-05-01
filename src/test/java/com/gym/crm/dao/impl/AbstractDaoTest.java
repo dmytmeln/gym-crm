@@ -15,10 +15,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SpringJUnitConfig(DaoTestConfig.class)
 @TestPropertySource(locations = "classpath:application-test.yml", factory = YamlPropertySourceFactory.class)
 @Sql(scripts = {"classpath:datasets/cleanup-all.sql", "classpath:datasets/seed-data.sql"})
-abstract class AbstractDaoTest extends BaseDbIntegrationTest {
+abstract class AbstractDaoTest<T> extends BaseDbIntegrationTest {
 
     @Autowired
     JdbcClient jdbcClient;
+
+    @Autowired
+    T dao;
 
     @Test
     void shouldStartContainer() {
