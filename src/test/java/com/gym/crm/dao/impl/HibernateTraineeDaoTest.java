@@ -20,11 +20,11 @@ class HibernateTraineeDaoTest extends AbstractDaoTest<HibernateTraineeDao> {
 
     private static final long EXISTING_ID = 1L;
     private static final long EXISTING_USER_ID = 1L;
+    private static final long NON_EXISTING_ID = 99999L;
     private static final String EXISTING_USERNAME = "liam.miller";
     private static final String NON_EXISTING_USERNAME = "non.existent";
-    private static final long NON_EXISTING_ID = 99999L;
     private static final int TRAINEES_COUNT = 2;
-    public static final int USERS_COUNT = 6;
+    private static final int USERS_COUNT = 6;
 
     @Test
     void shouldCreateTraineeAndUser() {
@@ -47,18 +47,15 @@ class HibernateTraineeDaoTest extends AbstractDaoTest<HibernateTraineeDao> {
         assertThat(actual.getUser().getId()).isNotNull();
         assertThat(actual.getTrainings()).isEmpty();
         assertThat(actual.getTrainers()).isEmpty();
-
         assertThat(actual)
                 .usingRecursiveComparison()
                 .ignoringFields("id", "user.id", "trainers", "trainings")
                 .isEqualTo(validTrainee);
-
         Trainee existingTrainee = findTraineeInDb(actual.getId());
         assertThat(existingTrainee)
                 .usingRecursiveComparison()
                 .ignoringFields("id", "user.id", "trainers", "trainings")
                 .isEqualTo(actual);
-
         assertThat(countTraineeTrainings(actual.getId()))
                 .as("New trainee should have no trainings in database")
                 .isZero();
@@ -141,7 +138,6 @@ class HibernateTraineeDaoTest extends AbstractDaoTest<HibernateTraineeDao> {
                 .usingRecursiveComparison()
                 .ignoringFields("trainers", "trainings")
                 .isEqualTo(expected);
-
         assertThat(findTraineeTrainingsInDb(EXISTING_ID))
                 .hasSize(1)
                 .usingRecursiveComparison()
@@ -179,7 +175,6 @@ class HibernateTraineeDaoTest extends AbstractDaoTest<HibernateTraineeDao> {
                 .usingRecursiveComparison()
                 .ignoringFields("trainers", "trainings")
                 .isEqualTo(expected);
-
         assertThat(findTraineeTrainingsInDb(EXISTING_ID))
                 .hasSize(1)
                 .usingRecursiveComparison()
@@ -241,19 +236,16 @@ class HibernateTraineeDaoTest extends AbstractDaoTest<HibernateTraineeDao> {
         assertThat(actual.getTrainers())
                 .as("Returned trainee should contain associated trainers")
                 .hasSize(1);
-
         assertThat(actual)
                 .usingRecursiveComparison()
                 .ignoringFields("trainings.trainee", "trainings.trainingType", "trainings.trainer",
                         "trainers.trainees", "trainers.specialization", "trainers.trainings")
                 .isEqualTo(updatedTrainee);
-
         Trainee existingTraineeAfterUpdate = findTraineeInDb(EXISTING_ID);
         assertThat(existingTraineeAfterUpdate)
                 .usingRecursiveComparison()
                 .ignoringFields("trainings", "trainers")
                 .isEqualTo(updatedTrainee);
-
         assertThat(findTraineeTrainingsInDb(EXISTING_ID))
                 .hasSize(1)
                 .usingRecursiveComparison()
