@@ -44,11 +44,11 @@ public class Trainer {
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
-    @OneToMany(mappedBy = "trainer", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = Training_.TRAINER, fetch = FetchType.LAZY)
     @Builder.Default
     private List<Training> trainings = new ArrayList<>();
 
-    @ManyToMany(mappedBy = "trainers", fetch = FetchType.LAZY)
+    @ManyToMany(mappedBy = Trainee_.TRAINERS, fetch = FetchType.LAZY)
     @Builder.Default
     private Set<Trainee> trainees = new HashSet<>();
 

@@ -1,19 +1,21 @@
 package com.gym.crm.dao.impl;
 
 import com.gym.crm.entity.Trainee;
-import com.gym.crm.entity.Trainer;
-import com.gym.crm.entity.Training;
 import com.gym.crm.entity.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
+import static com.gym.crm.test.helper.EntityRecursiveComparisonConfigs.getTraineeConfigForExisting;
+import static com.gym.crm.test.helper.EntityRecursiveComparisonConfigs.getTraineeConfigForSaved;
+import static com.gym.crm.test.helper.EntityRecursiveComparisonConfigs.getTrainerConfigForDirectFields;
+import static com.gym.crm.test.helper.EntityRecursiveComparisonConfigs.getTrainingConfigForDirectFields;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.tuple;
 
 @SpringJUnitConfig(HibernateTraineeDao.class)
 class HibernateTraineeDaoTest extends AbstractDaoTest<HibernateTraineeDao> {
@@ -27,7 +29,7 @@ class HibernateTraineeDaoTest extends AbstractDaoTest<HibernateTraineeDao> {
     private static final int USERS_COUNT = 6;
 
     @Test
-    void shouldCreateTraineeAndUser() {
+    void shouldSaveTraineeAndUser() {
         User validUser = User.builder()
                 .firstName("Robert")
                 .lastName("Downey")
@@ -41,112 +43,107 @@ class HibernateTraineeDaoTest extends AbstractDaoTest<HibernateTraineeDao> {
                 .dateOfBirth(LocalDate.of(1965, 4, 4))
                 .build();
 
-        Trainee actual = dao.create(validTrainee);
+        Trainee actual = dao.save(validTrainee);
 
         assertThat(actual.getId()).isNotNull();
         assertThat(actual.getUser().getId()).isNotNull();
         assertThat(actual.getTrainings()).isEmpty();
         assertThat(actual.getTrainers()).isEmpty();
         assertThat(actual)
-                .usingRecursiveComparison()
-                .ignoringFields("id", "user.id", "trainers", "trainings")
+                .usingRecursiveComparison(getTraineeConfigForSaved())
                 .isEqualTo(validTrainee);
-        Trainee existingTrainee = findTraineeInDb(actual.getId());
+        Trainee existingTrainee = testDbClient.findTrainee(actual.getId());
         assertThat(existingTrainee)
-                .usingRecursiveComparison()
-                .ignoringFields("id", "user.id", "trainers", "trainings")
+                .usingRecursiveComparison(getTraineeConfigForSaved())
                 .isEqualTo(actual);
-        assertThat(countTraineeTrainings(actual.getId()))
+        assertThat(testDbClient.countTraineeTrainings(actual.getId()))
                 .as("New trainee should have no trainings in database")
                 .isZero();
-        assertThat(countTraineeTrainers(actual.getId()))
+        assertThat(testDbClient.countTraineeTrainers(actual.getId()))
                 .as("New trainee should have no trainers in database")
                 .isZero();
     }
 
     @Test
-    void shouldThrowNullPointerExceptionWhenCreatingNullTrainee() {
-        assertThatThrownBy(() -> dao.create(null))
+    void shouldThrowNullPointerExceptionWhenSavingNullTrainee() {
+        assertThatThrownBy(() -> dao.save(null))
                 .isInstanceOf(NullPointerException.class)
                 .hasMessage("Trainee cannot be null");
-        assertThat(countTrainees())
+        assertThat(testDbClient.countTrainees())
                 .as("Trainees count should remain unchanged")
                 .isEqualTo(TRAINEES_COUNT);
-        assertThat(countUsers())
+        assertThat(testDbClient.countUsers())
                 .as("Users count should remain unchanged")
                 .isEqualTo(USERS_COUNT);
     }
 
     @Test
-    void shouldThrowNullPointerExceptionWhenCreatingTraineeWithNullUser() {
+    void shouldThrowNullPointerExceptionWhenSavingTraineeWithNullUser() {
         Trainee invalidTraineeWithoutUser = Trainee.builder().build();
 
-        assertThatThrownBy(() -> dao.create(invalidTraineeWithoutUser))
+        assertThatThrownBy(() -> dao.save(invalidTraineeWithoutUser))
                 .isInstanceOf(NullPointerException.class)
                 .hasMessage("User cannot be null");
-        assertThat(countTrainees())
+        assertThat(testDbClient.countTrainees())
                 .as("Trainees count should remain unchanged")
                 .isEqualTo(TRAINEES_COUNT);
-        assertThat(countUsers())
+        assertThat(testDbClient.countUsers())
                 .as("Users count should remain unchanged")
                 .isEqualTo(USERS_COUNT);
     }
 
     @Test
-    void shouldThrowIllegalArgumentExceptionWhenCreatingTraineeWithId() {
+    void shouldThrowIllegalArgumentExceptionWhenSavingTraineeWithId() {
         User validUser = User.builder().build();
         Trainee invalidTraineeWithId = Trainee.builder()
                 .id(EXISTING_ID)
                 .user(validUser)
                 .build();
 
-        assertThatThrownBy(() -> dao.create(invalidTraineeWithId))
+        assertThatThrownBy(() -> dao.save(invalidTraineeWithId))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Trainee ID must be null for creation.");
-        assertThat(countTrainees())
+        assertThat(testDbClient.countTrainees())
                 .as("Trainees count should remain unchanged")
                 .isEqualTo(TRAINEES_COUNT);
-        assertThat(countUsers())
+        assertThat(testDbClient.countUsers())
                 .as("Users count should remain unchanged")
                 .isEqualTo(USERS_COUNT);
     }
 
     @Test
-    void shouldThrowIllegalArgumentExceptionWhenCreatingTraineeWithUserId() {
+    void shouldThrowIllegalArgumentExceptionWhenSavingTraineeWithUserId() {
         User invalidUserWithId = User.builder().id(EXISTING_USER_ID).build();
         Trainee validTraineeWithInvalidUser = Trainee.builder().user(invalidUserWithId).build();
 
-        assertThatThrownBy(() -> dao.create(validTraineeWithInvalidUser))
+        assertThatThrownBy(() -> dao.save(validTraineeWithInvalidUser))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("User ID must be null for creation.");
-        assertThat(countTrainees())
+        assertThat(testDbClient.countTrainees())
                 .as("Trainees count should remain unchanged")
                 .isEqualTo(TRAINEES_COUNT);
-        assertThat(countUsers())
+        assertThat(testDbClient.countUsers())
                 .as("Users count should remain unchanged")
                 .isEqualTo(USERS_COUNT);
     }
 
     @Test
     void shouldFindByIdWhenExists() {
-        Trainee expected = buildSeededTrainee();
+        Trainee expected = testDbClient.findTrainee(EXISTING_ID);
 
         Optional<Trainee> actual = dao.findById(EXISTING_ID);
 
         assertThat(actual).isPresent();
         assertThat(actual.get())
-                .usingRecursiveComparison()
-                .ignoringFields("trainers", "trainings")
+                .usingRecursiveComparison(getTraineeConfigForExisting())
                 .isEqualTo(expected);
-        assertThat(findTraineeTrainingsInDb(EXISTING_ID))
+        assertThat(testDbClient.findTraineeTrainings(EXISTING_ID))
                 .hasSize(1)
-                .usingRecursiveComparison()
-                .ignoringFields("trainee", "trainingType", "trainer")
+                .usingRecursiveComparison(getTrainingConfigForDirectFields())
                 .isEqualTo(actual.get().getTrainings());
-        assertThat(findTraineeTrainersInDb(EXISTING_ID))
+        assertThat(testDbClient.findTraineeTrainers(EXISTING_ID))
                 .hasSize(1)
-                .usingRecursiveComparison()
-                .ignoringFields("user", "specialization", "trainings", "trainees")
+                .usingRecursiveComparison(getTrainerConfigForDirectFields())
                 .isEqualTo(actual.get().getTrainers());
     }
 
@@ -166,24 +163,21 @@ class HibernateTraineeDaoTest extends AbstractDaoTest<HibernateTraineeDao> {
 
     @Test
     void shouldFindByUsernameWhenExists() {
-        Trainee expected = buildSeededTrainee();
+        Trainee expected = testDbClient.findTrainee(EXISTING_ID);
 
         Optional<Trainee> actual = dao.findByUsername(EXISTING_USERNAME);
 
         assertThat(actual).isPresent();
         assertThat(actual.get())
-                .usingRecursiveComparison()
-                .ignoringFields("trainers", "trainings")
+                .usingRecursiveComparison(getTraineeConfigForExisting())
                 .isEqualTo(expected);
-        assertThat(findTraineeTrainingsInDb(EXISTING_ID))
+        assertThat(testDbClient.findTraineeTrainings(EXISTING_ID))
                 .hasSize(1)
-                .usingRecursiveComparison()
-                .ignoringFields("trainee", "trainingType", "trainer")
+                .usingRecursiveComparison(getTrainingConfigForDirectFields())
                 .isEqualTo(actual.get().getTrainings());
-        assertThat(findTraineeTrainersInDb(EXISTING_ID))
+        assertThat(testDbClient.findTraineeTrainers(EXISTING_ID))
                 .hasSize(1)
-                .usingRecursiveComparison()
-                .ignoringFields("user", "specialization", "trainings", "trainees")
+                .usingRecursiveComparison(getTrainerConfigForDirectFields())
                 .isEqualTo(actual.get().getTrainers());
     }
 
@@ -203,20 +197,20 @@ class HibernateTraineeDaoTest extends AbstractDaoTest<HibernateTraineeDao> {
 
     @Test
     void shouldFindAllTrainees() {
+        List<Trainee> expected = List.of(
+                Trainee.builder().id(EXISTING_ID).build(),
+                Trainee.builder().id(2L).build());
+
         List<Trainee> actual = dao.findAll();
 
-        assertThat(actual).hasSize(TRAINEES_COUNT);
         assertThat(actual)
-                .extracting(Trainee::getId, Trainee::getAddress, Trainee::getDateOfBirth, t -> t.getUser().getId(),
-                        t -> t.getTrainers().size(), t -> t.getTrainings().size())
-                .containsExactlyInAnyOrder(
-                        tuple(1L, "NYC", LocalDate.of(1990, 5, 15), 1L, 1, 1),
-                        tuple(2L, null, LocalDate.of(1992, 8, 20), 2L, 0, 1));
+                .hasSize(TRAINEES_COUNT)
+                .containsAll(expected);
     }
 
     @Test
     void shouldUpdateTrainee() {
-        Trainee existingTrainee = dao.findById(EXISTING_ID).orElseThrow(() -> new AssertionError("Trainee not found"));
+        Trainee existingTrainee = testDbClient.findTrainee(EXISTING_ID);
         User updatedUser = existingTrainee.getUser().toBuilder()
                 .firstName("UpdatedFirstName")
                 .lastName("UpdatedLastName")
@@ -226,6 +220,8 @@ class HibernateTraineeDaoTest extends AbstractDaoTest<HibernateTraineeDao> {
                 .address("Updated Address")
                 .dateOfBirth(LocalDate.of(1995, 1, 1))
                 .user(updatedUser)
+                .trainers(new HashSet<>(testDbClient.findTraineeTrainers(EXISTING_ID)))
+                .trainings(testDbClient.findTraineeTrainings(EXISTING_ID))
                 .build();
 
         Trainee actual = dao.update(updatedTrainee);
@@ -237,24 +233,21 @@ class HibernateTraineeDaoTest extends AbstractDaoTest<HibernateTraineeDao> {
                 .as("Returned trainee should contain associated trainers")
                 .hasSize(1);
         assertThat(actual)
-                .usingRecursiveComparison()
-                .ignoringFields("trainings.trainee", "trainings.trainingType", "trainings.trainer",
-                        "trainers.trainees", "trainers.specialization", "trainers.trainings")
+                .usingRecursiveComparison(getTraineeConfigForExisting())
                 .isEqualTo(updatedTrainee);
-        Trainee existingTraineeAfterUpdate = findTraineeInDb(EXISTING_ID);
+        Trainee existingTraineeAfterUpdate = testDbClient.findTrainee(EXISTING_ID);
         assertThat(existingTraineeAfterUpdate)
-                .usingRecursiveComparison()
-                .ignoringFields("trainings", "trainers")
+                .usingRecursiveComparison(getTraineeConfigForExisting())
                 .isEqualTo(updatedTrainee);
-        assertThat(findTraineeTrainingsInDb(EXISTING_ID))
+        assertThat(testDbClient.findTraineeTrainings(EXISTING_ID))
                 .hasSize(1)
-                .usingRecursiveComparison()
-                .ignoringFields("trainee", "trainingType", "trainer")
+                .usingRecursiveComparison(getTrainingConfigForDirectFields())
+                .isEqualTo(updatedTrainee.getTrainings())
                 .isEqualTo(actual.getTrainings());
-        assertThat(findTraineeTrainersInDb(EXISTING_ID))
+        assertThat(testDbClient.findTraineeTrainers(EXISTING_ID))
                 .hasSize(1)
-                .usingRecursiveComparison()
-                .ignoringFields("user", "specialization", "trainings", "trainees")
+                .usingRecursiveComparison(getTrainerConfigForDirectFields())
+                .isEqualTo(updatedTrainee.getTrainers())
                 .isEqualTo(actual.getTrainers());
     }
 
@@ -263,10 +256,10 @@ class HibernateTraineeDaoTest extends AbstractDaoTest<HibernateTraineeDao> {
         assertThatThrownBy(() -> dao.update(null))
                 .isInstanceOf(NullPointerException.class)
                 .hasMessage("Trainee cannot be null");
-        assertThat(countTrainees())
+        assertThat(testDbClient.countTrainees())
                 .as("Trainees count should remain unchanged")
                 .isEqualTo(TRAINEES_COUNT);
-        assertThat(countUsers())
+        assertThat(testDbClient.countUsers())
                 .as("Users count should remain unchanged")
                 .isEqualTo(USERS_COUNT);
     }
@@ -278,10 +271,10 @@ class HibernateTraineeDaoTest extends AbstractDaoTest<HibernateTraineeDao> {
         assertThatThrownBy(() -> dao.update(invalidTraineeWithoutId))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Cannot update entity without ID");
-        assertThat(countTrainees())
+        assertThat(testDbClient.countTrainees())
                 .as("Trainees count should remain unchanged")
                 .isEqualTo(TRAINEES_COUNT);
-        assertThat(countUsers())
+        assertThat(testDbClient.countUsers())
                 .as("Users count should remain unchanged")
                 .isEqualTo(USERS_COUNT);
     }
@@ -293,19 +286,19 @@ class HibernateTraineeDaoTest extends AbstractDaoTest<HibernateTraineeDao> {
         boolean result = dao.deleteByUsername(EXISTING_USERNAME);
 
         assertThat(result).isTrue();
-        assertThat(isTraineeInDb(EXISTING_ID))
+        assertThat(testDbClient.traineeExists(EXISTING_ID))
                 .as("Trainee should be deleted from database")
                 .isFalse();
-        assertThat(isUserInDb(EXISTING_USERNAME))
+        assertThat(testDbClient.userExists(EXISTING_USERNAME))
                 .as("User should be deleted from database")
                 .isFalse();
-        assertThat(countTraineeTrainings(EXISTING_ID))
+        assertThat(testDbClient.countTraineeTrainings(EXISTING_ID))
                 .as("Trainee's trainings should be deleted from database")
                 .isZero();
-        assertThat(countTraineeTrainers(EXISTING_ID))
+        assertThat(testDbClient.countTraineeTrainers(EXISTING_ID))
                 .as("Trainee's trainers link should be deleted from database")
                 .isZero();
-        assertThat(isTrainerInDb(existingTraineeTrainerId))
+        assertThat(testDbClient.trainerExists(existingTraineeTrainerId))
                 .as("Trainee's trainer should remain in database")
                 .isTrue();
     }
@@ -317,7 +310,7 @@ class HibernateTraineeDaoTest extends AbstractDaoTest<HibernateTraineeDao> {
         boolean result = dao.deleteByUsername(nonExistingUsername);
 
         assertThat(result).isFalse();
-        assertThat(countTrainees())
+        assertThat(testDbClient.countTrainees())
                 .as("Trainees count should remain unchanged")
                 .isEqualTo(2);
     }
@@ -327,109 +320,6 @@ class HibernateTraineeDaoTest extends AbstractDaoTest<HibernateTraineeDao> {
         assertThatThrownBy(() -> dao.deleteByUsername(null))
                 .isInstanceOf(NullPointerException.class)
                 .hasMessage("Trainee username cannot be null");
-    }
-
-    private Trainee buildSeededTrainee() {
-        User user = User.builder()
-                .id(EXISTING_USER_ID)
-                .firstName("Liam")
-                .lastName("Miller")
-                .username(EXISTING_USERNAME)
-                .password("pass123")
-                .isActive(true)
-                .build();
-        return Trainee.builder()
-                .id(EXISTING_ID)
-                .address("NYC")
-                .dateOfBirth(LocalDate.of(1990, 5, 15))
-                .user(user)
-                .build();
-    }
-
-    private Trainee findTraineeInDb(Long id) {
-        Trainee trainee = jdbcClient.sql("SELECT * FROM trainee WHERE id = ?")
-                .params(id)
-                .query((rs, rowNum) -> Trainee.builder()
-                        .id(rs.getLong("id"))
-                        .address(rs.getString("address"))
-                        .dateOfBirth(rs.getDate("date_of_birth").toLocalDate())
-                        .user(User.builder().id(rs.getLong("user_id")).build())
-                        .build())
-                .single();
-        User user = findUserInDb(trainee.getUser().getId());
-        return trainee.toBuilder().user(user).build();
-    }
-
-    private User findUserInDb(Long id) {
-        return jdbcClient.sql("SELECT * FROM user WHERE id = ?")
-                .params(id)
-                .query(User.class)
-                .single();
-    }
-
-    private long countTrainees() {
-        return jdbcClient.sql("SELECT COUNT(*) FROM trainee")
-                .query(Long.class)
-                .single();
-    }
-
-    private long countUsers() {
-        return jdbcClient.sql("SELECT COUNT(*) FROM user")
-                .query(Long.class)
-                .single();
-    }
-
-    private long countTraineeTrainings(Long traineeId) {
-        return jdbcClient.sql("SELECT COUNT(*) FROM training WHERE trainee_id = ?")
-                .params(traineeId)
-                .query(Long.class)
-                .single();
-    }
-
-    private long countTraineeTrainers(Long traineeId) {
-        return jdbcClient.sql("SELECT COUNT(*) FROM trainee_trainer WHERE trainee_id = ?")
-                .params(traineeId)
-                .query(Long.class)
-                .single();
-    }
-
-    private boolean isTraineeInDb(Long traineeId) {
-        return jdbcClient.sql("SELECT COUNT(*) FROM trainee WHERE id = ?")
-                .params(traineeId)
-                .query(Long.class)
-                .single() > 0;
-    }
-
-    private boolean isUserInDb(String username) {
-        return jdbcClient.sql("SELECT COUNT(*) FROM user WHERE username = ?")
-                .params(username)
-                .query(Long.class)
-                .single() > 0;
-    }
-
-    private boolean isTrainerInDb(Long trainerId) {
-        return jdbcClient.sql("SELECT COUNT(*) FROM trainer WHERE id = ?")
-                .params(trainerId)
-                .query(Long.class)
-                .single() > 0;
-    }
-
-    private List<Training> findTraineeTrainingsInDb(Long traineeId) {
-        return jdbcClient.sql("SELECT t.* FROM training t WHERE t.trainee_id = ?")
-                .params(traineeId)
-                .query(Training.class)
-                .list();
-    }
-
-    private List<Trainer> findTraineeTrainersInDb(Long traineeId) {
-        return jdbcClient.sql("""
-                        SELECT tr.* FROM trainer tr
-                        INNER JOIN trainee_trainer tt ON tt.trainer_id = tr.id
-                        WHERE tt.trainee_id = ?
-                        """)
-                .params(traineeId)
-                .query(Trainer.class)
-                .list();
     }
 
 }

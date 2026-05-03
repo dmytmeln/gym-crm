@@ -17,7 +17,7 @@ public class HibernateTraineeDao implements TraineeEntityDao {
     private final TransactionManager transactionManager;
 
     @Override
-    public Trainee create(Trainee entity) {
+    public Trainee save(Trainee entity) {
         Objects.requireNonNull(entity, "Trainee cannot be null");
         Objects.requireNonNull(entity.getUser(), "User cannot be null");
 

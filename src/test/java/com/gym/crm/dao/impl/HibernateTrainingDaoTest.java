@@ -1,0 +1,151 @@
+package com.gym.crm.dao.impl;
+
+import com.gym.crm.entity.Trainee;
+import com.gym.crm.entity.Trainer;
+import com.gym.crm.entity.Training;
+import com.gym.crm.entity.TrainingType;
+import org.junit.jupiter.api.Test;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+
+import static com.gym.crm.test.helper.EntityRecursiveComparisonConfigs.getTraineeConfigForDirectFields;
+import static com.gym.crm.test.helper.EntityRecursiveComparisonConfigs.getTrainerConfigForDirectFields;
+import static com.gym.crm.test.helper.EntityRecursiveComparisonConfigs.getTrainingConfigForExisting;
+import static com.gym.crm.test.helper.EntityRecursiveComparisonConfigs.getTrainingConfigForSaved;
+import static com.gym.crm.test.helper.EntityRecursiveComparisonConfigs.getTrainingTypeConfigForDirectFields;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+@SpringJUnitConfig(HibernateTrainingDao.class)
+class HibernateTrainingDaoTest extends AbstractDaoTest<HibernateTrainingDao> {
+
+    private static final long EXISTING_TRAINING_ID = 1L;
+    private static final long EXISTING_TRAINEE_ID = 1L;
+    private static final long EXISTING_TRAINER_ID = 1L;
+    private static final long EXISTING_TRAINING_TYPE_ID = 1L;
+    private static final long NON_EXISTING_ID = 99999L;
+    private static final int TRAININGS_COUNT = 2;
+
+    @Test
+    void shouldSaveTrainingWithExistingReferences() {
+        Trainee existingTrainee = testDbClient.findTraineeSimple(EXISTING_TRAINEE_ID);
+        Trainer existingTrainer = testDbClient.findTrainerSimple(EXISTING_TRAINER_ID);
+        TrainingType existingTrainingType = testDbClient.findTrainingType(EXISTING_TRAINING_TYPE_ID);
+        Training validTraining = Training.builder()
+                .trainee(existingTrainee)
+                .trainer(existingTrainer)
+                .trainingName("Advanced Cardio Session")
+                .trainingType(existingTrainingType)
+                .trainingDate(LocalDate.of(2025, 2, 1))
+                .trainingDuration(45)
+                .build();
+
+        Training actual = dao.save(validTraining);
+
+        assertThat(actual.getId()).isNotNull();
+        assertThat(actual)
+                .usingRecursiveComparison(getTrainingConfigForSaved())
+                .isEqualTo(validTraining);
+        Training existingTraining = testDbClient.findTraining(actual.getId());
+        assertThat(existingTraining)
+                .usingRecursiveComparison(getTrainingConfigForSaved())
+                .isEqualTo(actual);
+        assertThat(existingTraining.getTrainee())
+                .usingRecursiveComparison(getTraineeConfigForDirectFields())
+                .isEqualTo(existingTrainee);
+        assertThat(existingTraining.getTrainer())
+                .usingRecursiveComparison(getTrainerConfigForDirectFields())
+                .isEqualTo(existingTrainer);
+        assertThat(existingTraining.getTrainingType())
+                .usingRecursiveComparison(getTrainingTypeConfigForDirectFields())
+                .isEqualTo(existingTrainingType);
+        assertThat(testDbClient.countTrainings())
+                .as("WithAssociationsTrainings count should increase by 1")
+                .isEqualTo(TRAININGS_COUNT + 1);
+    }
+
+    @Test
+    void shouldThrowNullPointerExceptionWhenSavingNullTraining() {
+        assertThatThrownBy(() -> dao.save(null))
+                .isInstanceOf(NullPointerException.class)
+                .hasMessage("Training cannot be null");
+        assertThat(testDbClient.countTrainings())
+                .as("Trainings count should remain unchanged")
+                .isEqualTo(TRAININGS_COUNT);
+    }
+
+    @Test
+    void shouldThrowIllegalArgumentExceptionWhenSavingTrainingWithId() {
+        Trainee existingTrainee = Trainee.builder().id(EXISTING_TRAINEE_ID).build();
+        Trainer existingTrainer = Trainer.builder().id(EXISTING_TRAINER_ID).build();
+        TrainingType existingTrainingType = TrainingType.builder().id(EXISTING_TRAINING_TYPE_ID).build();
+        Training invalidTrainingWithId = Training.builder()
+                .id(EXISTING_TRAINING_ID)
+                .trainee(existingTrainee)
+                .trainer(existingTrainer)
+                .trainingName("Test Training")
+                .trainingType(existingTrainingType)
+                .trainingDate(LocalDate.of(2025, 2, 1))
+                .trainingDuration(45)
+                .build();
+
+        assertThatThrownBy(() -> dao.save(invalidTrainingWithId))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Training ID must be null for creation.");
+        assertThat(testDbClient.countTrainings())
+                .as("Trainings count should remain unchanged")
+                .isEqualTo(TRAININGS_COUNT);
+    }
+
+    @Test
+    void shouldFindByIdWhenExists() {
+        Training expected = testDbClient.findTraining(EXISTING_TRAINING_ID);
+
+        Optional<Training> actual = dao.findById(EXISTING_TRAINING_ID);
+
+        assertThat(actual).isPresent();
+        assertThat(actual.get())
+                .usingRecursiveComparison(getTrainingConfigForExisting())
+                .isEqualTo(expected);
+        assertThat(actual.get().getTrainee())
+                .usingRecursiveComparison(getTraineeConfigForDirectFields())
+                .isEqualTo(expected.getTrainee());
+        assertThat(actual.get().getTrainer())
+                .usingRecursiveComparison(getTrainerConfigForDirectFields())
+                .isEqualTo(expected.getTrainer());
+        assertThat(actual.get().getTrainingType())
+                .usingRecursiveComparison(getTrainingTypeConfigForDirectFields())
+                .isEqualTo(expected.getTrainingType());
+    }
+
+    @Test
+    void shouldReturnEmptyWhenNotFoundById() {
+        Optional<Training> actual = dao.findById(NON_EXISTING_ID);
+
+        assertThat(actual).isEmpty();
+    }
+
+    @Test
+    void shouldThrowNullPointerExceptionWhenFindingByNullId() {
+        assertThatThrownBy(() -> dao.findById(null))
+                .isInstanceOf(NullPointerException.class)
+                .hasMessage("Training ID cannot be null");
+    }
+
+    @Test
+    void shouldFindAllTrainings() {
+        List<Training> expected = List.of(
+                Training.builder().id(EXISTING_TRAINING_ID).build(),
+                Training.builder().id(2L).build());
+
+        List<Training> actual = dao.findAll();
+
+        assertThat(actual)
+                .hasSize(TRAININGS_COUNT)
+                .containsAll(expected);
+    }
+
+}
