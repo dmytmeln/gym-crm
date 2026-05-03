@@ -11,15 +11,11 @@ import static java.lang.String.format;
 
 public class EntityRecursiveComparisonConfigs {
 
-    // ========== TrainingType ==========
-
     public static RecursiveComparisonConfiguration getTrainingTypeConfigForDirectFields() {
         return getSharedBuilder()
                 .withComparedFields(TrainingType_.ID, TrainingType_.TRAINING_TYPE_NAME)
                 .build();
     }
-
-    // ========== Trainer ==========
 
     public static RecursiveComparisonConfiguration getTrainerConfigForDirectFields() {
         return getSharedBuilder()
@@ -42,8 +38,6 @@ public class EntityRecursiveComparisonConfigs {
                 .build();
     }
 
-    // ========== Trainee ==========
-
     public static RecursiveComparisonConfiguration getTraineeConfigForDirectFields() {
         return getSharedBuilder()
                 .withComparedFields(Trainee_.ID, Trainee_.DATE_OF_BIRTH, Trainee_.ADDRESS)
@@ -63,8 +57,6 @@ public class EntityRecursiveComparisonConfigs {
                 .build();
     }
 
-    // ========== Training ==========
-
     public static RecursiveComparisonConfiguration getTrainingConfigForDirectFields() {
         return getSharedBuilder()
                 .withComparedFields(Training_.ID, Training_.TRAINING_NAME, Training_.TRAINING_DATE, Training_.TRAINING_DURATION)
@@ -83,8 +75,6 @@ public class EntityRecursiveComparisonConfigs {
                 .withComparedFields(Training_.ID, Training_.TRAINING_NAME, Training_.TRAINING_DATE, Training_.TRAINING_DURATION)
                 .build();
     }
-
-    // ========== Shared ==========
 
     private static RecursiveComparisonConfiguration.Builder getSharedBuilder() {
         return RecursiveComparisonConfiguration.builder()

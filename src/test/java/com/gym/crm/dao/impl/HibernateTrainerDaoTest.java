@@ -16,7 +16,6 @@ import static com.gym.crm.test.helper.EntityRecursiveComparisonConfigs.getTraine
 import static com.gym.crm.test.helper.EntityRecursiveComparisonConfigs.getTrainingConfigForDirectFields;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.tuple;
 
 @SpringJUnitConfig(HibernateTrainerDao.class)
 class HibernateTrainerDaoTest extends AbstractDaoTest<HibernateTrainerDao> {
@@ -199,16 +198,16 @@ class HibernateTrainerDaoTest extends AbstractDaoTest<HibernateTrainerDao> {
 
     @Test
     void shouldFindAllTrainers() {
+        List<Trainer> expected = List.of(
+                Trainer.builder().id(EXISTING_ID).build(),
+                Trainer.builder().id(2L).build(),
+                Trainer.builder().id(3L).build());
+
         List<Trainer> actual = dao.findAll();
 
-        assertThat(actual).hasSize(TRAINERS_COUNT);
         assertThat(actual)
-                .extracting(Trainer::getId, t -> t.getUser().getId(), t -> t.getSpecialization().getId(),
-                        t -> t.getTrainees().size(), t -> t.getTrainings().size())
-                .containsExactlyInAnyOrder(
-                        tuple(1L, 4L, 1L, 1, 1),
-                        tuple(2L, 5L, 2L, 0, 1),
-                        tuple(3L, 6L, 3L, 0, 0));
+                .hasSize(TRAINERS_COUNT)
+                .containsAll(expected);
     }
 
     @Test

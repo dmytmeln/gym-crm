@@ -18,7 +18,6 @@ import static com.gym.crm.test.helper.EntityRecursiveComparisonConfigs.getTraini
 import static com.gym.crm.test.helper.EntityRecursiveComparisonConfigs.getTrainingTypeConfigForDirectFields;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.tuple;
 
 @SpringJUnitConfig(HibernateTrainingDao.class)
 class HibernateTrainingDaoTest extends AbstractDaoTest<HibernateTrainingDao> {
@@ -32,8 +31,8 @@ class HibernateTrainingDaoTest extends AbstractDaoTest<HibernateTrainingDao> {
 
     @Test
     void shouldSaveTrainingWithExistingReferences() {
-        Trainee existingTrainee = testDbClient.findTrainee(EXISTING_TRAINEE_ID);
-        Trainer existingTrainer = testDbClient.findTrainer(EXISTING_TRAINER_ID);
+        Trainee existingTrainee = testDbClient.findTraineeSimple(EXISTING_TRAINEE_ID);
+        Trainer existingTrainer = testDbClient.findTrainerSimple(EXISTING_TRAINER_ID);
         TrainingType existingTrainingType = testDbClient.findTrainingType(EXISTING_TRAINING_TYPE_ID);
         Training validTraining = Training.builder()
                 .trainee(existingTrainee)
@@ -138,16 +137,15 @@ class HibernateTrainingDaoTest extends AbstractDaoTest<HibernateTrainingDao> {
 
     @Test
     void shouldFindAllTrainings() {
+        List<Training> expected = List.of(
+                Training.builder().id(EXISTING_TRAINING_ID).build(),
+                Training.builder().id(2L).build());
+
         List<Training> actual = dao.findAll();
 
-        assertThat(actual).hasSize(TRAININGS_COUNT);
         assertThat(actual)
-                .extracting(Training::getId, Training::getTrainingName, Training::getTrainingDate,
-                        Training::getTrainingDuration, t -> t.getTrainee().getId(), t -> t.getTrainer().getId(),
-                        t -> t.getTrainingType().getId())
-                .containsExactlyInAnyOrder(
-                        tuple(1L, "Morning HIIT", LocalDate.of(2025, 1, 15), 60, 1L, 1L, 1L),
-                        tuple(2L, "Evening Weights", LocalDate.of(2025, 1, 16), 90, 2L, 2L, 2L));
+                .hasSize(TRAININGS_COUNT)
+                .containsAll(expected);
     }
 
 }

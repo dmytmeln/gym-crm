@@ -7,6 +7,8 @@ import com.gym.crm.entity.TrainingType;
 import com.gym.crm.entity.User;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 
 public class TestDbClient {
@@ -68,34 +70,26 @@ public class TestDbClient {
                     long traineeId = rs.getLong("trainee_id");
                     long trainerId = rs.getLong("trainer_id");
                     long trainingTypeId = rs.getLong("training_type_id");
-                    return Training.builder()
-                            .id(rs.getLong("id"))
-                            .trainee(findTraineeSimple(traineeId))
-                            .trainer(findTrainerSimple(trainerId))
-                            .trainingName(rs.getString("training_name"))
-                            .trainingType(findTrainingType(trainingTypeId))
-                            .trainingDate(rs.getDate("training_date").toLocalDate())
-                            .trainingDuration(rs.getInt("training_duration"))
-                            .build();
+                    return buildTraining(rs, traineeId, trainerId, trainingTypeId);
                 })
                 .single();
     }
 
-    private Trainee findTraineeSimple(Long id) {
+    public Trainee findTraineeSimple(Long id) {
         return jdbcClient.sql("SELECT * FROM trainee WHERE id = ?")
                 .params(id)
                 .query(Trainee.class)
                 .single();
     }
 
-    private Trainer findTrainerSimple(Long id) {
+    public Trainer findTrainerSimple(Long id) {
         return jdbcClient.sql("SELECT * FROM trainer WHERE id = ?")
                 .params(id)
                 .query(Trainer.class)
                 .single();
     }
 
-    private Training findTrainingSimple(Long id) {
+    public Training findTrainingSimple(Long id) {
         return jdbcClient.sql("SELECT * FROM training WHERE id = ?")
                 .params(id)
                 .query(Training.class)
@@ -209,6 +203,18 @@ public class TestDbClient {
                 .params(id)
                 .query(Long.class)
                 .single() > 0;
+    }
+
+    private Training buildTraining(ResultSet rs, long traineeId, long trainerId, long trainingTypeId) throws SQLException {
+        return Training.builder()
+                .id(rs.getLong("id"))
+                .trainee(findTraineeSimple(traineeId))
+                .trainer(findTrainerSimple(trainerId))
+                .trainingName(rs.getString("training_name"))
+                .trainingType(findTrainingType(trainingTypeId))
+                .trainingDate(rs.getDate("training_date").toLocalDate())
+                .trainingDuration(rs.getInt("training_duration"))
+                .build();
     }
 
 }
