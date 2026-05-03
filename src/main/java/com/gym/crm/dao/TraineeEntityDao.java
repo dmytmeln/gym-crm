@@ -7,7 +7,7 @@ import java.util.Optional;
 
 public interface TraineeEntityDao {
 
-    Trainee create(Trainee entity);
+    Trainee save(Trainee entity);
 
     Optional<Trainee> findById(Long id);
 
