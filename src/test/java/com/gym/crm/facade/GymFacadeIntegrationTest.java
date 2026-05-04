@@ -1,6 +1,7 @@
 package com.gym.crm.facade;
 
 import com.gym.crm.GymCrmApplication;
+import com.gym.crm.config.BaseDbIntegrationTest;
 import com.gym.crm.dto.TraineeCreateDto;
 import com.gym.crm.dto.TraineeCreateResponseDto;
 import com.gym.crm.dto.TraineeResponseDto;
@@ -11,126 +12,99 @@ import com.gym.crm.dto.TrainerResponseDto;
 import com.gym.crm.dto.TrainerUpdateDto;
 import com.gym.crm.dto.TrainingCreateDto;
 import com.gym.crm.dto.TrainingResponseDto;
-import com.gym.crm.exception.EntityNotFoundException;
-import com.gym.crm.service.TraineeService;
-import com.gym.crm.service.TrainerService;
-import com.gym.crm.service.TrainingService;
-import com.gym.crm.storage.impl.TraineeNamespaceStorage;
-import com.gym.crm.storage.impl.TrainerNamespaceStorage;
-import com.gym.crm.storage.impl.TrainingNamespaceStorage;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
-import java.util.Map;
 
-import static com.gym.crm.factory.TraineeTestFactory.NON_EXISTENT_TRAINEE_ID;
 import static com.gym.crm.factory.TraineeTestFactory.buildTraineeCreateDto;
 import static com.gym.crm.factory.TraineeTestFactory.buildTraineeUpdateDto;
 import static com.gym.crm.factory.TrainerTestFactory.buildTrainerCreateDto;
 import static com.gym.crm.factory.TrainerTestFactory.buildTrainerUpdateDto;
 import static com.gym.crm.factory.TrainingTestFactory.buildTrainingCreateDto;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringJUnitConfig(GymCrmApplication.class)
-class GymFacadeIntegrationTest {
+@Sql(scripts = {"classpath:datasets/cleanup-all.sql", "classpath:datasets/seed-data.sql"})
+class GymFacadeIntegrationTest extends BaseDbIntegrationTest {
+
+    private static final Long TRAINEE_ID = 1L;
+    private static final String TRAINEE_USERNAME = "liam.miller";
+    private static final String TRAINEE_PASSWORD = "pass123";
+    private static final Long TRAINER_ID = 1L;
+    private static final String TRAINER_USERNAME = "marcus.stone";
+    private static final String TRAINER_PASSWORD = "pass111";
+    private static final Long TRAINING_ID = 1L;
+    private static final String TRAINING_NAME = "Morning HIIT";
+    private static final int TRAINING_DURATION = 60;
 
     @Autowired
     private GymFacade facade;
 
-    @Autowired
-    private TraineeService traineeService;
+    @Test
+    void shouldGetTraineeById() {
+        TraineeResponseDto actual = facade.getTrainee(TRAINEE_ID);
 
-    @Autowired
-    private TrainerService trainerService;
-
-    @Autowired
-    private TrainingService trainingService;
-
-    @Autowired
-    private TraineeNamespaceStorage traineeNamespaceStorage;
-
-    @Autowired
-    private TrainerNamespaceStorage trainerNamespaceStorage;
-
-    @Autowired
-    private TrainingNamespaceStorage trainingNamespaceStorage;
-
-    @BeforeEach
-    @AfterEach
-    void resetStorage() {
-        clearNamespaceStorage(trainingNamespaceStorage);
-        clearNamespaceStorage(trainerNamespaceStorage);
-        clearNamespaceStorage(traineeNamespaceStorage);
-    }
-
-    private void clearNamespaceStorage(Object storageInstance) {
-        Map<?, ?> storageMap = (Map<?, ?>) ReflectionTestUtils.getField(storageInstance, "storage");
-        if (storageMap != null) {
-            storageMap.clear();
-        }
+        assertNotNull(actual);
+        assertEquals(TRAINEE_ID, actual.id());
+        assertEquals(TRAINEE_USERNAME, actual.username());
+        assertEquals("Liam", actual.firstName());
+        assertEquals("Miller", actual.lastName());
+        assertTrue(actual.active());
     }
 
     @Test
-    void shouldInitializeFacadeAndServicesInSpringContext() {
-        assertNotNull(facade);
-        assertNotNull(traineeService);
-        assertNotNull(trainerService);
-        assertNotNull(trainingService);
+    void shouldGetTraineeByUsername() {
+        TraineeResponseDto actual = facade.getTraineeByUsername(TRAINEE_USERNAME);
+
+        assertNotNull(actual);
+        assertEquals(TRAINEE_ID, actual.id());
+        assertEquals(TRAINEE_USERNAME, actual.username());
+    }
+
+    @Test
+    void shouldGetAllTrainees() {
+        List<TraineeResponseDto> actual = facade.getAllTrainees();
+
+        assertEquals(2, actual.size());
+    }
+
+    @Test
+    void shouldDoesTraineeUsernameAndPasswordMatch() {
+        boolean actual = facade.doesTraineeUsernameAndPasswordMatch(TRAINEE_USERNAME, TRAINEE_PASSWORD);
+
+        assertTrue(actual);
     }
 
     @Test
     void shouldCreateTrainee() {
-        TraineeCreateDto traineeDto = buildTraineeCreateDto();
+        TraineeCreateDto dto = buildTraineeCreateDto();
 
-        TraineeCreateResponseDto actual = facade.createTrainee(traineeDto);
+        TraineeCreateResponseDto actual = facade.createTrainee(dto);
 
-        assertNotNull(actual);
-        assertNotNull(actual.userId());
+        assertNotNull(actual.id());
         assertNotNull(actual.username());
         assertNotNull(actual.password());
-        assertEquals(traineeDto.firstName(), actual.firstName());
-        assertEquals(traineeDto.lastName(), actual.lastName());
-        assertEquals(traineeDto.active(), actual.active());
-        assertEquals(traineeDto.address(), actual.address());
-        assertEquals(traineeDto.dateOfBirth(), actual.dateOfBirth());
-    }
-
-    @Test
-    void shouldGetTraineeById() {
-        TraineeCreateDto traineeDto = buildTraineeCreateDto();
-        TraineeCreateResponseDto created = facade.createTrainee(traineeDto);
-
-        TraineeResponseDto actual = facade.getTrainee(created.userId());
-
-        assertNotNull(actual);
-        assertEquals(created.userId(), actual.userId());
-        assertEquals(created.username(), actual.username());
-        assertEquals(traineeDto.firstName(), actual.firstName());
-        assertEquals(traineeDto.lastName(), actual.lastName());
-        assertEquals(traineeDto.active(), actual.active());
-        assertEquals(traineeDto.address(), actual.address());
-        assertEquals(traineeDto.dateOfBirth(), actual.dateOfBirth());
+        assertEquals(dto.firstName(), actual.firstName());
+        assertEquals(dto.lastName(), actual.lastName());
+        assertEquals(dto.active(), actual.active());
+        assertEquals(dto.address(), actual.address());
+        assertEquals(dto.dateOfBirth(), actual.dateOfBirth());
     }
 
     @Test
     void shouldUpdateTrainee() {
-        TraineeCreateResponseDto created = facade.createTrainee(buildTraineeCreateDto());
         TraineeUpdateDto updateDto = buildTraineeUpdateDto();
 
-        TraineeResponseDto actual = facade.updateTrainee(created.userId(), updateDto);
+        TraineeResponseDto actual = facade.updateTrainee(TRAINEE_ID, updateDto);
 
-        assertNotNull(actual);
-        assertEquals(created.userId(), actual.userId());
-        assertEquals(created.username(), actual.username());
+        assertEquals(TRAINEE_ID, actual.id());
         assertEquals(updateDto.firstName(), actual.firstName());
         assertEquals(updateDto.lastName(), actual.lastName());
         assertEquals(updateDto.active(), actual.active());
@@ -139,185 +113,181 @@ class GymFacadeIntegrationTest {
     }
 
     @Test
-    void shouldDeleteTrainee() {
-        TraineeCreateResponseDto created = facade.createTrainee(buildTraineeCreateDto());
+    void shouldUpdateTraineeTrainers() {
+        facade.updateTraineeTrainers(TRAINEE_ID, List.of(2L, 3L));
 
-        boolean actual = facade.deleteTrainee(created.userId());
+        List<TrainerResponseDto> unassigned = facade.getAllTrainersNotAssignedToTrainee(TRAINEE_USERNAME);
+        assertEquals(1, unassigned.size());
+        assertEquals(TRAINER_ID, unassigned.get(0).id());
+    }
+
+    @Test
+    void shouldUpdateTraineePassword() {
+        String newPassword = "newPass999";
+
+        facade.updateTraineePassword(TRAINEE_ID, newPassword);
+
+        assertTrue(facade.doesTraineeUsernameAndPasswordMatch(TRAINEE_USERNAME, newPassword));
+    }
+
+    @Test
+    void shouldActivateTrainee() {
+        facade.deactivateTrainee(TRAINEE_ID);
+        facade.activateTrainee(TRAINEE_ID);
+
+        assertTrue(facade.getTrainee(TRAINEE_ID).active());
+    }
+
+    @Test
+    void shouldDeactivateTrainee() {
+        facade.deactivateTrainee(TRAINEE_ID);
+
+        assertFalse(facade.getTrainee(TRAINEE_ID).active());
+    }
+
+    @Test
+    void shouldDeleteTrainee() {
+        boolean actual = facade.deleteTrainee(2L);
 
         assertTrue(actual);
-
-        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> facade.getTrainee(created.userId()));
-
-        assertEquals("Trainee not found with id: " + created.userId(), exception.getMessage());
     }
 
     @Test
-    void shouldReturnFalseWhenDeletingNonExistentTrainee() {
-        boolean actual = facade.deleteTrainee(NON_EXISTENT_TRAINEE_ID);
+    void shouldDeleteTraineeByUsername() {
+        boolean actual = facade.deleteTraineeByUsername("liam.miller");
 
-        assertFalse(actual);
-    }
-
-    @Test
-    void shouldGetAllTrainees() {
-        TraineeCreateDto traineeDto = buildTraineeCreateDto();
-        TraineeCreateResponseDto created = facade.createTrainee(traineeDto);
-
-        List<TraineeResponseDto> actual = facade.getAllTrainees();
-
-        assertNotNull(actual);
-        assertEquals(1, actual.size());
-
-        TraineeResponseDto trainee = actual.get(0);
-        assertEquals(created.userId(), trainee.userId());
-        assertEquals(created.username(), trainee.username());
-        assertEquals(traineeDto.firstName(), trainee.firstName());
-        assertEquals(traineeDto.lastName(), trainee.lastName());
-    }
-
-    @Test
-    void shouldReturnEmptyListWhenNoTraineesExist() {
-        List<TraineeResponseDto> actual = facade.getAllTrainees();
-
-        assertNotNull(actual);
-        assertTrue(actual.isEmpty());
-    }
-
-    @Test
-    void shouldCreateTrainer() {
-        TrainerCreateDto trainerDto = buildTrainerCreateDto();
-
-        TrainerCreateResponseDto actual = facade.createTrainer(trainerDto);
-
-        assertNotNull(actual);
-        assertNotNull(actual.userId());
-        assertNotNull(actual.username());
-        assertNotNull(actual.password());
-        assertEquals(trainerDto.firstName(), actual.firstName());
-        assertEquals(trainerDto.lastName(), actual.lastName());
-        assertEquals(trainerDto.active(), actual.active());
-        assertEquals(trainerDto.specialization().getTrainingTypeName(), actual.specialization().getTrainingTypeName());
+        assertTrue(actual);
     }
 
     @Test
     void shouldGetTrainerById() {
-        TrainerCreateDto trainerDto = buildTrainerCreateDto();
-        TrainerCreateResponseDto created = facade.createTrainer(trainerDto);
-
-        TrainerResponseDto actual = facade.getTrainer(created.userId());
+        TrainerResponseDto actual = facade.getTrainer(TRAINER_ID);
 
         assertNotNull(actual);
-        assertEquals(created.userId(), actual.userId());
-        assertEquals(created.username(), actual.username());
-        assertEquals(trainerDto.firstName(), actual.firstName());
-        assertEquals(trainerDto.lastName(), actual.lastName());
-        assertEquals(trainerDto.active(), actual.active());
-        assertEquals(trainerDto.specialization().getTrainingTypeName(), actual.specialization().getTrainingTypeName());
+        assertEquals(TRAINER_ID, actual.id());
+        assertEquals(TRAINER_USERNAME, actual.username());
+        assertEquals("Marcus", actual.firstName());
+        assertEquals("Stone", actual.lastName());
+        assertTrue(actual.active());
+        assertEquals("CARDIO", actual.specializationName());
     }
 
     @Test
-    void shouldUpdateTrainer() {
-        TrainerCreateResponseDto created = facade.createTrainer(buildTrainerCreateDto());
-        TrainerUpdateDto updateDto = buildTrainerUpdateDto();
-
-        TrainerResponseDto actual = facade.updateTrainer(created.userId(), updateDto);
+    void shouldGetTrainerByUsername() {
+        TrainerResponseDto actual = facade.getTrainerByUsername(TRAINER_USERNAME);
 
         assertNotNull(actual);
-        assertEquals(created.userId(), actual.userId());
-        assertEquals(created.username(), actual.username());
-        assertEquals(updateDto.firstName(), actual.firstName());
-        assertEquals(updateDto.lastName(), actual.lastName());
-        assertEquals(updateDto.active(), actual.active());
-        assertEquals(updateDto.specialization().getTrainingTypeName(), actual.specialization().getTrainingTypeName());
+        assertEquals(TRAINER_ID, actual.id());
+        assertEquals(TRAINER_USERNAME, actual.username());
     }
 
     @Test
     void shouldGetAllTrainers() {
-        TrainerCreateDto trainerDto = buildTrainerCreateDto();
-        TrainerCreateResponseDto created = facade.createTrainer(trainerDto);
-
         List<TrainerResponseDto> actual = facade.getAllTrainers();
 
-        assertNotNull(actual);
-        assertEquals(1, actual.size());
-
-        TrainerResponseDto trainer = actual.get(0);
-        assertEquals(created.userId(), trainer.userId());
-        assertEquals(created.username(), trainer.username());
-        assertEquals(trainerDto.firstName(), trainer.firstName());
-        assertEquals(trainerDto.lastName(), trainer.lastName());
+        assertEquals(3, actual.size());
     }
 
     @Test
-    void shouldReturnEmptyListWhenNoTrainersExist() {
-        List<TrainerResponseDto> actual = facade.getAllTrainers();
+    void shouldGetAllTrainersNotAssignedToTrainee() {
+        List<Long> expectedTrainerIds = List.of(2L, 3L);
 
-        assertNotNull(actual);
-        assertTrue(actual.isEmpty());
+        List<TrainerResponseDto> actual = facade.getAllTrainersNotAssignedToTrainee(TRAINEE_USERNAME);
+
+        assertThat(actual)
+                .hasSize(2)
+                .extracting(TrainerResponseDto::id)
+                .containsAll(expectedTrainerIds);
+    }
+
+    @Test
+    void shouldDoesTrainerUsernameAndPasswordMatch() {
+        boolean actual = facade.doesTrainerUsernameAndPasswordMatch(TRAINER_USERNAME, TRAINER_PASSWORD);
+
+        assertTrue(actual);
+    }
+
+    @Test
+    void shouldCreateTrainer() {
+        TrainerCreateDto dto = buildTrainerCreateDto();
+
+        TrainerCreateResponseDto actual = facade.createTrainer(dto);
+
+        assertNotNull(actual.id());
+        assertNotNull(actual.username());
+        assertNotNull(actual.password());
+        assertEquals(dto.firstName(), actual.firstName());
+        assertEquals(dto.lastName(), actual.lastName());
+        assertEquals(dto.active(), actual.active());
+    }
+
+    @Test
+    void shouldUpdateTrainer() {
+        TrainerUpdateDto updateDto = buildTrainerUpdateDto();
+
+        TrainerResponseDto actual = facade.updateTrainer(TRAINER_ID, updateDto);
+
+        assertEquals(TRAINER_ID, actual.id());
+        assertEquals(updateDto.firstName(), actual.firstName());
+        assertEquals(updateDto.lastName(), actual.lastName());
+        assertEquals(updateDto.active(), actual.active());
+    }
+
+    @Test
+    void shouldUpdateTrainerPassword() {
+        String newPassword = "newTrainerPass";
+
+        facade.updateTrainerPassword(TRAINER_ID, newPassword);
+
+        assertTrue(facade.doesTrainerUsernameAndPasswordMatch(TRAINER_USERNAME, newPassword));
+    }
+
+    @Test
+    void shouldActivateTrainer() {
+        facade.deactivateTrainer(TRAINER_ID);
+        facade.activateTrainer(TRAINER_ID);
+
+        assertTrue(facade.getTrainer(TRAINER_ID).active());
+    }
+
+    @Test
+    void shouldDeactivateTrainer() {
+        facade.deactivateTrainer(TRAINER_ID);
+
+        assertFalse(facade.getTrainer(TRAINER_ID).active());
     }
 
     @Test
     void shouldCreateTraining() {
-        TraineeCreateResponseDto createdTrainee = facade.createTrainee(buildTraineeCreateDto());
-        TrainerCreateResponseDto createdTrainer = facade.createTrainer(buildTrainerCreateDto());
-        TrainingCreateDto trainingDto = buildTrainingCreateDto(createdTrainee.userId(), createdTrainer.userId());
+        TrainingCreateDto dto = buildTrainingCreateDto(TRAINEE_ID, TRAINER_ID);
 
-        TrainingResponseDto actual = facade.createTraining(trainingDto);
+        TrainingResponseDto actual = facade.createTraining(dto);
 
-        assertNotNull(actual);
         assertNotNull(actual.id());
-        assertEquals(trainingDto.traineeId(), actual.traineeId());
-        assertEquals(trainingDto.trainerId(), actual.trainerId());
-        assertEquals(trainingDto.trainingName(), actual.trainingName());
-        assertEquals(trainingDto.trainingDuration(), actual.trainingDuration());
-        assertEquals(trainingDto.trainingType().getTrainingTypeName(), actual.trainingType().getTrainingTypeName());
-        assertEquals(trainingDto.trainingDate(), actual.trainingDate());
+        assertEquals(dto.traineeId(), actual.traineeId());
+        assertEquals(dto.trainerId(), actual.trainerId());
+        assertEquals(dto.trainingName(), actual.trainingName());
+        assertEquals(dto.trainingDuration(), actual.trainingDuration());
+        assertEquals(dto.trainingDate(), actual.trainingDate());
     }
 
     @Test
     void shouldGetTrainingById() {
-        TraineeCreateResponseDto createdTrainee = facade.createTrainee(buildTraineeCreateDto());
-        TrainerCreateResponseDto createdTrainer = facade.createTrainer(buildTrainerCreateDto());
-        TrainingCreateDto trainingDto = buildTrainingCreateDto(createdTrainee.userId(), createdTrainer.userId());
-        TrainingResponseDto created = facade.createTraining(trainingDto);
-
-        TrainingResponseDto actual = facade.getTraining(created.id());
+        TrainingResponseDto actual = facade.getTraining(TRAINING_ID);
 
         assertNotNull(actual);
-        assertEquals(created.id(), actual.id());
-        assertEquals(trainingDto.traineeId(), actual.traineeId());
-        assertEquals(trainingDto.trainerId(), actual.trainerId());
-        assertEquals(trainingDto.trainingName(), actual.trainingName());
-        assertEquals(trainingDto.trainingDuration(), actual.trainingDuration());
-        assertEquals(trainingDto.trainingType().getTrainingTypeName(), actual.trainingType().getTrainingTypeName());
-        assertEquals(trainingDto.trainingDate(), actual.trainingDate());
+        assertEquals(TRAINING_ID, actual.id());
+        assertEquals(TRAINEE_ID, actual.traineeId());
+        assertEquals(TRAINER_ID, actual.trainerId());
+        assertEquals(TRAINING_NAME, actual.trainingName());
+        assertEquals(TRAINING_DURATION, actual.trainingDuration());
     }
 
     @Test
     void shouldGetAllTrainings() {
-        TraineeCreateResponseDto createdTrainee = facade.createTrainee(buildTraineeCreateDto());
-        TrainerCreateResponseDto createdTrainer = facade.createTrainer(buildTrainerCreateDto());
-        TrainingCreateDto trainingDto = buildTrainingCreateDto(createdTrainee.userId(), createdTrainer.userId());
-        TrainingResponseDto created = facade.createTraining(trainingDto);
-
         List<TrainingResponseDto> actual = facade.getAllTrainings();
 
-        assertNotNull(actual);
-        assertEquals(1, actual.size());
-
-        TrainingResponseDto training = actual.get(0);
-        assertEquals(created.id(), training.id());
-        assertEquals(trainingDto.traineeId(), training.traineeId());
-        assertEquals(trainingDto.trainerId(), training.trainerId());
-        assertEquals(trainingDto.trainingName(), training.trainingName());
-    }
-
-    @Test
-    void shouldReturnEmptyListWhenNoTrainingsExist() {
-        List<TrainingResponseDto> actual = facade.getAllTrainings();
-
-        assertNotNull(actual);
-        assertTrue(actual.isEmpty());
+        assertEquals(2, actual.size());
     }
 
 }

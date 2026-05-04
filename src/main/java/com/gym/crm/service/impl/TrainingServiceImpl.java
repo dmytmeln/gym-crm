@@ -1,9 +1,13 @@
 package com.gym.crm.service.impl;
 
-import com.gym.crm.dao.TraineeDao;
-import com.gym.crm.dao.TrainerDao;
-import com.gym.crm.dao.TrainingDao;
-import com.gym.crm.model.Training;
+import com.gym.crm.dao.TraineeEntityDao;
+import com.gym.crm.dao.TrainerEntityDao;
+import com.gym.crm.dao.TrainingEntityDao;
+import com.gym.crm.dao.TrainingTypeEntityDao;
+import com.gym.crm.entity.Trainee;
+import com.gym.crm.entity.Trainer;
+import com.gym.crm.entity.Training;
+import com.gym.crm.entity.TrainingType;
 import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.service.TrainingService;
 import lombok.extern.slf4j.Slf4j;
@@ -17,34 +21,55 @@ import java.util.Objects;
 @Service
 public class TrainingServiceImpl implements TrainingService {
 
-    private TrainingDao trainingDao;
-    private TraineeDao traineeDao;
-    private TrainerDao trainerDao;
+    private TrainingEntityDao trainingDao;
+    private TraineeEntityDao traineeDao;
+    private TrainerEntityDao trainerDao;
+    private TrainingTypeEntityDao trainingTypeDao;
 
     @Autowired
-    public void setTrainingDao(TrainingDao trainingDao) {
+    public void setTrainingDao(TrainingEntityDao trainingDao) {
         this.trainingDao = trainingDao;
     }
 
     @Autowired
-    public void setTraineeDao(TraineeDao traineeDao) {
+    public void setTraineeDao(TraineeEntityDao traineeDao) {
         this.traineeDao = traineeDao;
     }
 
     @Autowired
-    public void setTrainerDao(TrainerDao trainerDao) {
+    public void setTrainerDao(TrainerEntityDao trainerDao) {
         this.trainerDao = trainerDao;
+    }
+
+    @Autowired
+    public void setTrainingTypeDao(TrainingTypeEntityDao trainingTypeDao) {
+        this.trainingTypeDao = trainingTypeDao;
     }
 
     @Override
     public Training createTraining(Training training) {
         Objects.requireNonNull(training, "Training cannot be null");
+        Objects.requireNonNull(training.getTrainee(), "Trainee cannot be null");
+        Objects.requireNonNull(training.getTrainer(), "Trainer cannot be null");
+        Objects.requireNonNull(training.getTrainingType(), "Training type cannot be null");
         log.info("Creating training: {}", training.getTrainingName());
-        ensureTrainingParticipantsExist(training);
 
-        Training createdTraining = trainingDao.create(training);
+        Trainee trainee = traineeDao.findById(training.getTrainee().getId())
+                .orElseThrow(() -> EntityNotFoundException.forId("Trainee", training.getTrainee().getId()));
+        Trainer trainer = trainerDao.findById(training.getTrainer().getId())
+                .orElseThrow(() -> EntityNotFoundException.forId("Trainer", training.getTrainer().getId()));
+        TrainingType trainingType = trainingTypeDao.findById(training.getTrainingType().getId())
+                .orElseThrow(() -> EntityNotFoundException.forId("TrainingType", training.getTrainingType().getId()));
+
+        Training trainingWithAssociations = training.toBuilder()
+                .trainee(trainee)
+                .trainer(trainer)
+                .trainingType(trainingType)
+                .build();
+
+        Training createdTraining = trainingDao.save(trainingWithAssociations);
         log.info("Training created with ID: {} for trainee ID: {} and trainer ID: {}",
-                createdTraining.getId(), createdTraining.getTraineeId(), createdTraining.getTrainerId());
+                createdTraining.getId(), createdTraining.getTrainee().getId(), createdTraining.getTrainer().getId());
 
         return createdTraining;
     }
@@ -54,22 +79,12 @@ public class TrainingServiceImpl implements TrainingService {
         Objects.requireNonNull(trainingId, "Training ID cannot be null");
 
         return trainingDao.findById(trainingId)
-                .orElseThrow(() -> new EntityNotFoundException("Training", trainingId));
+                .orElseThrow(() -> EntityNotFoundException.forId("Training", trainingId));
     }
 
     @Override
     public List<Training> getAllTrainings() {
         return trainingDao.findAll();
-    }
-
-    private void ensureTrainingParticipantsExist(Training training) {
-        if (traineeDao.findById(training.getTraineeId()).isEmpty()) {
-            throw new EntityNotFoundException("Trainee", training.getTraineeId());
-        }
-
-        if (trainerDao.findById(training.getTrainerId()).isEmpty()) {
-            throw new EntityNotFoundException("Trainer", training.getTrainerId());
-        }
     }
 
 }

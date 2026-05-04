@@ -15,6 +15,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 
 import java.util.ArrayList;
@@ -38,6 +39,7 @@ public class Trainer {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "specialization_id", nullable = false)
+    @Setter
     private TrainingType specialization;
 
     @OneToOne(fetch = FetchType.LAZY)

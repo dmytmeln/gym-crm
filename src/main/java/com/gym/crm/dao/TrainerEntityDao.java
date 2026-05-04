@@ -15,6 +15,10 @@ public interface TrainerEntityDao {
 
     List<Trainer> findAll();
 
+    List<Trainer> findAllByIds(List<Long> ids);
+
+    List<Trainer> findAllNotAssignedToTrainee(String traineeUsername);
+
     Trainer update(Trainer trainer);
 
 }

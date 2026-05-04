@@ -4,7 +4,7 @@ import com.gym.crm.dto.TrainerCreateDto;
 import com.gym.crm.dto.TrainerCreateResponseDto;
 import com.gym.crm.dto.TrainerResponseDto;
 import com.gym.crm.dto.TrainerUpdateDto;
-import com.gym.crm.model.Trainer;
+import com.gym.crm.entity.Trainer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
@@ -16,14 +16,16 @@ import static com.gym.crm.factory.TrainerTestFactory.DEFAULT_FIRST_NAME;
 import static com.gym.crm.factory.TrainerTestFactory.DEFAULT_LAST_NAME;
 import static com.gym.crm.factory.TrainerTestFactory.DEFAULT_PASSWORD;
 import static com.gym.crm.factory.TrainerTestFactory.DEFAULT_SPECIALIZATION;
+import static com.gym.crm.factory.TrainerTestFactory.DEFAULT_SPECIALIZATION_ID;
 import static com.gym.crm.factory.TrainerTestFactory.DEFAULT_TRAINER_ID;
 import static com.gym.crm.factory.TrainerTestFactory.DEFAULT_USERNAME;
+import static com.gym.crm.factory.TrainerTestFactory.DEFAULT_USER_ID;
 import static com.gym.crm.factory.TrainerTestFactory.SECONDARY_TRAINER_ID;
 import static com.gym.crm.factory.TrainerTestFactory.buildTrainer;
 import static com.gym.crm.factory.TrainerTestFactory.buildTrainerCreateDto;
 import static com.gym.crm.factory.TrainerTestFactory.buildTrainerUpdateDto;
 import static com.gym.crm.factory.TrainerTestFactory.buildTrainerWithId;
-import static com.gym.crm.factory.TrainingTypeTestFactory.STRENGTH;
+import static com.gym.crm.factory.TrainerTestFactory.buildTrainerWithIdAndUserId;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -41,17 +43,18 @@ class TrainerMapperTest {
 
     @Test
     void shouldMapAllFieldsCorrectlyWhenTrainerIsValid() {
-        Trainer trainer = buildTrainerWithId(DEFAULT_TRAINER_ID);
+        Trainer trainer = buildTrainerWithIdAndUserId();
 
         TrainerResponseDto result = mapper.toDto(trainer);
 
         assertNotNull(result);
-        assertEquals(DEFAULT_TRAINER_ID, result.userId());
+        assertEquals(DEFAULT_TRAINER_ID, result.id());
+        assertEquals(DEFAULT_USER_ID, result.userId());
         assertEquals(DEFAULT_USERNAME, result.username());
         assertEquals(DEFAULT_FIRST_NAME, result.firstName());
         assertEquals(DEFAULT_LAST_NAME, result.lastName());
         assertTrue(result.active());
-        assertEquals(DEFAULT_SPECIALIZATION, result.specialization().getTrainingTypeName());
+        assertEquals(DEFAULT_SPECIALIZATION, result.specializationName());
     }
 
     @Test
@@ -63,18 +66,19 @@ class TrainerMapperTest {
 
     @Test
     void shouldMapAllFieldsCorrectlyWhenMappingToCreateResponseDto() {
-        Trainer trainer = buildTrainerWithId(DEFAULT_TRAINER_ID);
+        Trainer trainer = buildTrainerWithIdAndUserId();
 
         TrainerCreateResponseDto result = mapper.toCreateResponseDto(trainer);
 
         assertNotNull(result);
-        assertEquals(DEFAULT_TRAINER_ID, result.userId());
+        assertEquals(DEFAULT_TRAINER_ID, result.id());
+        assertEquals(DEFAULT_USER_ID, result.userId());
         assertEquals(DEFAULT_USERNAME, result.username());
         assertEquals(DEFAULT_FIRST_NAME, result.firstName());
         assertEquals(DEFAULT_LAST_NAME, result.lastName());
         assertEquals(DEFAULT_PASSWORD, result.password());
         assertTrue(result.active());
-        assertEquals(DEFAULT_SPECIALIZATION, result.specialization().getTrainingTypeName());
+        assertEquals(DEFAULT_SPECIALIZATION, result.specializationName());
     }
 
     @Test
@@ -91,13 +95,14 @@ class TrainerMapperTest {
         Trainer result = mapper.toEntity(dto);
 
         assertNotNull(result);
-        assertNull(result.getUserId());
-        assertNull(result.getUsername());
-        assertNull(result.getPassword());
-        assertEquals(DEFAULT_FIRST_NAME, result.getFirstName());
-        assertEquals(DEFAULT_LAST_NAME, result.getLastName());
-        assertTrue(result.isActive());
-        assertEquals(DEFAULT_SPECIALIZATION, result.getSpecialization().getTrainingTypeName());
+        assertNull(result.getId());
+        assertNull(result.getUser().getId());
+        assertNull(result.getUser().getUsername());
+        assertNull(result.getUser().getPassword());
+        assertEquals(DEFAULT_FIRST_NAME, result.getUser().getFirstName());
+        assertEquals(DEFAULT_LAST_NAME, result.getUser().getLastName());
+        assertTrue(result.getUser().getIsActive());
+        assertEquals(DEFAULT_SPECIALIZATION_ID, result.getSpecialization().getId());
     }
 
     @Test
@@ -114,10 +119,12 @@ class TrainerMapperTest {
         Trainer result = mapper.toEntity(dto, DEFAULT_TRAINER_ID);
 
         assertNotNull(result);
-        assertEquals(DEFAULT_TRAINER_ID, result.getUserId());
-        assertNull(result.getUsername());
-        assertFalse(result.isActive());
-        assertEquals(STRENGTH, result.getSpecialization().getTrainingTypeName());
+        assertNull(result.getUser().getId());
+        assertNull(result.getUser().getPassword());
+        assertNull(result.getUser().getUsername());
+        assertFalse(result.getUser().getIsActive());
+        assertEquals(DEFAULT_TRAINER_ID, result.getId());
+        assertEquals(DEFAULT_SPECIALIZATION_ID, result.getSpecialization().getId());
     }
 
     @Test
@@ -125,12 +132,8 @@ class TrainerMapperTest {
         Trainer result = mapper.toEntity(null, DEFAULT_TRAINER_ID);
 
         assertNotNull(result);
-        assertEquals(DEFAULT_TRAINER_ID, result.getUserId());
-        assertNull(result.getUsername());
-        assertNull(result.getFirstName());
-        assertNull(result.getLastName());
-        assertNull(result.getPassword());
-        assertFalse(result.isActive());
+        assertEquals(DEFAULT_TRAINER_ID, result.getId());
+        assertNull(result.getUser());
         assertNull(result.getSpecialization());
     }
 
@@ -148,10 +151,10 @@ class TrainerMapperTest {
         Trainer result = mapper.toEntity(dto, null);
 
         assertNotNull(result);
-        assertNull(result.getUserId());
-        assertNull(result.getUsername());
-        assertFalse(result.isActive());
-        assertEquals(STRENGTH, result.getSpecialization().getTrainingTypeName());
+        assertNull(result.getId());
+        assertNull(result.getUser().getUsername());
+        assertFalse(result.getUser().getIsActive());
+        assertEquals(dto.specializationId(), result.getSpecialization().getId());
     }
 
     @Test
@@ -164,10 +167,10 @@ class TrainerMapperTest {
 
         assertNotNull(result);
         assertEquals(2, result.size());
-        assertEquals(DEFAULT_TRAINER_ID, result.get(0).userId());
+        assertEquals(DEFAULT_TRAINER_ID, result.get(0).id());
         assertEquals(DEFAULT_USERNAME, result.get(0).username());
-        assertEquals(SECONDARY_TRAINER_ID, result.get(1).userId());
-        assertEquals("sarah.adams", result.get(1).username());
+        assertEquals(SECONDARY_TRAINER_ID, result.get(1).id());
+        assertEquals(trainer2.getUser().getUsername(), result.get(1).username());
     }
 
     @Test
