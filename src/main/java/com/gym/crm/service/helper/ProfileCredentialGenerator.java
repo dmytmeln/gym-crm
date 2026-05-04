@@ -1,8 +1,10 @@
 package com.gym.crm.service.helper;
 
-import com.gym.crm.dao.TraineeDao;
-import com.gym.crm.dao.TrainerDao;
-import com.gym.crm.model.User;
+import com.gym.crm.dao.TraineeEntityDao;
+import com.gym.crm.dao.TrainerEntityDao;
+import com.gym.crm.entity.Trainee;
+import com.gym.crm.entity.Trainer;
+import com.gym.crm.entity.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -24,16 +26,16 @@ public class ProfileCredentialGenerator {
 
     private final SecureRandom secureRandom = new SecureRandom();
 
-    private TraineeDao traineeDao;
-    private TrainerDao trainerDao;
+    private TraineeEntityDao traineeDao;
+    private TrainerEntityDao trainerDao;
 
     @Autowired
-    public void setTraineeDao(TraineeDao traineeDao) {
+    public void setTraineeDao(TraineeEntityDao traineeDao) {
         this.traineeDao = traineeDao;
     }
 
     @Autowired
-    public void setTrainerDao(TrainerDao trainerDao) {
+    public void setTrainerDao(TrainerEntityDao trainerDao) {
         this.trainerDao = trainerDao;
     }
 
@@ -75,8 +77,8 @@ public class ProfileCredentialGenerator {
 
     private Stream<String> findAllUsernames() {
         return Stream.concat(
-                        traineeDao.findAll().stream(),
-                        trainerDao.findAll().stream())
+                        traineeDao.findAll().stream().map(Trainee::getUser),
+                        trainerDao.findAll().stream().map(Trainer::getUser))
                 .map(User::getUsername);
     }
 

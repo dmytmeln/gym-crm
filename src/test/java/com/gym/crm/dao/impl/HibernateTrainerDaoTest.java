@@ -211,6 +211,55 @@ class HibernateTrainerDaoTest extends AbstractDaoTest<HibernateTrainerDao> {
     }
 
     @Test
+    void shouldFindAllTrainersByIds() {
+        List<Long> ids = List.of(EXISTING_ID, 2L);
+        List<Trainer> expected = List.of(
+                Trainer.builder().id(EXISTING_ID).build(),
+                Trainer.builder().id(2L).build());
+
+        List<Trainer> actual = dao.findAllByIds(ids);
+
+        assertThat(actual)
+                .hasSize(expected.size())
+                .containsAll(expected);
+    }
+
+    @Test
+    void shouldFindSingleTrainerByIdsWhenFindAllWithSingleId() {
+        List<Long> ids = List.of(EXISTING_ID);
+        List<Trainer> expected = List.of(Trainer.builder().id(EXISTING_ID).build());
+
+        List<Trainer> actual = dao.findAllByIds(ids);
+
+        assertThat(actual)
+                .hasSize(expected.size())
+                .containsAll(expected);
+    }
+
+    @Test
+    void shouldFindAllByIdsWhenNoTrainersExist() {
+        List<Long> ids = List.of(99999L, 88888L);
+
+        List<Trainer> actual = dao.findAllByIds(ids);
+
+        assertThat(actual).isEmpty();
+    }
+
+    @Test
+    void shouldFindAllNotAssignedToTrainee() {
+        List<Trainer> expected = List.of(
+                Trainer.builder().id(2L).build(),
+                Trainer.builder().id(3L).build());
+        String existingTraineeUsername = "liam.miller";
+
+        List<Trainer> actual = dao.findAllNotAssignedToTrainee(existingTraineeUsername);
+
+        assertThat(actual)
+                .hasSize(2)
+                .containsAll(expected);
+    }
+
+    @Test
     void shouldUpdateTrainer() {
         Trainer existingTrainer = testDbClient.findTrainer(EXISTING_ID);
         User updatedUser = existingTrainer.getUser().toBuilder()

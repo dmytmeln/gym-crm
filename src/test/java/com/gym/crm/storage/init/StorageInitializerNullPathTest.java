@@ -8,6 +8,7 @@ import com.gym.crm.storage.Namespace;
 import com.gym.crm.storage.Storage;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import java.util.List;
@@ -16,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringJUnitConfig(GymCrmApplication.class)
+@TestPropertySource(properties = {"storage.init.trainee=#{null}", "storage.init.trainer=#{null}", "storage.init.training=#{null}"})
 class StorageInitializerNullPathTest {
 
     @Autowired

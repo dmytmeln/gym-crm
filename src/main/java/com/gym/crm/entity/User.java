@@ -40,7 +40,7 @@ public class User {
     private String password;
 
     @Column(name = "is_active", nullable = false, columnDefinition = "TINYINT")
-    private boolean isActive;
+    private Boolean isActive;
 
     @Override
     public boolean equals(Object o) {

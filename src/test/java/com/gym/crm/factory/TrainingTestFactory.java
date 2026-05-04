@@ -2,8 +2,10 @@ package com.gym.crm.factory;
 
 import com.gym.crm.dto.TrainingCreateDto;
 import com.gym.crm.dto.TrainingResponseDto;
-import com.gym.crm.model.Training;
-import com.gym.crm.model.TrainingType;
+import com.gym.crm.entity.Trainee;
+import com.gym.crm.entity.Trainer;
+import com.gym.crm.entity.Training;
+import com.gym.crm.entity.TrainingType;
 
 import java.time.LocalDate;
 
@@ -11,20 +13,23 @@ public class TrainingTestFactory {
 
     public static final Long DEFAULT_TRAINING_ID = 1L;
     public static final Long SECONDARY_TRAINING_ID = 2L;
-    public static final Long NON_EXISTENT_TRAINING_ID = 999L;
     public static final Long DEFAULT_TRAINEE_ID = 1L;
     public static final Long DEFAULT_TRAINER_ID = 2L;
     public static final String DEFAULT_TRAINING_NAME = "Morning Workout";
-    public static final String DEFAULT_TRAINING_TYPE = "Cardio";
     public static final int DEFAULT_DURATION = 60;
     public static final LocalDate DEFAULT_DATE = LocalDate.of(2026, 4, 15);
+    public static final Long DEFAULT_TRAINING_TYPE_ID = 1L;
+    public static final String DEFAULT_TRAINING_TYPE_NAME = "STRENGTH";
 
     public static Training.TrainingBuilder getDefaultTrainingBuilder() {
         return Training.builder()
-                .traineeId(DEFAULT_TRAINEE_ID)
-                .trainerId(DEFAULT_TRAINER_ID)
+                .trainee(Trainee.builder().id(DEFAULT_TRAINEE_ID).build())
+                .trainer(Trainer.builder().id(DEFAULT_TRAINER_ID).build())
                 .trainingName(DEFAULT_TRAINING_NAME)
-                .trainingType(new TrainingType(DEFAULT_TRAINING_TYPE))
+                .trainingType(TrainingType.builder().
+                        id(DEFAULT_TRAINING_TYPE_ID)
+                        .trainingTypeName(DEFAULT_TRAINING_TYPE_NAME).
+                        build())
                 .trainingDuration(DEFAULT_DURATION)
                 .trainingDate(DEFAULT_DATE);
     }
@@ -36,8 +41,8 @@ public class TrainingTestFactory {
     public static Training buildTraining(Long id, Long traineeId, Long trainerId) {
         return getDefaultTrainingBuilder()
                 .id(id)
-                .traineeId(traineeId)
-                .trainerId(trainerId)
+                .trainee(Trainee.builder().id(traineeId).build())
+                .trainer(Trainer.builder().id(trainerId).build())
                 .build();
     }
 
@@ -52,14 +57,17 @@ public class TrainingTestFactory {
         return getDefaultTrainingBuilder().id(trainingId).build();
     }
 
-    public static Training buildTrainingWithIdAndType(Long trainingId, TrainingType trainingType) {
-        return getDefaultTrainingBuilder().id(trainingId).trainingType(trainingType).build();
+    public static Training buildTrainingWithIdAndTypeName(Long trainingId, String trainingTypeName) {
+        return getDefaultTrainingBuilder()
+                .id(trainingId)
+                .trainingType(TrainingType.builder().trainingTypeName(trainingTypeName).build())
+                .build();
     }
 
     public static Training buildTrainingWithoutId(Long traineeId, Long trainerId) {
         return getDefaultTrainingBuilder()
-                .traineeId(traineeId)
-                .trainerId(trainerId)
+                .trainee(Trainee.builder().id(traineeId).build())
+                .trainer(Trainer.builder().id(trainerId).build())
                 .build();
     }
 
@@ -68,7 +76,7 @@ public class TrainingTestFactory {
                 .traineeId(DEFAULT_TRAINEE_ID)
                 .trainerId(DEFAULT_TRAINER_ID)
                 .trainingName("Morning Cardio")
-                .trainingType(new TrainingType(DEFAULT_TRAINING_TYPE))
+                .trainingTypeId(DEFAULT_TRAINING_TYPE_ID)
                 .trainingDuration(DEFAULT_DURATION)
                 .trainingDate(LocalDate.of(2026, 4, 17));
     }
@@ -90,7 +98,7 @@ public class TrainingTestFactory {
                 .traineeId(DEFAULT_TRAINEE_ID)
                 .trainerId(DEFAULT_TRAINER_ID)
                 .trainingName(DEFAULT_TRAINING_NAME)
-                .trainingType(new TrainingType(DEFAULT_TRAINING_TYPE))
+                .trainingTypeName(DEFAULT_TRAINING_TYPE_NAME)
                 .trainingDuration(DEFAULT_DURATION)
                 .trainingDate(DEFAULT_DATE);
     }

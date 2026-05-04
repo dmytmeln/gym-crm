@@ -6,6 +6,7 @@ import java.time.LocalDate;
 
 @Builder
 public record TraineeCreateResponseDto(
+        Long id,
         Long userId,
         String username,
         String firstName,

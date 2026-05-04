@@ -108,4 +108,26 @@ public class HibernateTraineeDao implements TraineeEntityDao {
         });
     }
 
+    @Override
+    public boolean deleteById(Long id) {
+        Objects.requireNonNull(id, "Trainee ID cannot be null");
+
+        return transactionManager.executeReturningWithinTx(session -> {
+            Optional<Trainee> traineeOptional = session.createQuery(
+                            "SELECT t FROM Trainee t JOIN FETCH t.user u WHERE t.id = :id", Trainee.class)
+                    .setParameter("id", id)
+                    .uniqueResultOptional();
+
+            if (traineeOptional.isEmpty()) {
+                return false;
+            }
+
+            Trainee trainee = traineeOptional.get();
+            session.remove(trainee);
+            session.remove(trainee.getUser());
+
+            return true;
+        });
+    }
+
 }

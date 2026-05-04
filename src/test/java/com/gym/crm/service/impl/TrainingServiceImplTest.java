@@ -1,11 +1,13 @@
 package com.gym.crm.service.impl;
 
-import com.gym.crm.dao.TraineeDao;
-import com.gym.crm.dao.TrainerDao;
-import com.gym.crm.dao.TrainingDao;
-import com.gym.crm.model.Trainee;
-import com.gym.crm.model.Trainer;
-import com.gym.crm.model.Training;
+import com.gym.crm.dao.TraineeEntityDao;
+import com.gym.crm.dao.TrainerEntityDao;
+import com.gym.crm.dao.TrainingEntityDao;
+import com.gym.crm.dao.TrainingTypeEntityDao;
+import com.gym.crm.entity.Trainee;
+import com.gym.crm.entity.Trainer;
+import com.gym.crm.entity.Training;
+import com.gym.crm.entity.TrainingType;
 import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.service.TrainingService;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,11 +19,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 import java.util.Optional;
 
-import static com.gym.crm.factory.TraineeTestFactory.DEFAULT_TRAINEE_ID;
-import static com.gym.crm.factory.TraineeTestFactory.buildTraineeWithId;
-import static com.gym.crm.factory.TrainerTestFactory.buildTrainerWithId;
-import static com.gym.crm.factory.TrainingTestFactory.DEFAULT_TRAINER_ID;
 import static com.gym.crm.factory.TrainingTestFactory.DEFAULT_TRAINING_ID;
+import static com.gym.crm.factory.TrainingTestFactory.DEFAULT_TRAINING_TYPE_ID;
 import static com.gym.crm.factory.TrainingTestFactory.SECONDARY_TRAINING_ID;
 import static com.gym.crm.factory.TrainingTestFactory.buildTraining;
 import static com.gym.crm.factory.TrainingTestFactory.buildTrainingWithId;
@@ -29,6 +28,7 @@ import static com.gym.crm.factory.TrainingTestFactory.buildTrainingWithoutId;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -38,13 +38,16 @@ import static org.mockito.Mockito.when;
 class TrainingServiceImplTest {
 
     @Mock
-    private TrainingDao trainingDao;
+    private TrainingEntityDao trainingDao;
 
     @Mock
-    private TraineeDao traineeDao;
+    private TraineeEntityDao traineeDao;
 
     @Mock
-    private TrainerDao trainerDao;
+    private TrainerEntityDao trainerDao;
+
+    @Mock
+    private TrainingTypeEntityDao trainingTypeDao;
 
     private TrainingService service;
 
@@ -54,6 +57,7 @@ class TrainingServiceImplTest {
         implementation.setTrainingDao(trainingDao);
         implementation.setTraineeDao(traineeDao);
         implementation.setTrainerDao(trainerDao);
+        implementation.setTrainingTypeDao(trainingTypeDao);
         service = implementation;
     }
 
@@ -61,19 +65,22 @@ class TrainingServiceImplTest {
     void shouldCreateTrainingWhenParticipantsExist() {
         Training training = buildTraining();
         Training expected = buildTrainingWithId(DEFAULT_TRAINING_ID);
-        Trainee existingTrainee = buildTraineeWithId(DEFAULT_TRAINEE_ID);
-        Trainer existingTrainer = buildTrainerWithId(DEFAULT_TRAINER_ID);
+        Trainee existingTrainee = Trainee.builder().id(1L).build();
+        Trainer existingTrainer = Trainer.builder().id(2L).build();
+        TrainingType existingTrainingType = TrainingType.builder().id(DEFAULT_TRAINING_TYPE_ID).build();
 
-        when(traineeDao.findById(DEFAULT_TRAINEE_ID)).thenReturn(Optional.of(existingTrainee));
-        when(trainerDao.findById(DEFAULT_TRAINER_ID)).thenReturn(Optional.of(existingTrainer));
-        when(trainingDao.create(training)).thenReturn(expected);
+        when(traineeDao.findById(1L)).thenReturn(Optional.of(existingTrainee));
+        when(trainerDao.findById(2L)).thenReturn(Optional.of(existingTrainer));
+        when(trainingTypeDao.findById(DEFAULT_TRAINING_TYPE_ID)).thenReturn(Optional.of(existingTrainingType));
+        when(trainingDao.save(any(Training.class))).thenReturn(expected);
 
         Training actual = service.createTraining(training);
 
         assertEquals(expected, actual);
-        verify(traineeDao).findById(DEFAULT_TRAINEE_ID);
-        verify(trainerDao).findById(DEFAULT_TRAINER_ID);
-        verify(trainingDao).create(training);
+        verify(traineeDao).findById(1L);
+        verify(trainerDao).findById(2L);
+        verify(trainingTypeDao).findById(DEFAULT_TRAINING_TYPE_ID);
+        verify(trainingDao).save(any(Training.class));
     }
 
     @Test
@@ -81,37 +88,58 @@ class TrainingServiceImplTest {
         NullPointerException exception = assertThrows(NullPointerException.class, () -> service.createTraining(null));
 
         assertEquals("Training cannot be null", exception.getMessage());
-        verifyNoInteractions(trainingDao, traineeDao, trainerDao);
+        verifyNoInteractions(trainingDao, traineeDao, trainerDao, trainingTypeDao);
     }
 
     @Test
     void shouldThrowEntityNotFoundWhenTraineeDoesNotExist() {
-        Training training = buildTrainingWithoutId(DEFAULT_TRAINEE_ID, DEFAULT_TRAINER_ID);
+        Training training = buildTrainingWithoutId(1L, 2L);
 
-        when(traineeDao.findById(DEFAULT_TRAINEE_ID)).thenReturn(Optional.empty());
+        when(traineeDao.findById(1L)).thenReturn(Optional.empty());
 
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> service.createTraining(training));
 
-        assertEquals("Trainee not found with id: " + DEFAULT_TRAINEE_ID, exception.getMessage());
-        verify(traineeDao).findById(DEFAULT_TRAINEE_ID);
-        verify(trainerDao, never()).findById(DEFAULT_TRAINER_ID);
-        verify(trainingDao, never()).create(training);
+        assertEquals("Trainee not found with id: " + 1L, exception.getMessage());
+        verify(traineeDao).findById(1L);
+        verify(trainerDao, never()).findById(2L);
+        verify(trainingTypeDao, never()).findById(DEFAULT_TRAINING_TYPE_ID);
+        verify(trainingDao, never()).save(training);
     }
 
     @Test
     void shouldThrowEntityNotFoundWhenTrainerDoesNotExist() {
-        Training training = buildTrainingWithoutId(DEFAULT_TRAINEE_ID, DEFAULT_TRAINER_ID);
-        Trainee existingTrainee = buildTraineeWithId(DEFAULT_TRAINEE_ID);
+        Training training = buildTrainingWithoutId(1L, 2L);
+        Trainee existingTrainee = Trainee.builder().id(1L).build();
 
-        when(traineeDao.findById(DEFAULT_TRAINEE_ID)).thenReturn(Optional.of(existingTrainee));
-        when(trainerDao.findById(DEFAULT_TRAINER_ID)).thenReturn(Optional.empty());
+        when(traineeDao.findById(1L)).thenReturn(Optional.of(existingTrainee));
+        when(trainerDao.findById(2L)).thenReturn(Optional.empty());
 
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> service.createTraining(training));
 
-        assertEquals("Trainer not found with id: " + DEFAULT_TRAINER_ID, exception.getMessage());
-        verify(traineeDao).findById(DEFAULT_TRAINEE_ID);
-        verify(trainerDao).findById(DEFAULT_TRAINER_ID);
-        verify(trainingDao, never()).create(training);
+        assertEquals("Trainer not found with id: " + 2L, exception.getMessage());
+        verify(traineeDao).findById(1L);
+        verify(trainerDao).findById(2L);
+        verify(trainingTypeDao, never()).findById(DEFAULT_TRAINING_TYPE_ID);
+        verify(trainingDao, never()).save(training);
+    }
+
+    @Test
+    void shouldThrowEntityNotFoundWhenTrainingTypeDoesNotExist() {
+        Training training = buildTrainingWithoutId(1L, 2L);
+        Trainee existingTrainee = Trainee.builder().id(1L).build();
+        Trainer existingTrainer = Trainer.builder().id(2L).build();
+
+        when(traineeDao.findById(1L)).thenReturn(Optional.of(existingTrainee));
+        when(trainerDao.findById(2L)).thenReturn(Optional.of(existingTrainer));
+        when(trainingTypeDao.findById(DEFAULT_TRAINING_TYPE_ID)).thenReturn(Optional.empty());
+
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> service.createTraining(training));
+
+        assertEquals("TrainingType not found with id: " + DEFAULT_TRAINING_TYPE_ID, exception.getMessage());
+        verify(traineeDao).findById(1L);
+        verify(trainerDao).findById(2L);
+        verify(trainingTypeDao).findById(DEFAULT_TRAINING_TYPE_ID);
+        verify(trainingDao, never()).save(training);
     }
 
     @Test

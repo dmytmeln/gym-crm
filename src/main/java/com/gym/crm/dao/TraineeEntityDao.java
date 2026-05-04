@@ -19,4 +19,6 @@ public interface TraineeEntityDao {
 
     boolean deleteByUsername(String username);
 
+    boolean deleteById(Long id);
+
 }
