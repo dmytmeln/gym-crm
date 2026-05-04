@@ -322,4 +322,45 @@ class HibernateTraineeDaoTest extends AbstractDaoTest<HibernateTraineeDao> {
                 .hasMessage("Trainee username cannot be null");
     }
 
+    @Test
+    void shouldDeleteByIdWhenExists() {
+        Long existingTrainerId = 1L;
+
+        boolean result = dao.deleteById(EXISTING_ID);
+
+        assertThat(result).isTrue();
+        assertThat(testDbClient.traineeExists(EXISTING_ID))
+                .as("Trainee should be deleted from database")
+                .isFalse();
+        assertThat(testDbClient.userExists(EXISTING_USERNAME))
+                .as("User should be deleted from database")
+                .isFalse();
+        assertThat(testDbClient.countTraineeTrainings(EXISTING_ID))
+                .as("Trainee's trainings should be deleted from database")
+                .isZero();
+        assertThat(testDbClient.countTraineeTrainers(EXISTING_ID))
+                .as("Trainee's trainers link should be deleted from database")
+                .isZero();
+        assertThat(testDbClient.trainerExists(existingTrainerId))
+                .as("Trainee's trainer should remain in database")
+                .isTrue();
+    }
+
+    @Test
+    void shouldReturnFalseWhenDeletingByNonExistentId() {
+        boolean result = dao.deleteById(NON_EXISTING_ID);
+
+        assertThat(result).isFalse();
+        assertThat(testDbClient.countTrainees())
+                .as("Trainees count should remain unchanged")
+                .isEqualTo(TRAINEES_COUNT);
+    }
+
+    @Test
+    void shouldThrowNullPointerExceptionWhenDeletingByNullId() {
+        assertThatThrownBy(() -> dao.deleteById(null))
+                .isInstanceOf(NullPointerException.class)
+                .hasMessage("Trainee ID cannot be null");
+    }
+
 }

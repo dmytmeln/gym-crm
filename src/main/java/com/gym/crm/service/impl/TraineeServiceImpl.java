@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 @Slf4j
 @Service
@@ -52,7 +51,6 @@ public class TraineeServiceImpl implements TraineeService {
                 .username(username)
                 .password(password)
                 .build();
-
         Trainee traineeWithCredentials = trainee.toBuilder()
                 .user(userWithCredentials)
                 .build();
@@ -116,7 +114,6 @@ public class TraineeServiceImpl implements TraineeService {
                 .lastName(trainee.getUser().getLastName())
                 .isActive(trainee.getUser().getIsActive())
                 .build();
-
         Trainee mergedTrainee = existingTrainee.toBuilder()
                 .user(updatedUser)
                 .address(trainee.getAddress())
@@ -137,7 +134,6 @@ public class TraineeServiceImpl implements TraineeService {
 
         Trainee trainee = traineeDao.findById(traineeId)
                 .orElseThrow(() -> EntityNotFoundException.forId("Trainee", traineeId));
-
         List<Trainer> trainers = trainerDao.findAllByIds(trainerIds);
 
         trainee.getTrainers().clear();
@@ -161,13 +157,11 @@ public class TraineeServiceImpl implements TraineeService {
         User updatedUser = trainee.getUser().toBuilder()
                 .password(newPassword)
                 .build();
-
         Trainee updatedTrainee = trainee.toBuilder()
                 .user(updatedUser)
                 .build();
 
         traineeDao.update(updatedTrainee);
-
         log.info("Password for trainee with ID: {} updated successfully", traineeId);
     }
 
@@ -175,7 +169,6 @@ public class TraineeServiceImpl implements TraineeService {
     public void activateTrainee(Long traineeId) {
         Objects.requireNonNull(traineeId, "Trainee ID cannot be null");
         log.info("Activating trainee with ID: {}", traineeId);
-
         Trainee trainee = traineeDao.findById(traineeId)
                 .orElseThrow(() -> EntityNotFoundException.forId("Trainee", traineeId));
 
@@ -186,13 +179,11 @@ public class TraineeServiceImpl implements TraineeService {
         User updatedUser = trainee.getUser().toBuilder()
                 .isActive(true)
                 .build();
-
         Trainee updatedTrainee = trainee.toBuilder()
                 .user(updatedUser)
                 .build();
 
         traineeDao.update(updatedTrainee);
-
         log.info("Trainee with ID: {} activated successfully", traineeId);
     }
 
@@ -200,7 +191,6 @@ public class TraineeServiceImpl implements TraineeService {
     public void deactivateTrainee(Long traineeId) {
         Objects.requireNonNull(traineeId, "Trainee ID cannot be null");
         log.info("Deactivating trainee with ID: {}", traineeId);
-
         Trainee trainee = traineeDao.findById(traineeId)
                 .orElseThrow(() -> EntityNotFoundException.forId("Trainee", traineeId));
 
@@ -211,13 +201,11 @@ public class TraineeServiceImpl implements TraineeService {
         User updatedUser = trainee.getUser().toBuilder()
                 .isActive(false)
                 .build();
-
         Trainee updatedTrainee = trainee.toBuilder()
                 .user(updatedUser)
                 .build();
 
         traineeDao.update(updatedTrainee);
-
         log.info("Trainee with ID: {} deactivated successfully", traineeId);
     }
 
@@ -226,14 +214,7 @@ public class TraineeServiceImpl implements TraineeService {
         Objects.requireNonNull(traineeId, "Trainee ID cannot be null");
         log.info("Deleting trainee with ID: {}", traineeId);
 
-        Optional<Trainee> traineeOpt = traineeDao.findById(traineeId);
-        if (traineeOpt.isEmpty()) {
-            log.warn("Trainee with ID: {} not found for deletion", traineeId);
-            return false;
-        }
-
-        Trainee trainee = traineeOpt.get();
-        boolean deleted = traineeDao.deleteByUsername(trainee.getUser().getUsername());
+        boolean deleted = traineeDao.deleteById(traineeId);
         if (!deleted) {
             log.warn("Trainee with ID: {} not found for deletion", traineeId);
             return false;

@@ -75,7 +75,6 @@ public class GymFacade {
         Objects.requireNonNull(traineeId, "Trainee ID cannot be null");
 
         Trainee trainee = traineeService.getTrainee(traineeId);
-
         return traineeMapper.toDto(trainee);
     }
 
@@ -83,7 +82,6 @@ public class GymFacade {
         Objects.requireNonNull(username, "Username cannot be null");
 
         Trainee trainee = traineeService.getTraineeByUsername(username);
-
         return traineeMapper.toDto(trainee);
     }
 
@@ -163,7 +161,6 @@ public class GymFacade {
         Objects.requireNonNull(trainerId, "Trainer ID cannot be null");
 
         Trainer trainer = trainerService.getTrainer(trainerId);
-
         return trainerMapper.toDto(trainer);
     }
 
@@ -171,7 +168,6 @@ public class GymFacade {
         Objects.requireNonNull(username, "Username cannot be null");
 
         Trainer trainer = trainerService.getTrainerByUsername(username);
-
         return trainerMapper.toDto(trainer);
     }
 
@@ -185,7 +181,6 @@ public class GymFacade {
         Objects.requireNonNull(traineeUsername, "Trainee username cannot be null");
 
         List<Trainer> trainers = trainerService.getAllTrainersNotAssignedToTrainee(traineeUsername);
-
         return trainerMapper.toDtoList(trainers);
     }
 
@@ -238,13 +233,11 @@ public class GymFacade {
         Objects.requireNonNull(trainingId, "Training ID cannot be null");
 
         Training training = trainingService.getTraining(trainingId);
-
         return trainingMapper.toDto(training);
     }
 
     public List<TrainingResponseDto> getAllTrainings() {
         List<Training> trainings = trainingService.getAllTrainings();
-
         return trainingMapper.toDtoList(trainings);
     }
 

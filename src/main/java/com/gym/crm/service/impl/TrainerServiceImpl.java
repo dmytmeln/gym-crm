@@ -61,7 +61,6 @@ public class TrainerServiceImpl implements TrainerService {
                 .username(username)
                 .password(password)
                 .build();
-
         Trainer trainerWithCredentialsAndSpecialization = trainer.toBuilder()
                 .user(user)
                 .specialization(trainerSpecialization)
@@ -146,7 +145,6 @@ public class TrainerServiceImpl implements TrainerService {
                 .lastName(trainer.getUser().getLastName())
                 .isActive(trainer.getUser().getIsActive())
                 .build();
-
         Trainer mergedTrainer = existingTrainer.toBuilder()
                 .user(updatedUser)
                 .build();
@@ -170,13 +168,11 @@ public class TrainerServiceImpl implements TrainerService {
         User updatedUser = trainer.getUser().toBuilder()
                 .password(newPassword)
                 .build();
-
         Trainer updatedTrainer = trainer.toBuilder()
                 .user(updatedUser)
                 .build();
 
         trainerDao.update(updatedTrainer);
-
         log.info("Password for trainer with ID: {} updated successfully", trainerId);
     }
 
@@ -184,7 +180,6 @@ public class TrainerServiceImpl implements TrainerService {
     public void activateTrainer(Long trainerId) {
         Objects.requireNonNull(trainerId, "Trainer ID cannot be null");
         log.info("Activating trainer with ID: {}", trainerId);
-
         Trainer trainer = trainerDao.findById(trainerId)
                 .orElseThrow(() -> EntityNotFoundException.forId("Trainer", trainerId));
 
@@ -195,13 +190,11 @@ public class TrainerServiceImpl implements TrainerService {
         User updatedUser = trainer.getUser().toBuilder()
                 .isActive(true)
                 .build();
-
         Trainer updatedTrainer = trainer.toBuilder()
                 .user(updatedUser)
                 .build();
 
         trainerDao.update(updatedTrainer);
-
         log.info("Trainer with ID: {} activated successfully", trainerId);
     }
 
@@ -209,7 +202,6 @@ public class TrainerServiceImpl implements TrainerService {
     public void deactivateTrainer(Long trainerId) {
         Objects.requireNonNull(trainerId, "Trainer ID cannot be null");
         log.info("Deactivating trainer with ID: {}", trainerId);
-
         Trainer trainer = trainerDao.findById(trainerId)
                 .orElseThrow(() -> EntityNotFoundException.forId("Trainer", trainerId));
 
@@ -220,13 +212,11 @@ public class TrainerServiceImpl implements TrainerService {
         User updatedUser = trainer.getUser().toBuilder()
                 .isActive(false)
                 .build();
-
         Trainer updatedTrainer = trainer.toBuilder()
                 .user(updatedUser)
                 .build();
 
         trainerDao.update(updatedTrainer);
-
         log.info("Trainer with ID: {} deactivated successfully", trainerId);
     }
 

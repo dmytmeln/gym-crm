@@ -522,40 +522,22 @@ class TraineeServiceImplTest {
 
     @Test
     void shouldDeleteTrainee() {
-        Trainee trainee = buildTraineeWithId();
-        when(dao.findById(DEFAULT_TRAINEE_ID)).thenReturn(Optional.of(trainee));
-        when(dao.deleteByUsername(DEFAULT_USERNAME)).thenReturn(true);
+        when(dao.deleteById(DEFAULT_TRAINEE_ID)).thenReturn(true);
 
         boolean actual = service.deleteTrainee(DEFAULT_TRAINEE_ID);
 
         assertTrue(actual);
-        verify(dao).findById(DEFAULT_TRAINEE_ID);
-        verify(dao).deleteByUsername(DEFAULT_USERNAME);
+        verify(dao).deleteById(DEFAULT_TRAINEE_ID);
     }
 
     @Test
     void shouldReturnFalseWhenDeletingNonExistentTrainee() {
-        when(dao.findById(NON_EXISTENT_TRAINEE_ID)).thenReturn(Optional.empty());
+        when(dao.deleteById(NON_EXISTENT_TRAINEE_ID)).thenReturn(false);
 
         boolean actual = service.deleteTrainee(NON_EXISTENT_TRAINEE_ID);
 
         assertFalse(actual);
-        verify(dao).findById(NON_EXISTENT_TRAINEE_ID);
-        verify(dao, never()).deleteByUsername(any());
-    }
-
-    @Test
-    void shouldReturnFalseWhenDeleteByUsernameFails() {
-        Trainee trainee = buildTraineeWithId();
-
-        when(dao.findById(DEFAULT_TRAINEE_ID)).thenReturn(Optional.of(trainee));
-        when(dao.deleteByUsername(DEFAULT_USERNAME)).thenReturn(false);
-
-        boolean actual = service.deleteTrainee(DEFAULT_TRAINEE_ID);
-
-        assertFalse(actual);
-        verify(dao).findById(DEFAULT_TRAINEE_ID);
-        verify(dao).deleteByUsername(DEFAULT_USERNAME);
+        verify(dao).deleteById(NON_EXISTENT_TRAINEE_ID);
     }
 
     @Test
