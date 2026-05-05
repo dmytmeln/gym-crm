@@ -4,6 +4,8 @@ import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.dao.TrainerDao;
 import com.gym.crm.dao.TrainingDao;
 import com.gym.crm.dao.TrainingTypeDao;
+import com.gym.crm.dto.filter.TraineeTrainingSearchFilter;
+import com.gym.crm.dto.filter.TrainerTrainingSearchFilter;
 import com.gym.crm.entity.Trainee;
 import com.gym.crm.entity.Trainer;
 import com.gym.crm.entity.Training;
@@ -85,6 +87,20 @@ public class TrainingServiceImpl implements TrainingService {
     @Override
     public List<Training> getAllTrainings() {
         return trainingDao.findAll();
+    }
+
+    @Override
+    public List<Training> getTrainingsByTraineeCriteria(TraineeTrainingSearchFilter filter) {
+        Objects.requireNonNull(filter, "Filter cannot be null");
+
+        return trainingDao.findAllByTraineeCriteria(filter);
+    }
+
+    @Override
+    public List<Training> getTrainingsByTrainerCriteria(TrainerTrainingSearchFilter filter) {
+        Objects.requireNonNull(filter, "Filter cannot be null");
+
+        return trainingDao.findAllByTrainerCriteria(filter);
     }
 
 }

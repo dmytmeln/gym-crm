@@ -16,6 +16,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.gym.crm.dto.filter.TraineeTrainingSearchFilter;
+import com.gym.crm.dto.filter.TrainerTrainingSearchFilter;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -196,6 +199,48 @@ class TrainingServiceImplTest {
 
         assertNotNull(actual);
         assertEquals(expected, actual);
+    }
+
+    @Test
+    void shouldReturnTrainingsByTraineeCriteria() {
+        TraineeTrainingSearchFilter filter = org.mockito.Mockito.mock(TraineeTrainingSearchFilter.class);
+        List<Training> expected = List.of(buildTrainingWithId(DEFAULT_TRAINING_ID));
+
+        when(trainingDao.findAllByTraineeCriteria(filter)).thenReturn(expected);
+
+        List<Training> actual = service.getTrainingsByTraineeCriteria(filter);
+
+        assertEquals(expected, actual);
+        verify(trainingDao).findAllByTraineeCriteria(filter);
+    }
+
+    @Test
+    void shouldThrowNullPointerWhenTraineeFilterIsNull() {
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.getTrainingsByTraineeCriteria(null));
+
+        assertEquals("Filter cannot be null", exception.getMessage());
+        verifyNoInteractions(trainingDao);
+    }
+
+    @Test
+    void shouldReturnTrainingsByTrainerCriteria() {
+        TrainerTrainingSearchFilter filter = org.mockito.Mockito.mock(TrainerTrainingSearchFilter.class);
+        List<Training> expected = List.of(buildTrainingWithId(DEFAULT_TRAINING_ID));
+
+        when(trainingDao.findAllByTrainerCriteria(filter)).thenReturn(expected);
+
+        List<Training> actual = service.getTrainingsByTrainerCriteria(filter);
+
+        assertEquals(expected, actual);
+        verify(trainingDao).findAllByTrainerCriteria(filter);
+    }
+
+    @Test
+    void shouldThrowNullPointerWhenTrainerFilterIsNull() {
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.getTrainingsByTrainerCriteria(null));
+
+        assertEquals("Filter cannot be null", exception.getMessage());
+        verifyNoInteractions(trainingDao);
     }
 
 }

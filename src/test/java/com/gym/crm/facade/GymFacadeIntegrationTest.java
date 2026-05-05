@@ -2,6 +2,7 @@ package com.gym.crm.facade;
 
 import com.gym.crm.GymCrmApplication;
 import com.gym.crm.config.BaseDbIntegrationTest;
+import com.gym.crm.dto.PasswordUpdateDto;
 import com.gym.crm.dto.TraineeCreateDto;
 import com.gym.crm.dto.TraineeCreateResponseDto;
 import com.gym.crm.dto.TraineeResponseDto;
@@ -12,6 +13,9 @@ import com.gym.crm.dto.TrainerResponseDto;
 import com.gym.crm.dto.TrainerUpdateDto;
 import com.gym.crm.dto.TrainingCreateDto;
 import com.gym.crm.dto.TrainingResponseDto;
+import com.gym.crm.dto.filter.TraineeTrainingSearchFilter;
+import com.gym.crm.dto.filter.TrainerTrainingSearchFilter;
+import com.gym.crm.exception.ValidationException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.jdbc.Sql;
@@ -28,6 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringJUnitConfig(GymCrmApplication.class)
@@ -99,6 +104,17 @@ class GymFacadeIntegrationTest extends BaseDbIntegrationTest {
     }
 
     @Test
+    void shouldThrowValidationExceptionWhenCreatingTraineeWithInvalidDto() {
+        TraineeCreateDto invalidDto = TraineeCreateDto.builder()
+                .firstName("")
+                .lastName("Doe")
+                .active(true)
+                .build();
+
+        assertThrows(ValidationException.class, () -> facade.createTrainee(invalidDto));
+    }
+
+    @Test
     void shouldUpdateTrainee() {
         TraineeUpdateDto updateDto = buildTraineeUpdateDto();
 
@@ -124,8 +140,9 @@ class GymFacadeIntegrationTest extends BaseDbIntegrationTest {
     @Test
     void shouldUpdateTraineePassword() {
         String newPassword = "newPass999";
+        PasswordUpdateDto passwordDto = PasswordUpdateDto.builder().password(newPassword).build();
 
-        facade.updateTraineePassword(TRAINEE_ID, newPassword);
+        facade.updateTraineePassword(TRAINEE_ID, passwordDto);
 
         assertTrue(facade.doesTraineeUsernameAndPasswordMatch(TRAINEE_USERNAME, newPassword));
     }
@@ -236,8 +253,9 @@ class GymFacadeIntegrationTest extends BaseDbIntegrationTest {
     @Test
     void shouldUpdateTrainerPassword() {
         String newPassword = "newTrainerPass";
+        PasswordUpdateDto passwordDto = PasswordUpdateDto.builder().password(newPassword).build();
 
-        facade.updateTrainerPassword(TRAINER_ID, newPassword);
+        facade.updateTrainerPassword(TRAINER_ID, passwordDto);
 
         assertTrue(facade.doesTrainerUsernameAndPasswordMatch(TRAINER_USERNAME, newPassword));
     }
@@ -288,6 +306,54 @@ class GymFacadeIntegrationTest extends BaseDbIntegrationTest {
         List<TrainingResponseDto> actual = facade.getAllTrainings();
 
         assertEquals(2, actual.size());
+    }
+
+    @Test
+    void shouldGetTraineeTrainings() {
+        TraineeTrainingSearchFilter filter = TraineeTrainingSearchFilter.builder()
+                .username(TRAINEE_USERNAME)
+                .build();
+
+        List<TrainingResponseDto> actual = facade.getTrainingsByTraineeCriteria(filter);
+
+        assertEquals(1, actual.size());
+        assertEquals(TRAINING_NAME, actual.get(0).trainingName());
+    }
+
+    @Test
+    void shouldGetEmptyTraineeTrainingsWhenFilterDoesNotMatch() {
+        TraineeTrainingSearchFilter filter = TraineeTrainingSearchFilter.builder()
+                .username(TRAINEE_USERNAME)
+                .trainerName("non.existent")
+                .build();
+
+        List<TrainingResponseDto> actual = facade.getTrainingsByTraineeCriteria(filter);
+
+        assertTrue(actual.isEmpty());
+    }
+
+    @Test
+    void shouldGetTrainerTrainings() {
+        TrainerTrainingSearchFilter filter = TrainerTrainingSearchFilter.builder()
+                .username(TRAINER_USERNAME)
+                .build();
+
+        List<TrainingResponseDto> actual = facade.getTrainingsByTrainerCriteria(filter);
+
+        assertEquals(1, actual.size());
+        assertEquals(TRAINING_NAME, actual.get(0).trainingName());
+    }
+
+    @Test
+    void shouldGetEmptyTrainerTrainingsWhenFilterDoesNotMatch() {
+        TrainerTrainingSearchFilter filter = TrainerTrainingSearchFilter.builder()
+                .username(TRAINER_USERNAME)
+                .traineeName("non.existent")
+                .build();
+
+        List<TrainingResponseDto> actual = facade.getTrainingsByTrainerCriteria(filter);
+
+        assertTrue(actual.isEmpty());
     }
 
 }

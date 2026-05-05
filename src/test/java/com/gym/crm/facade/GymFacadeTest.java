@@ -1,5 +1,6 @@
 package com.gym.crm.facade;
 
+import com.gym.crm.dto.PasswordUpdateDto;
 import com.gym.crm.dto.TraineeCreateDto;
 import com.gym.crm.dto.TraineeCreateResponseDto;
 import com.gym.crm.dto.TraineeResponseDto;
@@ -10,23 +11,30 @@ import com.gym.crm.dto.TrainerResponseDto;
 import com.gym.crm.dto.TrainerUpdateDto;
 import com.gym.crm.dto.TrainingCreateDto;
 import com.gym.crm.dto.TrainingResponseDto;
+import com.gym.crm.dto.filter.TraineeTrainingSearchFilter;
+import com.gym.crm.dto.filter.TrainerTrainingSearchFilter;
 import com.gym.crm.entity.Trainee;
 import com.gym.crm.entity.Trainer;
 import com.gym.crm.entity.Training;
 import com.gym.crm.exception.EntityNotFoundException;
+import com.gym.crm.exception.ValidationException;
 import com.gym.crm.mapper.TraineeMapper;
 import com.gym.crm.mapper.TrainerMapper;
 import com.gym.crm.mapper.TrainingMapper;
 import com.gym.crm.service.TraineeService;
 import com.gym.crm.service.TrainerService;
 import com.gym.crm.service.TrainingService;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import static com.gym.crm.factory.TraineeTestFactory.DEFAULT_TRAINEE_ID;
 import static com.gym.crm.factory.TraineeTestFactory.buildTraineeCreateDto;
@@ -50,6 +58,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -67,6 +76,9 @@ class GymFacadeTest {
     private TrainingService trainingService;
 
     @Mock
+    private Validator validator;
+
+    @Mock
     private TraineeMapper traineeMapper;
 
     @Mock
@@ -79,7 +91,7 @@ class GymFacadeTest {
 
     @BeforeEach
     void setUp() {
-        facade = new GymFacade(traineeService, trainerService, trainingService);
+        facade = new GymFacade(traineeService, trainerService, trainingService, validator);
         facade.setTraineeMapper(traineeMapper);
         facade.setTrainerMapper(trainerMapper);
         facade.setTrainingMapper(trainingMapper);
@@ -91,6 +103,7 @@ class GymFacadeTest {
         Trainee trainee = buildTraineeWithId(DEFAULT_TRAINEE_ID);
         TraineeCreateResponseDto expected = buildTraineeCreateResponseDto();
 
+        when(validator.validate(createDto)).thenReturn(Collections.emptySet());
         when(traineeMapper.toEntity(createDto)).thenReturn(trainee);
         when(traineeService.createTrainee(trainee)).thenReturn(trainee);
         when(traineeMapper.toCreateResponseDto(trainee)).thenReturn(expected);
@@ -99,9 +112,23 @@ class GymFacadeTest {
 
         assertNotNull(actual);
         assertEquals(expected, actual);
+        verify(validator).validate(createDto);
         verify(traineeMapper).toEntity(createDto);
         verify(traineeService).createTrainee(trainee);
         verify(traineeMapper).toCreateResponseDto(trainee);
+    }
+
+    @Test
+    void shouldThrowValidationExceptionWhenCreatingTraineeWithInvalidDto() {
+        TraineeCreateDto createDto = buildTraineeCreateDto();
+        ConstraintViolation<TraineeCreateDto> violation = mockConstraintViolation();
+
+        when(validator.validate(createDto)).thenReturn(Set.of(violation));
+
+        assertThrows(ValidationException.class, () -> facade.createTrainee(createDto));
+
+        verify(validator).validate(createDto);
+        verifyNoInteractions(traineeMapper, traineeService);
     }
 
     @Test
@@ -109,6 +136,7 @@ class GymFacadeTest {
         TraineeCreateDto createDto = buildTraineeCreateDto();
         Trainee trainee = buildTraineeWithId(DEFAULT_TRAINEE_ID);
 
+        when(validator.validate(createDto)).thenReturn(Collections.emptySet());
         when(traineeMapper.toEntity(createDto)).thenReturn(trainee);
         when(traineeService.createTrainee(trainee)).thenThrow(new RuntimeException("Service error"));
 
@@ -124,7 +152,7 @@ class GymFacadeTest {
 
         assertEquals("TraineeCreateDto cannot be null", exception.getMessage());
 
-        verifyNoInteractions(traineeMapper, traineeService);
+        verifyNoInteractions(validator, traineeMapper, traineeService);
     }
 
     @Test
@@ -133,6 +161,7 @@ class GymFacadeTest {
         Trainee trainee = buildTraineeWithId(DEFAULT_TRAINEE_ID);
         TraineeResponseDto expected = buildTraineeResponseDto();
 
+        when(validator.validate(updateDto)).thenReturn(Collections.emptySet());
         when(traineeMapper.toEntity(updateDto, DEFAULT_TRAINEE_ID)).thenReturn(trainee);
         when(traineeService.updateTrainee(trainee)).thenReturn(trainee);
         when(traineeMapper.toDto(trainee)).thenReturn(expected);
@@ -141,9 +170,23 @@ class GymFacadeTest {
 
         assertNotNull(actual);
         assertEquals(expected, actual);
+        verify(validator).validate(updateDto);
         verify(traineeMapper).toEntity(updateDto, DEFAULT_TRAINEE_ID);
         verify(traineeService).updateTrainee(trainee);
         verify(traineeMapper).toDto(trainee);
+    }
+
+    @Test
+    void shouldThrowValidationExceptionWhenUpdatingTraineeWithInvalidDto() {
+        TraineeUpdateDto updateDto = buildTraineeUpdateDto();
+        ConstraintViolation<TraineeUpdateDto> violation = mockConstraintViolation();
+
+        when(validator.validate(updateDto)).thenReturn(Set.of(violation));
+
+        assertThrows(ValidationException.class, () -> facade.updateTrainee(DEFAULT_TRAINEE_ID, updateDto));
+
+        verify(validator).validate(updateDto);
+        verifyNoInteractions(traineeMapper, traineeService);
     }
 
     @Test
@@ -151,6 +194,7 @@ class GymFacadeTest {
         TraineeUpdateDto updateDto = buildTraineeUpdateDto();
         Trainee trainee = buildTraineeWithId(DEFAULT_TRAINEE_ID);
 
+        when(validator.validate(updateDto)).thenReturn(Collections.emptySet());
         when(traineeMapper.toEntity(updateDto, DEFAULT_TRAINEE_ID)).thenReturn(trainee);
         when(traineeService.updateTrainee(trainee)).thenThrow(EntityNotFoundException.forId("Trainee", DEFAULT_TRAINEE_ID));
 
@@ -389,37 +433,59 @@ class GymFacadeTest {
     @Test
     void shouldUpdateTraineePassword() {
         String newPassword = "newPassword";
+        PasswordUpdateDto passwordDto = PasswordUpdateDto.builder().password(newPassword).build();
 
-        facade.updateTraineePassword(DEFAULT_TRAINEE_ID, newPassword);
+        when(validator.validate(passwordDto)).thenReturn(Collections.emptySet());
 
+        facade.updateTraineePassword(DEFAULT_TRAINEE_ID, passwordDto);
+
+        verify(validator).validate(passwordDto);
         verify(traineeService).updateTraineePassword(DEFAULT_TRAINEE_ID, newPassword);
+    }
+
+    @Test
+    void shouldThrowValidationExceptionWhenUpdatingTraineePasswordWithInvalidDto() {
+        String newPassword = "newPassword";
+        PasswordUpdateDto passwordDto = PasswordUpdateDto.builder().password(newPassword).build();
+        ConstraintViolation<PasswordUpdateDto> violation = mockConstraintViolation();
+
+        when(validator.validate(passwordDto)).thenReturn(Set.of(violation));
+
+        assertThrows(ValidationException.class, () -> facade.updateTraineePassword(DEFAULT_TRAINEE_ID, passwordDto));
+
+        verify(validator).validate(passwordDto);
+        verifyNoInteractions(traineeService);
     }
 
     @Test
     void shouldPropagateEntityNotFoundExceptionWhenUpdatingTraineePassword() {
         String newPassword = "newPassword";
+        PasswordUpdateDto passwordDto = PasswordUpdateDto.builder().password(newPassword).build();
+
+        when(validator.validate(passwordDto)).thenReturn(Collections.emptySet());
         doThrow(EntityNotFoundException.forId("Trainee", DEFAULT_TRAINEE_ID))
                 .when(traineeService).updateTraineePassword(DEFAULT_TRAINEE_ID, newPassword);
 
-        assertThrows(EntityNotFoundException.class, () -> facade.updateTraineePassword(DEFAULT_TRAINEE_ID, newPassword));
+        assertThrows(EntityNotFoundException.class, () -> facade.updateTraineePassword(DEFAULT_TRAINEE_ID, passwordDto));
 
         verify(traineeService).updateTraineePassword(DEFAULT_TRAINEE_ID, newPassword);
     }
 
     @Test
     void shouldThrowNullPointerWhenUpdatingTraineePasswordWithNullTraineeId() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.updateTraineePassword(null, "password"));
+        PasswordUpdateDto passwordDto = PasswordUpdateDto.builder().password("password").build();
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.updateTraineePassword(null, passwordDto));
 
         assertEquals("Trainee ID cannot be null", exception.getMessage());
-        verifyNoInteractions(traineeService);
+        verifyNoInteractions(validator, traineeService);
     }
 
     @Test
-    void shouldThrowNullPointerWhenUpdatingTraineePasswordWithNullNewPassword() {
+    void shouldThrowNullPointerWhenUpdatingTraineePasswordWithNullPasswordDto() {
         NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.updateTraineePassword(DEFAULT_TRAINEE_ID, null));
 
-        assertEquals("New password cannot be null", exception.getMessage());
-        verifyNoInteractions(traineeService);
+        assertEquals("PasswordUpdateDto cannot be null", exception.getMessage());
+        verifyNoInteractions(validator, traineeService);
     }
 
     @Test
@@ -528,6 +594,7 @@ class GymFacadeTest {
         Trainer trainer = buildTrainerWithId(DEFAULT_TRAINER_ID);
         TrainerCreateResponseDto expected = buildTrainerCreateResponseDto();
 
+        when(validator.validate(createDto)).thenReturn(Collections.emptySet());
         when(trainerMapper.toEntity(createDto)).thenReturn(trainer);
         when(trainerService.createTrainer(trainer)).thenReturn(trainer);
         when(trainerMapper.toCreateResponseDto(trainer)).thenReturn(expected);
@@ -536,9 +603,23 @@ class GymFacadeTest {
 
         assertNotNull(actual);
         assertEquals(expected, actual);
+        verify(validator).validate(createDto);
         verify(trainerMapper).toEntity(createDto);
         verify(trainerService).createTrainer(trainer);
         verify(trainerMapper).toCreateResponseDto(trainer);
+    }
+
+    @Test
+    void shouldThrowValidationExceptionWhenCreatingTrainerWithInvalidDto() {
+        TrainerCreateDto createDto = buildTrainerCreateDto();
+        ConstraintViolation<TrainerCreateDto> violation = mockConstraintViolation();
+
+        when(validator.validate(createDto)).thenReturn(Set.of(violation));
+
+        assertThrows(ValidationException.class, () -> facade.createTrainer(createDto));
+
+        verify(validator).validate(createDto);
+        verifyNoInteractions(trainerMapper, trainerService);
     }
 
     @Test
@@ -546,6 +627,7 @@ class GymFacadeTest {
         TrainerCreateDto createDto = buildTrainerCreateDto();
         Trainer trainer = buildTrainerWithId(DEFAULT_TRAINER_ID);
 
+        when(validator.validate(createDto)).thenReturn(Collections.emptySet());
         when(trainerMapper.toEntity(createDto)).thenReturn(trainer);
         when(trainerService.createTrainer(trainer)).thenThrow(new RuntimeException("Service error"));
 
@@ -561,7 +643,7 @@ class GymFacadeTest {
 
         assertEquals("TrainerCreateDto cannot be null", exception.getMessage());
 
-        verifyNoInteractions(trainerMapper, trainerService);
+        verifyNoInteractions(validator, trainerMapper, trainerService);
     }
 
     @Test
@@ -570,6 +652,7 @@ class GymFacadeTest {
         Trainer trainer = buildTrainerWithId(DEFAULT_TRAINER_ID);
         TrainerResponseDto expected = buildTrainerResponseDto();
 
+        when(validator.validate(updateDto)).thenReturn(Collections.emptySet());
         when(trainerMapper.toEntity(updateDto, DEFAULT_TRAINER_ID)).thenReturn(trainer);
         when(trainerService.updateTrainer(trainer)).thenReturn(trainer);
         when(trainerMapper.toDto(trainer)).thenReturn(expected);
@@ -578,9 +661,23 @@ class GymFacadeTest {
 
         assertNotNull(actual);
         assertEquals(expected, actual);
+        verify(validator).validate(updateDto);
         verify(trainerMapper).toEntity(updateDto, DEFAULT_TRAINER_ID);
         verify(trainerService).updateTrainer(trainer);
         verify(trainerMapper).toDto(trainer);
+    }
+
+    @Test
+    void shouldThrowValidationExceptionWhenUpdatingTrainerWithInvalidDto() {
+        TrainerUpdateDto updateDto = buildTrainerUpdateDto();
+        ConstraintViolation<TrainerUpdateDto> violation = mockConstraintViolation();
+
+        when(validator.validate(updateDto)).thenReturn(Set.of(violation));
+
+        assertThrows(ValidationException.class, () -> facade.updateTrainer(DEFAULT_TRAINER_ID, updateDto));
+
+        verify(validator).validate(updateDto);
+        verifyNoInteractions(trainerMapper, trainerService);
     }
 
     @Test
@@ -588,6 +685,7 @@ class GymFacadeTest {
         TrainerUpdateDto updateDto = buildTrainerUpdateDto();
         Trainer trainer = buildTrainerWithId(DEFAULT_TRAINER_ID);
 
+        when(validator.validate(updateDto)).thenReturn(Collections.emptySet());
         when(trainerMapper.toEntity(updateDto, DEFAULT_TRAINER_ID)).thenReturn(trainer);
         when(trainerService.updateTrainer(trainer)).thenThrow(EntityNotFoundException.forId("Trainer", DEFAULT_TRAINER_ID));
 
@@ -603,7 +701,7 @@ class GymFacadeTest {
 
         assertEquals("Trainer ID cannot be null", exception.getMessage());
 
-        verifyNoInteractions(trainerMapper, trainerService);
+        verifyNoInteractions(validator, trainerMapper, trainerService);
     }
 
     @Test
@@ -612,7 +710,7 @@ class GymFacadeTest {
 
         assertEquals("TrainerUpdateDto cannot be null", exception.getMessage());
 
-        verifyNoInteractions(trainerMapper, trainerService);
+        verifyNoInteractions(validator, trainerMapper, trainerService);
     }
 
     @Test
@@ -823,37 +921,58 @@ class GymFacadeTest {
     @Test
     void shouldUpdateTrainerPassword() {
         String newPassword = "newPassword";
+        PasswordUpdateDto passwordDto = PasswordUpdateDto.builder().password(newPassword).build();
 
-        facade.updateTrainerPassword(DEFAULT_TRAINER_ID, newPassword);
+        when(validator.validate(passwordDto)).thenReturn(Collections.emptySet());
 
+        facade.updateTrainerPassword(DEFAULT_TRAINER_ID, passwordDto);
+
+        verify(validator).validate(passwordDto);
         verify(trainerService).updateTrainerPassword(DEFAULT_TRAINER_ID, newPassword);
+    }
+
+    @Test
+    void shouldThrowValidationExceptionWhenUpdatingTrainerPasswordWithInvalidDto() {
+        String newPassword = "newPassword";
+        PasswordUpdateDto passwordDto = PasswordUpdateDto.builder().password(newPassword).build();
+        ConstraintViolation<PasswordUpdateDto> violation = mockConstraintViolation();
+
+        when(validator.validate(passwordDto)).thenReturn(Set.of(violation));
+
+        assertThrows(ValidationException.class, () -> facade.updateTrainerPassword(DEFAULT_TRAINER_ID, passwordDto));
+
+        verify(validator).validate(passwordDto);
+        verifyNoInteractions(trainerService);
     }
 
     @Test
     void shouldPropagateEntityNotFoundExceptionWhenUpdatingTrainerPassword() {
         String newPassword = "newPassword";
+        PasswordUpdateDto passwordDto = PasswordUpdateDto.builder().password(newPassword).build();
+        when(validator.validate(passwordDto)).thenReturn(Collections.emptySet());
         doThrow(EntityNotFoundException.forId("Trainer", DEFAULT_TRAINER_ID))
                 .when(trainerService).updateTrainerPassword(DEFAULT_TRAINER_ID, newPassword);
 
-        assertThrows(EntityNotFoundException.class, () -> facade.updateTrainerPassword(DEFAULT_TRAINER_ID, newPassword));
+        assertThrows(EntityNotFoundException.class, () -> facade.updateTrainerPassword(DEFAULT_TRAINER_ID, passwordDto));
 
         verify(trainerService).updateTrainerPassword(DEFAULT_TRAINER_ID, newPassword);
     }
 
     @Test
     void shouldThrowNullPointerWhenUpdatingTrainerPasswordWithNullTrainerId() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.updateTrainerPassword(null, "password"));
+        PasswordUpdateDto passwordDto = PasswordUpdateDto.builder().password("password").build();
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.updateTrainerPassword(null, passwordDto));
 
         assertEquals("Trainer ID cannot be null", exception.getMessage());
-        verifyNoInteractions(trainerService);
+        verifyNoInteractions(validator, trainerService);
     }
 
     @Test
-    void shouldThrowNullPointerWhenUpdatingTrainerPasswordWithNullNewPassword() {
+    void shouldThrowNullPointerWhenUpdatingTrainerPasswordWithNullPasswordDto() {
         NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.updateTrainerPassword(DEFAULT_TRAINER_ID, null));
 
-        assertEquals("New password cannot be null", exception.getMessage());
-        verifyNoInteractions(trainerService);
+        assertEquals("PasswordUpdateDto cannot be null", exception.getMessage());
+        verifyNoInteractions(validator, trainerService);
     }
 
     @Test
@@ -932,6 +1051,7 @@ class GymFacadeTest {
         Training training = buildTrainingWithId(DEFAULT_TRAINING_ID);
         TrainingResponseDto expected = buildTrainingResponseDto();
 
+        when(validator.validate(createDto)).thenReturn(Collections.emptySet());
         when(trainingMapper.toEntity(createDto)).thenReturn(training);
         when(trainingService.createTraining(training)).thenReturn(training);
         when(trainingMapper.toDto(training)).thenReturn(expected);
@@ -940,9 +1060,23 @@ class GymFacadeTest {
 
         assertNotNull(actual);
         assertEquals(expected, actual);
+        verify(validator).validate(createDto);
         verify(trainingMapper).toEntity(createDto);
         verify(trainingService).createTraining(training);
         verify(trainingMapper).toDto(training);
+    }
+
+    @Test
+    void shouldThrowValidationExceptionWhenCreatingTrainingWithInvalidDto() {
+        TrainingCreateDto createDto = buildTrainingCreateDto();
+        ConstraintViolation<TrainingCreateDto> violation = mockConstraintViolation();
+
+        when(validator.validate(createDto)).thenReturn(Set.of(violation));
+
+        assertThrows(ValidationException.class, () -> facade.createTraining(createDto));
+
+        verify(validator).validate(createDto);
+        verifyNoInteractions(trainingMapper, trainingService);
     }
 
     @Test
@@ -950,6 +1084,7 @@ class GymFacadeTest {
         TrainingCreateDto createDto = buildTrainingCreateDto();
         Training training = buildTrainingWithId(DEFAULT_TRAINING_ID);
 
+        when(validator.validate(createDto)).thenReturn(Collections.emptySet());
         when(trainingMapper.toEntity(createDto)).thenReturn(training);
         when(trainingService.createTraining(training)).thenThrow(new RuntimeException("Service error"));
 
@@ -1032,6 +1167,65 @@ class GymFacadeTest {
         assertTrue(actual.isEmpty());
         verify(trainingService).getAllTrainings();
         verify(trainingMapper).toDtoList(List.of());
+    }
+
+    @Test
+    void shouldGetTrainingsByTraineeCriteria() {
+        TraineeTrainingSearchFilter filter = mock(TraineeTrainingSearchFilter.class);
+        Training training = buildTrainingWithId(DEFAULT_TRAINING_ID);
+        TrainingResponseDto responseDto = buildTrainingResponseDto();
+        List<Training> trainings = List.of(training);
+        List<TrainingResponseDto> expected = List.of(responseDto);
+
+        when(trainingService.getTrainingsByTraineeCriteria(filter)).thenReturn(trainings);
+        when(trainingMapper.toDtoList(trainings)).thenReturn(expected);
+
+        List<TrainingResponseDto> actual = facade.getTrainingsByTraineeCriteria(filter);
+
+        assertNotNull(actual);
+        assertEquals(expected, actual);
+        verify(trainingService).getTrainingsByTraineeCriteria(filter);
+        verify(trainingMapper).toDtoList(trainings);
+    }
+
+    @Test
+    void shouldThrowNullPointerWhenTraineeFilterIsNull() {
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.getTrainingsByTraineeCriteria(null));
+
+        assertEquals("Filter cannot be null", exception.getMessage());
+        verifyNoInteractions(trainingService, trainingMapper);
+    }
+
+    @Test
+    void shouldGetTrainingsByTrainerCriteria() {
+        TrainerTrainingSearchFilter filter = mock(TrainerTrainingSearchFilter.class);
+        Training training = buildTrainingWithId(DEFAULT_TRAINING_ID);
+        TrainingResponseDto responseDto = buildTrainingResponseDto();
+        List<Training> trainings = List.of(training);
+        List<TrainingResponseDto> expected = List.of(responseDto);
+
+        when(trainingService.getTrainingsByTrainerCriteria(filter)).thenReturn(trainings);
+        when(trainingMapper.toDtoList(trainings)).thenReturn(expected);
+
+        List<TrainingResponseDto> actual = facade.getTrainingsByTrainerCriteria(filter);
+
+        assertNotNull(actual);
+        assertEquals(expected, actual);
+        verify(trainingService).getTrainingsByTrainerCriteria(filter);
+        verify(trainingMapper).toDtoList(trainings);
+    }
+
+    @Test
+    void shouldThrowNullPointerWhenTrainerFilterIsNull() {
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.getTrainingsByTrainerCriteria(null));
+
+        assertEquals("Filter cannot be null", exception.getMessage());
+        verifyNoInteractions(trainingService, trainingMapper);
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> ConstraintViolation<T> mockConstraintViolation() {
+        return mock(ConstraintViolation.class);
     }
 
 }

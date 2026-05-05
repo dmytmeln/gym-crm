@@ -1,9 +1,3 @@
-storage:
-  init:
-    trainee: classpath:data/trainee.csv
-    trainer: classpath:data/trainer.csv
-    training: classpath:data/training.csv
-
 datasource:
   jdbc-url: ${DB_URL:jdbc:mysql://localhost:3306/gym_db}
   username: ${DB_USERNAME:gym}
