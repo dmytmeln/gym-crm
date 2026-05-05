@@ -22,22 +22,21 @@ public abstract class TrainingCriteriaBuilder<C extends TrainingSearchFilter> {
     public List<Training> findTrainings(Session session, C criteria) {
         CriteriaBuilder cb = session.getCriteriaBuilder();
         CriteriaQuery<Training> cq = cb.createQuery(Training.class);
-        Root<Training> root = cq.from(Training.class);
 
+        Root<Training> root = cq.from(Training.class);
         root.fetch(Training_.TRAINEE, JoinType.INNER);
         root.fetch(Training_.TRAINER, JoinType.INNER);
         root.fetch(Training_.TRAINING_TYPE, JoinType.INNER);
 
         List<Predicate> predicates = new ArrayList<>();
-
         addFromDateFilter(cb, root, criteria, predicates);
         addToDateFilter(cb, root, criteria, predicates);
         addUsernameFilter(cb, root, criteria, predicates);
         addPartnerNameFilter(cb, root, criteria, predicates);
-
         addSpecificFilters(cb, root, criteria, predicates);
 
         cq.select(root).distinct(true).where(predicates.toArray(new Predicate[0]));
+
         return session.createQuery(cq).getResultList();
     }
 

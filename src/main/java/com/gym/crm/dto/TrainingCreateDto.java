@@ -10,18 +10,18 @@ import java.time.LocalDate;
 
 @Builder
 public record TrainingCreateDto(
-        @NotNull
+        @NotNull(message = "Trainee is required for training.")
         Long traineeId,
-        @NotNull
+        @NotNull(message = "Trainer is required for training.")
         Long trainerId,
-        @NotNull
+        @NotNull(message = "Training type is required for training.")
         Long trainingTypeId,
-        @NotBlank
-        @Size(max = 100)
+        @NotBlank(message = "Training name is required.")
+        @Size(max = 100, message = "Training name must not exceed 100 characters.")
         String trainingName,
-        @Positive
+        @Positive(message = "Training duration must be a positive number.")
         int trainingDuration,
-        @NotNull
+        @NotNull(message = "Training date is required.")
         LocalDate trainingDate
 ) {
 }

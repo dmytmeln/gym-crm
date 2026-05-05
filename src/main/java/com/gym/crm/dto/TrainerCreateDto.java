@@ -7,14 +7,14 @@ import lombok.Builder;
 
 @Builder
 public record TrainerCreateDto(
-        @NotBlank
-        @Size(max = 100)
+        @NotBlank(message = "Trainer first name is required.")
+        @Size(max = 100, message = "Trainer first name must not exceed 100 characters.")
         String firstName,
-        @NotBlank
-        @Size(max = 100)
+        @NotBlank(message = "Trainer last name is required.")
+        @Size(max = 100, message = "Trainer last name must not exceed 100 characters.")
         String lastName,
         boolean active,
-        @NotNull
+        @NotNull(message = "Specialization is required for trainer.")
         Long specializationId
 ) {
 }

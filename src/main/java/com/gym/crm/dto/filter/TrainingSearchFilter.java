@@ -11,7 +11,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @ToString
 public class TrainingSearchFilter {
-    @NotBlank
+    @NotBlank(message = "Username is required for search.")
     private String username;
     private LocalDate fromDate;
     private LocalDate toDate;

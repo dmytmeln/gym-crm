@@ -6,7 +6,7 @@ import com.gym.crm.entity.Trainee;
 import com.gym.crm.entity.Trainer;
 import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.service.TraineeService;
-import com.gym.crm.service.helper.ProfileCredentialGenerator;
+import com.gym.crm.service.common.ProfileCredentialGenerator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

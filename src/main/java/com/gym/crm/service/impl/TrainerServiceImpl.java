@@ -8,7 +8,7 @@ import com.gym.crm.entity.TrainingType;
 import com.gym.crm.entity.User;
 import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.service.TrainerService;
-import com.gym.crm.service.helper.ProfileCredentialGenerator;
+import com.gym.crm.service.common.ProfileCredentialGenerator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
