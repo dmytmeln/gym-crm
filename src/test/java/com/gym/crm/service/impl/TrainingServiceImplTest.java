@@ -1,9 +1,9 @@
 package com.gym.crm.service.impl;
 
-import com.gym.crm.dao.TraineeEntityDao;
-import com.gym.crm.dao.TrainerEntityDao;
-import com.gym.crm.dao.TrainingEntityDao;
-import com.gym.crm.dao.TrainingTypeEntityDao;
+import com.gym.crm.dao.TraineeDao;
+import com.gym.crm.dao.TrainerDao;
+import com.gym.crm.dao.TrainingDao;
+import com.gym.crm.dao.TrainingTypeDao;
 import com.gym.crm.entity.Trainee;
 import com.gym.crm.entity.Trainer;
 import com.gym.crm.entity.Training;
@@ -38,16 +38,16 @@ import static org.mockito.Mockito.when;
 class TrainingServiceImplTest {
 
     @Mock
-    private TrainingEntityDao trainingDao;
+    private TrainingDao trainingDao;
 
     @Mock
-    private TraineeEntityDao traineeDao;
+    private TraineeDao traineeDao;
 
     @Mock
-    private TrainerEntityDao trainerDao;
+    private TrainerDao trainerDao;
 
     @Mock
-    private TrainingTypeEntityDao trainingTypeDao;
+    private TrainingTypeDao trainingTypeDao;
 
     private TrainingService service;
 

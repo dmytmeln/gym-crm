@@ -4,7 +4,7 @@ import com.gym.crm.entity.TrainingType;
 
 import java.util.Optional;
 
-public interface TrainingTypeEntityDao {
+public interface TrainingTypeDao {
 
     Optional<TrainingType> findById(Long id);
 

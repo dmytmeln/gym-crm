@@ -4,38 +4,36 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
-import com.gym.crm.storage.Storage;
-import com.gym.crm.storage.csv.CsvEntityMapper;
-import com.gym.crm.storage.csv.CsvParser;
-import com.gym.crm.storage.csv.dto.TraineeCsvDto;
-import com.gym.crm.storage.init.StorageInitializer;
+import com.gym.crm.dao.TraineeDao;
+import com.gym.crm.dao.TrainerDao;
+import com.gym.crm.service.TraineeService;
+import com.gym.crm.service.helper.ProfileCredentialGenerator;
+import com.gym.crm.service.impl.TraineeServiceImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.LoggerFactory;
 
+import static com.gym.crm.factory.TraineeTestFactory.DEFAULT_USERNAME;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class LoggingTest {
 
     @Mock
-    private Storage storage;
+    private TraineeDao dao;
 
     @Mock
-    private CsvParser parser;
+    private TrainerDao trainerDao;
 
     @Mock
-    private CsvEntityMapper mapper;
+    private ProfileCredentialGenerator generator;
 
-    @InjectMocks
-    private StorageInitializer storageInitializer;
+    private TraineeService service;
 
     private ListAppender<ILoggingEvent> listAppender;
 
@@ -43,7 +41,13 @@ class LoggingTest {
 
     @BeforeEach
     void setUp() {
-        logger = (Logger) LoggerFactory.getLogger(StorageInitializer.class);
+        TraineeServiceImpl implementation = new TraineeServiceImpl();
+        implementation.setTraineeDao(dao);
+        implementation.setTrainerDao(trainerDao);
+        implementation.setCredentialGenerator(generator);
+        service = implementation;
+
+        logger = (Logger) LoggerFactory.getLogger(TraineeServiceImpl.class);
         listAppender = new ListAppender<>();
         listAppender.start();
         logger.addAppender(listAppender);
@@ -55,8 +59,10 @@ class LoggingTest {
     }
 
     @Test
-    void shouldLogInfoWhenInitializationStarts() {
-        storageInitializer.initializeStorage();
+    void shouldLogInfoWhenDeleteSucceeds() {
+        when(dao.deleteByUsername(DEFAULT_USERNAME)).thenReturn(true);
+
+        service.deleteTraineeByUsername(DEFAULT_USERNAME);
 
         assertThat(listAppender.list)
                 .extracting(ILoggingEvent::getLevel)
@@ -64,17 +70,14 @@ class LoggingTest {
     }
 
     @Test
-    void shouldLogErrorWhenDataLoadingFails() {
-        String filePath = "invalid/path.csv";
-        storageInitializer.setTraineeFilePath(filePath);
+    void shouldLogWarnWhenNotDeleted() {
+        when(dao.deleteByUsername(DEFAULT_USERNAME)).thenReturn(false);
 
-        when(parser.parseCsv(eq(filePath), eq(TraineeCsvDto.class))).thenThrow(new RuntimeException("Parsing failed"));
-
-        storageInitializer.initializeStorage();
+        service.deleteTraineeByUsername(DEFAULT_USERNAME);
 
         assertThat(listAppender.list)
                 .extracting(ILoggingEvent::getLevel)
-                .contains(Level.ERROR);
+                .contains(Level.WARN);
     }
 
 }
