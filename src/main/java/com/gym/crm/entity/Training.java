@@ -55,7 +55,6 @@ public class Training {
     @Column(name = "training_duration", nullable = false)
     private Integer trainingDuration;
 
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

@@ -7,7 +7,7 @@ import ch.qos.logback.core.read.ListAppender;
 import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.dao.TrainerDao;
 import com.gym.crm.service.TraineeService;
-import com.gym.crm.service.helper.ProfileCredentialGenerator;
+import com.gym.crm.service.common.ProfileCredentialGenerator;
 import com.gym.crm.service.impl.TraineeServiceImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
