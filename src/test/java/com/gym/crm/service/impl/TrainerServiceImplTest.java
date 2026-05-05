@@ -275,12 +275,12 @@ class TrainerServiceImplTest {
     }
 
     @Test
-    void shouldThrowEntityNotFoundWhenNoTrainerExists() {
+    void shouldReturnFalseWhenNoTrainerExists() {
         when(dao.findByUsername(DEFAULT_USERNAME)).thenReturn(Optional.empty());
 
-        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> service.doesUsernameAndPasswordMatch(DEFAULT_USERNAME, DEFAULT_PASSWORD));
+        boolean result = service.doesUsernameAndPasswordMatch(DEFAULT_USERNAME, DEFAULT_PASSWORD);
 
-        assertEquals("Trainer not found with username: " + DEFAULT_USERNAME, exception.getMessage());
+        assertFalse(result);
     }
 
     @Test

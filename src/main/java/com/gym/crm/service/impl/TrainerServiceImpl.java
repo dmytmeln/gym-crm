@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -108,11 +109,17 @@ public class TrainerServiceImpl implements TrainerService {
 
     @Override
     public boolean doesUsernameAndPasswordMatch(String username, String password) {
+        Objects.requireNonNull(username, "Trainer username cannot be null");
         Objects.requireNonNull(password, "Password cannot be null");
         log.info("Checking if username and password match for trainer username: {}", username);
 
-        Trainer trainer = getTrainerByUsername(username);
+        Optional<Trainer> trainerOptional = trainerDao.findByUsername(username);
+        if (trainerOptional.isEmpty()) {
+            log.warn("Trainer not found with username: {}", username);
+            return false;
+        }
 
+        Trainer trainer = trainerOptional.get();
         boolean passwordsMatch = Objects.equals(trainer.getUser().getPassword(), password);
         if (!passwordsMatch) {
             log.warn("Passwords do not match for trainer username: {}", username);

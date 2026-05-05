@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -84,11 +85,17 @@ public class TraineeServiceImpl implements TraineeService {
 
     @Override
     public boolean doesUsernameAndPasswordMatch(String username, String password) {
+        Objects.requireNonNull(username, "Trainee username cannot be null");
         Objects.requireNonNull(password, "Password cannot be null");
         log.info("Checking if username and password match for trainee username: {}", username);
 
-        Trainee trainee = getTraineeByUsername(username);
+        Optional<Trainee> traineeOptional = traineeDao.findByUsername(username);
+        if (traineeOptional.isEmpty()) {
+            log.warn("Trainee not found with username: {}", username);
+            return false;
+        }
 
+        Trainee trainee = traineeOptional.get();
         boolean passwordsMatch = Objects.equals(trainee.getUser().getPassword(), password);
         if (!passwordsMatch) {
             log.warn("Passwords do not match for trainee username: {}", username);
