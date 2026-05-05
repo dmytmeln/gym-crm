@@ -1,7 +1,7 @@
 package com.gym.crm.service.impl;
 
-import com.gym.crm.dao.TraineeEntityDao;
-import com.gym.crm.dao.TrainerEntityDao;
+import com.gym.crm.dao.TraineeDao;
+import com.gym.crm.dao.TrainerDao;
 import com.gym.crm.entity.Trainee;
 import com.gym.crm.entity.Trainer;
 import com.gym.crm.entity.User;
@@ -19,17 +19,17 @@ import java.util.Objects;
 @Service
 public class TraineeServiceImpl implements TraineeService {
 
-    private TraineeEntityDao traineeDao;
-    private TrainerEntityDao trainerDao;
+    private TraineeDao traineeDao;
+    private TrainerDao trainerDao;
     private ProfileCredentialGenerator credentialGenerator;
 
     @Autowired
-    public void setTraineeDao(TraineeEntityDao traineeDao) {
+    public void setTraineeDao(TraineeDao traineeDao) {
         this.traineeDao = traineeDao;
     }
 
     @Autowired
-    public void setTrainerDao(TrainerEntityDao trainerDao) {
+    public void setTrainerDao(TrainerDao trainerDao) {
         this.trainerDao = trainerDao;
     }
 

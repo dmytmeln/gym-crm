@@ -1,7 +1,24 @@
 package com.gym.crm.dao;
 
-import com.gym.crm.model.Trainer;
+import com.gym.crm.entity.Trainer;
 
-public interface TrainerDao extends Dao<Trainer> {
+import java.util.List;
+import java.util.Optional;
+
+public interface TrainerDao {
+
+    Trainer save(Trainer trainer);
+
+    Optional<Trainer> findById(Long trainerId);
+
+    Optional<Trainer> findByUsername(String username);
+
+    List<Trainer> findAll();
+
+    List<Trainer> findAllByIds(List<Long> ids);
+
+    List<Trainer> findAllNotAssignedToTrainee(String traineeUsername);
+
+    Trainer update(Trainer trainer);
 
 }

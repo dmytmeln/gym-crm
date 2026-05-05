@@ -1,6 +1,6 @@
 package com.gym.crm.dao.impl;
 
-import com.gym.crm.dao.TrainingEntityDao;
+import com.gym.crm.dao.TrainingDao;
 import com.gym.crm.dao.helper.TransactionManager;
 import com.gym.crm.entity.Training;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +12,7 @@ import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
-public class HibernateTrainingDao implements TrainingEntityDao {
+public class HibernateTrainingDao implements TrainingDao {
 
     private final TransactionManager transactionManager;
 

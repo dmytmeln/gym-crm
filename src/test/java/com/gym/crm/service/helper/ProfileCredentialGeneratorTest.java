@@ -1,7 +1,7 @@
 package com.gym.crm.service.helper;
 
-import com.gym.crm.dao.TraineeEntityDao;
-import com.gym.crm.dao.TrainerEntityDao;
+import com.gym.crm.dao.TraineeDao;
+import com.gym.crm.dao.TrainerDao;
 import com.gym.crm.entity.Trainee;
 import com.gym.crm.entity.Trainer;
 import com.gym.crm.entity.User;
@@ -34,10 +34,10 @@ class ProfileCredentialGeneratorTest {
     private static final String LAST_NAME = "Miller";
 
     @Mock
-    private TraineeEntityDao traineeDao;
+    private TraineeDao traineeDao;
 
     @Mock
-    private TrainerEntityDao trainerDao;
+    private TrainerDao trainerDao;
 
     @InjectMocks
     private ProfileCredentialGenerator generator;

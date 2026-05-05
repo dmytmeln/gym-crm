@@ -1,9 +1,9 @@
 package com.gym.crm.service.impl;
 
-import com.gym.crm.dao.TraineeEntityDao;
-import com.gym.crm.dao.TrainerEntityDao;
-import com.gym.crm.dao.TrainingEntityDao;
-import com.gym.crm.dao.TrainingTypeEntityDao;
+import com.gym.crm.dao.TraineeDao;
+import com.gym.crm.dao.TrainerDao;
+import com.gym.crm.dao.TrainingDao;
+import com.gym.crm.dao.TrainingTypeDao;
 import com.gym.crm.entity.Trainee;
 import com.gym.crm.entity.Trainer;
 import com.gym.crm.entity.Training;
@@ -21,28 +21,28 @@ import java.util.Objects;
 @Service
 public class TrainingServiceImpl implements TrainingService {
 
-    private TrainingEntityDao trainingDao;
-    private TraineeEntityDao traineeDao;
-    private TrainerEntityDao trainerDao;
-    private TrainingTypeEntityDao trainingTypeDao;
+    private TrainingDao trainingDao;
+    private TraineeDao traineeDao;
+    private TrainerDao trainerDao;
+    private TrainingTypeDao trainingTypeDao;
 
     @Autowired
-    public void setTrainingDao(TrainingEntityDao trainingDao) {
+    public void setTrainingDao(TrainingDao trainingDao) {
         this.trainingDao = trainingDao;
     }
 
     @Autowired
-    public void setTraineeDao(TraineeEntityDao traineeDao) {
+    public void setTraineeDao(TraineeDao traineeDao) {
         this.traineeDao = traineeDao;
     }
 
     @Autowired
-    public void setTrainerDao(TrainerEntityDao trainerDao) {
+    public void setTrainerDao(TrainerDao trainerDao) {
         this.trainerDao = trainerDao;
     }
 
     @Autowired
-    public void setTrainingTypeDao(TrainingTypeEntityDao trainingTypeDao) {
+    public void setTrainingTypeDao(TrainingTypeDao trainingTypeDao) {
         this.trainingTypeDao = trainingTypeDao;
     }
 
