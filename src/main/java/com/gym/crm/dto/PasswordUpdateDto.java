@@ -6,8 +6,8 @@ import lombok.Builder;
 
 @Builder
 public record PasswordUpdateDto(
-        @NotBlank(message = "Password is required.")
-        @Size(min = 10, message = "Password must be at least 10 characters long.")
+        @NotBlank(message = "Password is required")
+        @Size(min = 10, message = "Password must be at least 10 characters long")
         String password
 ) {
 }

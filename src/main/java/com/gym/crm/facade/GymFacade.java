@@ -37,7 +37,7 @@ public class GymFacade {
     private final TraineeService traineeService;
     private final TrainerService trainerService;
     private final TrainingService trainingService;
-    private final BusinessValidator businessValidator;
+    private final BusinessValidator validator;
 
     private TraineeMapper traineeMapper;
     private TrainerMapper trainerMapper;
@@ -60,7 +60,7 @@ public class GymFacade {
 
     public TraineeCreateResponseDto createTrainee(TraineeCreateDto traineeCreateDto) {
         Objects.requireNonNull(traineeCreateDto, "TraineeCreateDto cannot be null");
-        businessValidator.validate(traineeCreateDto);
+        validator.validate(traineeCreateDto);
 
         Trainee trainee = traineeMapper.toEntity(traineeCreateDto);
         Trainee createdTrainee = traineeService.createTrainee(trainee);
@@ -98,7 +98,7 @@ public class GymFacade {
     public TraineeResponseDto updateTrainee(Long traineeId, TraineeUpdateDto traineeUpdateDto) {
         Objects.requireNonNull(traineeId, "Trainee ID cannot be null");
         Objects.requireNonNull(traineeUpdateDto, "TraineeUpdateDto cannot be null");
-        businessValidator.validate(traineeUpdateDto);
+        validator.validate(traineeUpdateDto);
 
         Trainee trainee = traineeMapper.toEntity(traineeUpdateDto, traineeId);
         Trainee updatedTrainee = traineeService.updateTrainee(trainee);
@@ -118,7 +118,7 @@ public class GymFacade {
     public void updateTraineePassword(Long traineeId, PasswordUpdateDto passwordUpdateDto) {
         Objects.requireNonNull(traineeId, "Trainee ID cannot be null");
         Objects.requireNonNull(passwordUpdateDto, "PasswordUpdateDto cannot be null");
-        businessValidator.validate(passwordUpdateDto);
+        validator.validate(passwordUpdateDto);
 
         traineeService.updateTraineePassword(traineeId, passwordUpdateDto.password());
     }
@@ -149,7 +149,7 @@ public class GymFacade {
 
     public TrainerCreateResponseDto createTrainer(TrainerCreateDto trainerCreateDto) {
         Objects.requireNonNull(trainerCreateDto, "TrainerCreateDto cannot be null");
-        businessValidator.validate(trainerCreateDto);
+        validator.validate(trainerCreateDto);
 
         Trainer trainer = trainerMapper.toEntity(trainerCreateDto);
         Trainer createdTrainer = trainerService.createTrainer(trainer);
@@ -194,7 +194,7 @@ public class GymFacade {
     public TrainerResponseDto updateTrainer(Long trainerId, TrainerUpdateDto trainerUpdateDto) {
         Objects.requireNonNull(trainerId, "Trainer ID cannot be null");
         Objects.requireNonNull(trainerUpdateDto, "TrainerUpdateDto cannot be null");
-        businessValidator.validate(trainerUpdateDto);
+        validator.validate(trainerUpdateDto);
 
         Trainer trainer = trainerMapper.toEntity(trainerUpdateDto, trainerId);
         Trainer updatedTrainer = trainerService.updateTrainer(trainer);
@@ -205,7 +205,7 @@ public class GymFacade {
     public void updateTrainerPassword(Long trainerId, PasswordUpdateDto passwordUpdateDto) {
         Objects.requireNonNull(trainerId, "Trainer ID cannot be null");
         Objects.requireNonNull(passwordUpdateDto, "PasswordUpdateDto cannot be null");
-        businessValidator.validate(passwordUpdateDto);
+        validator.validate(passwordUpdateDto);
 
         trainerService.updateTrainerPassword(trainerId, passwordUpdateDto.password());
     }
@@ -224,7 +224,7 @@ public class GymFacade {
 
     public TrainingResponseDto createTraining(TrainingCreateDto trainingCreateDto) {
         Objects.requireNonNull(trainingCreateDto, "TrainingCreateDto cannot be null");
-        businessValidator.validate(trainingCreateDto);
+        validator.validate(trainingCreateDto);
 
         Training training = trainingMapper.toEntity(trainingCreateDto);
         Training createdTraining = trainingService.createTraining(training);
@@ -246,7 +246,7 @@ public class GymFacade {
 
     public List<TrainingResponseDto> getTrainingsByTraineeCriteria(TraineeTrainingSearchFilter filter) {
         Objects.requireNonNull(filter, "Filter cannot be null");
-        businessValidator.validate(filter);
+        validator.validate(filter);
 
         List<Training> trainings = trainingService.getTrainingsByTraineeCriteria(filter);
         return trainingMapper.toDtoList(trainings);
@@ -254,7 +254,7 @@ public class GymFacade {
 
     public List<TrainingResponseDto> getTrainingsByTrainerCriteria(TrainerTrainingSearchFilter filter) {
         Objects.requireNonNull(filter, "Filter cannot be null");
-        businessValidator.validate(filter);
+        validator.validate(filter);
 
         List<Training> trainings = trainingService.getTrainingsByTrainerCriteria(filter);
         return trainingMapper.toDtoList(trainings);
