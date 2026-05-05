@@ -4,6 +4,8 @@ import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.dao.TrainerDao;
 import com.gym.crm.dao.TrainingDao;
 import com.gym.crm.dao.TrainingTypeDao;
+import com.gym.crm.dto.filter.TraineeTrainingSearchFilter;
+import com.gym.crm.dto.filter.TrainerTrainingSearchFilter;
 import com.gym.crm.entity.Trainee;
 import com.gym.crm.entity.Trainer;
 import com.gym.crm.entity.Training;
@@ -15,9 +17,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import com.gym.crm.dto.filter.TraineeTrainingSearchFilter;
-import com.gym.crm.dto.filter.TrainerTrainingSearchFilter;
 
 import java.util.List;
 import java.util.Optional;
@@ -32,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -203,7 +203,7 @@ class TrainingServiceImplTest {
 
     @Test
     void shouldReturnTrainingsByTraineeCriteria() {
-        TraineeTrainingSearchFilter filter = org.mockito.Mockito.mock(TraineeTrainingSearchFilter.class);
+        TraineeTrainingSearchFilter filter = mock(TraineeTrainingSearchFilter.class);
         List<Training> expected = List.of(buildTrainingWithId(DEFAULT_TRAINING_ID));
 
         when(trainingDao.findAllByTraineeCriteria(filter)).thenReturn(expected);
@@ -224,7 +224,7 @@ class TrainingServiceImplTest {
 
     @Test
     void shouldReturnTrainingsByTrainerCriteria() {
-        TrainerTrainingSearchFilter filter = org.mockito.Mockito.mock(TrainerTrainingSearchFilter.class);
+        TrainerTrainingSearchFilter filter = mock(TrainerTrainingSearchFilter.class);
         List<Training> expected = List.of(buildTrainingWithId(DEFAULT_TRAINING_ID));
 
         when(trainingDao.findAllByTrainerCriteria(filter)).thenReturn(expected);
