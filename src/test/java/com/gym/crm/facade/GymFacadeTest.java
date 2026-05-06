@@ -21,6 +21,7 @@ import com.gym.crm.exception.ValidationException;
 import com.gym.crm.mapper.TraineeMapper;
 import com.gym.crm.mapper.TrainerMapper;
 import com.gym.crm.mapper.TrainingMapper;
+import com.gym.crm.service.AuthenticationService;
 import com.gym.crm.service.TraineeService;
 import com.gym.crm.service.TrainerService;
 import com.gym.crm.service.TrainingService;
@@ -64,6 +65,8 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class GymFacadeTest {
 
+    private static final String USERNAME = "username";
+
     @Mock
     private TraineeService traineeService;
 
@@ -72,6 +75,9 @@ class GymFacadeTest {
 
     @Mock
     private TrainingService trainingService;
+
+    @Mock
+    private AuthenticationService authenticationService;
 
     @Mock
     private BusinessValidator businessValidator;
@@ -89,7 +95,7 @@ class GymFacadeTest {
 
     @BeforeEach
     void setUp() {
-        facade = new GymFacade(traineeService, trainerService, trainingService, businessValidator);
+        facade = new GymFacade(traineeService, trainerService, trainingService, authenticationService, businessValidator);
         facade.setTraineeMapper(traineeMapper);
         facade.setTrainerMapper(trainerMapper);
         facade.setTrainingMapper(trainingMapper);
@@ -164,7 +170,7 @@ class GymFacadeTest {
         when(traineeService.updateTrainee(trainee)).thenReturn(trainee);
         when(traineeMapper.toDto(trainee)).thenReturn(expected);
 
-        TraineeResponseDto actual = facade.updateTrainee(DEFAULT_TRAINEE_ID, updateDto);
+        TraineeResponseDto actual = facade.updateTrainee(USERNAME, DEFAULT_TRAINEE_ID, updateDto);
 
         assertNotNull(actual);
         assertEquals(expected, actual);
@@ -181,7 +187,7 @@ class GymFacadeTest {
         doThrow(new ValidationException("Validation error"))
                 .when(businessValidator).validate(updateDto);
 
-        assertThrows(ValidationException.class, () -> facade.updateTrainee(DEFAULT_TRAINEE_ID, updateDto));
+        assertThrows(ValidationException.class, () -> facade.updateTrainee(USERNAME, DEFAULT_TRAINEE_ID, updateDto));
 
         verify(businessValidator).validate(updateDto);
         verifyNoInteractions(traineeMapper, traineeService);
@@ -196,7 +202,7 @@ class GymFacadeTest {
         when(traineeMapper.toEntity(updateDto, DEFAULT_TRAINEE_ID)).thenReturn(trainee);
         when(traineeService.updateTrainee(trainee)).thenThrow(EntityNotFoundException.forId("Trainee", DEFAULT_TRAINEE_ID));
 
-        assertThrows(EntityNotFoundException.class, () -> facade.updateTrainee(DEFAULT_TRAINEE_ID, updateDto));
+        assertThrows(EntityNotFoundException.class, () -> facade.updateTrainee(USERNAME, DEFAULT_TRAINEE_ID, updateDto));
 
         verify(traineeMapper).toEntity(updateDto, DEFAULT_TRAINEE_ID);
         verify(traineeService).updateTrainee(trainee);
@@ -204,7 +210,7 @@ class GymFacadeTest {
 
     @Test
     void shouldThrowNullPointerWhenUpdatingWithNullTraineeId() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.updateTrainee(null, buildTraineeUpdateDto()));
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.updateTrainee(USERNAME, null, buildTraineeUpdateDto()));
 
         assertEquals("Trainee ID cannot be null", exception.getMessage());
 
@@ -213,7 +219,7 @@ class GymFacadeTest {
 
     @Test
     void shouldThrowNullPointerWhenUpdatingWithNullTraineeDto() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.updateTrainee(DEFAULT_TRAINEE_ID, null));
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.updateTrainee(USERNAME, DEFAULT_TRAINEE_ID, null));
 
         assertEquals("TraineeUpdateDto cannot be null", exception.getMessage());
 
@@ -224,7 +230,7 @@ class GymFacadeTest {
     void shouldDeleteTrainee() {
         when(traineeService.deleteTrainee(DEFAULT_TRAINEE_ID)).thenReturn(true);
 
-        boolean actual = facade.deleteTrainee(DEFAULT_TRAINEE_ID);
+        boolean actual = facade.deleteTrainee(USERNAME, DEFAULT_TRAINEE_ID);
 
         assertTrue(actual);
         verify(traineeService).deleteTrainee(DEFAULT_TRAINEE_ID);
@@ -234,7 +240,7 @@ class GymFacadeTest {
     void shouldReturnFalseWhenDeletingNonExistentTrainee() {
         when(traineeService.deleteTrainee(DEFAULT_TRAINEE_ID)).thenReturn(false);
 
-        boolean actual = facade.deleteTrainee(DEFAULT_TRAINEE_ID);
+        boolean actual = facade.deleteTrainee(USERNAME, DEFAULT_TRAINEE_ID);
 
         assertFalse(actual);
         verify(traineeService).deleteTrainee(DEFAULT_TRAINEE_ID);
@@ -242,7 +248,7 @@ class GymFacadeTest {
 
     @Test
     void shouldThrowNullPointerWhenDeletingNullTraineeId() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.deleteTrainee(null));
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.deleteTrainee(USERNAME, null));
 
         assertEquals("Trainee ID cannot be null", exception.getMessage());
 
@@ -257,7 +263,7 @@ class GymFacadeTest {
         when(traineeService.getTrainee(DEFAULT_TRAINEE_ID)).thenReturn(trainee);
         when(traineeMapper.toDto(trainee)).thenReturn(expected);
 
-        TraineeResponseDto actual = facade.getTrainee(DEFAULT_TRAINEE_ID);
+        TraineeResponseDto actual = facade.getTrainee(USERNAME, DEFAULT_TRAINEE_ID);
 
         assertNotNull(actual);
         assertEquals(expected, actual);
@@ -269,7 +275,7 @@ class GymFacadeTest {
     void shouldPropagateEntityNotFoundExceptionWhenGettingTrainee() {
         when(traineeService.getTrainee(DEFAULT_TRAINEE_ID)).thenThrow(EntityNotFoundException.forId("Trainee", DEFAULT_TRAINEE_ID));
 
-        assertThrows(EntityNotFoundException.class, () -> facade.getTrainee(DEFAULT_TRAINEE_ID));
+        assertThrows(EntityNotFoundException.class, () -> facade.getTrainee(USERNAME, DEFAULT_TRAINEE_ID));
 
         verify(traineeService).getTrainee(DEFAULT_TRAINEE_ID);
         verifyNoInteractions(traineeMapper);
@@ -277,7 +283,7 @@ class GymFacadeTest {
 
     @Test
     void shouldThrowNullPointerWhenGettingNullTraineeId() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.getTrainee(null));
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.getTrainee(USERNAME, null));
 
         assertEquals("Trainee ID cannot be null", exception.getMessage());
 
@@ -289,7 +295,7 @@ class GymFacadeTest {
         when(traineeService.getAllTrainees()).thenReturn(List.of());
         when(traineeMapper.toDtoList(List.of())).thenReturn(List.of());
 
-        List<TraineeResponseDto> actual = facade.getAllTrainees();
+        List<TraineeResponseDto> actual = facade.getAllTrainees(USERNAME);
 
         assertNotNull(actual);
         assertTrue(actual.isEmpty());
@@ -334,57 +340,6 @@ class GymFacadeTest {
     }
 
     @Test
-    void shouldCheckTraineeUsernameAndPasswordMatch() {
-        String username = "username";
-        String password = "password";
-        when(traineeService.doesUsernameAndPasswordMatch(username, password)).thenReturn(true);
-
-        boolean actual = facade.doesTraineeUsernameAndPasswordMatch(username, password);
-
-        assertTrue(actual);
-        verify(traineeService).doesUsernameAndPasswordMatch(username, password);
-    }
-
-    @Test
-    void shouldReturnFalseWhenTraineeUsernameAndPasswordDoNotMatch() {
-        String username = "username";
-        String password = "password";
-        when(traineeService.doesUsernameAndPasswordMatch(username, password)).thenReturn(false);
-
-        boolean actual = facade.doesTraineeUsernameAndPasswordMatch(username, password);
-
-        assertFalse(actual);
-        verify(traineeService).doesUsernameAndPasswordMatch(username, password);
-    }
-
-    @Test
-    void shouldPropagateEntityNotFoundExceptionWhenCheckingTraineeMatch() {
-        String username = "username";
-        String password = "password";
-        when(traineeService.doesUsernameAndPasswordMatch(username, password)).thenThrow(EntityNotFoundException.forUsername("Trainee", username));
-
-        assertThrows(EntityNotFoundException.class, () -> facade.doesTraineeUsernameAndPasswordMatch(username, password));
-
-        verify(traineeService).doesUsernameAndPasswordMatch(username, password);
-    }
-
-    @Test
-    void shouldThrowNullPointerWhenCheckingTraineeMatchWithNullUsername() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.doesTraineeUsernameAndPasswordMatch(null, "password"));
-
-        assertEquals("Username cannot be null", exception.getMessage());
-        verifyNoInteractions(traineeService);
-    }
-
-    @Test
-    void shouldThrowNullPointerWhenCheckingTraineeMatchWithNullPassword() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.doesTraineeUsernameAndPasswordMatch("username", null));
-
-        assertEquals("Password cannot be null", exception.getMessage());
-        verifyNoInteractions(traineeService);
-    }
-
-    @Test
     void shouldUpdateTraineeTrainersAndMapToDto() {
         List<Long> trainerIds = List.of(1L, 2L);
         Trainee trainee = buildTraineeWithId(DEFAULT_TRAINEE_ID);
@@ -393,7 +348,7 @@ class GymFacadeTest {
         when(traineeService.updateTraineeTrainers(DEFAULT_TRAINEE_ID, trainerIds)).thenReturn(trainee);
         when(traineeMapper.toDto(trainee)).thenReturn(expected);
 
-        TraineeResponseDto actual = facade.updateTraineeTrainers(DEFAULT_TRAINEE_ID, trainerIds);
+        TraineeResponseDto actual = facade.updateTraineeTrainers(USERNAME, DEFAULT_TRAINEE_ID, trainerIds);
 
         assertNotNull(actual);
         assertEquals(expected, actual);
@@ -406,7 +361,7 @@ class GymFacadeTest {
         List<Long> trainerIds = List.of(1L);
         when(traineeService.updateTraineeTrainers(DEFAULT_TRAINEE_ID, trainerIds)).thenThrow(EntityNotFoundException.forId("Trainee", DEFAULT_TRAINEE_ID));
 
-        assertThrows(EntityNotFoundException.class, () -> facade.updateTraineeTrainers(DEFAULT_TRAINEE_ID, trainerIds));
+        assertThrows(EntityNotFoundException.class, () -> facade.updateTraineeTrainers(USERNAME, DEFAULT_TRAINEE_ID, trainerIds));
 
         verify(traineeService).updateTraineeTrainers(DEFAULT_TRAINEE_ID, trainerIds);
         verifyNoInteractions(traineeMapper);
@@ -414,7 +369,7 @@ class GymFacadeTest {
 
     @Test
     void shouldThrowNullPointerWhenUpdatingTraineeTrainersWithNullTraineeId() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.updateTraineeTrainers(null, List.of(1L)));
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.updateTraineeTrainers(USERNAME, null, List.of(1L)));
 
         assertEquals("Trainee ID cannot be null", exception.getMessage());
         verifyNoInteractions(traineeService);
@@ -422,7 +377,7 @@ class GymFacadeTest {
 
     @Test
     void shouldThrowNullPointerWhenUpdatingTraineeTrainersWithNullTrainerIds() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.updateTraineeTrainers(DEFAULT_TRAINEE_ID, null));
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.updateTraineeTrainers(USERNAME, DEFAULT_TRAINEE_ID, null));
 
         assertEquals("Trainer IDs cannot be null", exception.getMessage());
         verifyNoInteractions(traineeService);
@@ -435,7 +390,7 @@ class GymFacadeTest {
 
         doNothing().when(businessValidator).validate(passwordDto);
 
-        facade.updateTraineePassword(DEFAULT_TRAINEE_ID, passwordDto);
+        facade.updateTraineePassword(USERNAME, DEFAULT_TRAINEE_ID, passwordDto);
 
         verify(businessValidator).validate(passwordDto);
         verify(traineeService).updateTraineePassword(DEFAULT_TRAINEE_ID, newPassword);
@@ -449,7 +404,7 @@ class GymFacadeTest {
         doThrow(new ValidationException("Validation error"))
                 .when(businessValidator).validate(passwordDto);
 
-        assertThrows(ValidationException.class, () -> facade.updateTraineePassword(DEFAULT_TRAINEE_ID, passwordDto));
+        assertThrows(ValidationException.class, () -> facade.updateTraineePassword(USERNAME, DEFAULT_TRAINEE_ID, passwordDto));
 
         verify(businessValidator).validate(passwordDto);
         verifyNoInteractions(traineeService);
@@ -464,7 +419,7 @@ class GymFacadeTest {
         doThrow(EntityNotFoundException.forId("Trainee", DEFAULT_TRAINEE_ID))
                 .when(traineeService).updateTraineePassword(DEFAULT_TRAINEE_ID, newPassword);
 
-        assertThrows(EntityNotFoundException.class, () -> facade.updateTraineePassword(DEFAULT_TRAINEE_ID, passwordDto));
+        assertThrows(EntityNotFoundException.class, () -> facade.updateTraineePassword(USERNAME, DEFAULT_TRAINEE_ID, passwordDto));
 
         verify(traineeService).updateTraineePassword(DEFAULT_TRAINEE_ID, newPassword);
     }
@@ -472,7 +427,7 @@ class GymFacadeTest {
     @Test
     void shouldThrowNullPointerWhenUpdatingTraineePasswordWithNullTraineeId() {
         PasswordUpdateDto passwordDto = PasswordUpdateDto.builder().password("password").build();
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.updateTraineePassword(null, passwordDto));
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.updateTraineePassword(USERNAME, null, passwordDto));
 
         assertEquals("Trainee ID cannot be null", exception.getMessage());
         verifyNoInteractions(businessValidator, traineeService);
@@ -480,7 +435,7 @@ class GymFacadeTest {
 
     @Test
     void shouldThrowNullPointerWhenUpdatingTraineePasswordWithNullPasswordDto() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.updateTraineePassword(DEFAULT_TRAINEE_ID, null));
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.updateTraineePassword(USERNAME, DEFAULT_TRAINEE_ID, null));
 
         assertEquals("PasswordUpdateDto cannot be null", exception.getMessage());
         verifyNoInteractions(businessValidator, traineeService);
@@ -488,7 +443,7 @@ class GymFacadeTest {
 
     @Test
     void shouldActivateTrainee() {
-        facade.activateTrainee(DEFAULT_TRAINEE_ID);
+        facade.activateTrainee(USERNAME, DEFAULT_TRAINEE_ID);
 
         verify(traineeService).activateTrainee(DEFAULT_TRAINEE_ID);
     }
@@ -498,7 +453,7 @@ class GymFacadeTest {
         doThrow(EntityNotFoundException.forId("Trainee", DEFAULT_TRAINEE_ID))
                 .when(traineeService).activateTrainee(DEFAULT_TRAINEE_ID);
 
-        assertThrows(EntityNotFoundException.class, () -> facade.activateTrainee(DEFAULT_TRAINEE_ID));
+        assertThrows(EntityNotFoundException.class, () -> facade.activateTrainee(USERNAME, DEFAULT_TRAINEE_ID));
 
         verify(traineeService).activateTrainee(DEFAULT_TRAINEE_ID);
     }
@@ -508,14 +463,14 @@ class GymFacadeTest {
         doThrow(new IllegalStateException("Already active"))
                 .when(traineeService).activateTrainee(DEFAULT_TRAINEE_ID);
 
-        assertThrows(IllegalStateException.class, () -> facade.activateTrainee(DEFAULT_TRAINEE_ID));
+        assertThrows(IllegalStateException.class, () -> facade.activateTrainee(USERNAME, DEFAULT_TRAINEE_ID));
 
         verify(traineeService).activateTrainee(DEFAULT_TRAINEE_ID);
     }
 
     @Test
     void shouldThrowNullPointerWhenActivatingNullTraineeId() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.activateTrainee(null));
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.activateTrainee(USERNAME, null));
 
         assertEquals("Trainee ID cannot be null", exception.getMessage());
         verifyNoInteractions(traineeService);
@@ -523,7 +478,7 @@ class GymFacadeTest {
 
     @Test
     void shouldDeactivateTrainee() {
-        facade.deactivateTrainee(DEFAULT_TRAINEE_ID);
+        facade.deactivateTrainee(USERNAME, DEFAULT_TRAINEE_ID);
 
         verify(traineeService).deactivateTrainee(DEFAULT_TRAINEE_ID);
     }
@@ -533,7 +488,7 @@ class GymFacadeTest {
         doThrow(EntityNotFoundException.forId("Trainee", DEFAULT_TRAINEE_ID))
                 .when(traineeService).deactivateTrainee(DEFAULT_TRAINEE_ID);
 
-        assertThrows(EntityNotFoundException.class, () -> facade.deactivateTrainee(DEFAULT_TRAINEE_ID));
+        assertThrows(EntityNotFoundException.class, () -> facade.deactivateTrainee(USERNAME, DEFAULT_TRAINEE_ID));
 
         verify(traineeService).deactivateTrainee(DEFAULT_TRAINEE_ID);
     }
@@ -543,14 +498,14 @@ class GymFacadeTest {
         doThrow(new IllegalStateException("Already deactivated"))
                 .when(traineeService).deactivateTrainee(DEFAULT_TRAINEE_ID);
 
-        assertThrows(IllegalStateException.class, () -> facade.deactivateTrainee(DEFAULT_TRAINEE_ID));
+        assertThrows(IllegalStateException.class, () -> facade.deactivateTrainee(USERNAME, DEFAULT_TRAINEE_ID));
 
         verify(traineeService).deactivateTrainee(DEFAULT_TRAINEE_ID);
     }
 
     @Test
     void shouldThrowNullPointerWhenDeactivatingNullTraineeId() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.deactivateTrainee(null));
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.deactivateTrainee(USERNAME, null));
 
         assertEquals("Trainee ID cannot be null", exception.getMessage());
         verifyNoInteractions(traineeService);
@@ -655,7 +610,7 @@ class GymFacadeTest {
         when(trainerService.updateTrainer(trainer)).thenReturn(trainer);
         when(trainerMapper.toDto(trainer)).thenReturn(expected);
 
-        TrainerResponseDto actual = facade.updateTrainer(DEFAULT_TRAINER_ID, updateDto);
+        TrainerResponseDto actual = facade.updateTrainer(USERNAME, DEFAULT_TRAINER_ID, updateDto);
 
         assertNotNull(actual);
         assertEquals(expected, actual);
@@ -672,7 +627,7 @@ class GymFacadeTest {
         doThrow(new ValidationException("Validation error"))
                 .when(businessValidator).validate(updateDto);
 
-        assertThrows(ValidationException.class, () -> facade.updateTrainer(DEFAULT_TRAINER_ID, updateDto));
+        assertThrows(ValidationException.class, () -> facade.updateTrainer(USERNAME, DEFAULT_TRAINER_ID, updateDto));
 
         verify(businessValidator).validate(updateDto);
         verifyNoInteractions(trainerMapper, trainerService);
@@ -687,7 +642,7 @@ class GymFacadeTest {
         when(trainerMapper.toEntity(updateDto, DEFAULT_TRAINER_ID)).thenReturn(trainer);
         when(trainerService.updateTrainer(trainer)).thenThrow(EntityNotFoundException.forId("Trainer", DEFAULT_TRAINER_ID));
 
-        assertThrows(EntityNotFoundException.class, () -> facade.updateTrainer(DEFAULT_TRAINER_ID, updateDto));
+        assertThrows(EntityNotFoundException.class, () -> facade.updateTrainer(USERNAME, DEFAULT_TRAINER_ID, updateDto));
 
         verify(trainerMapper).toEntity(updateDto, DEFAULT_TRAINER_ID);
         verify(trainerService).updateTrainer(trainer);
@@ -695,7 +650,7 @@ class GymFacadeTest {
 
     @Test
     void shouldThrowNullPointerWhenUpdatingWithNullTrainerId() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.updateTrainer(null, buildTrainerUpdateDto()));
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.updateTrainer(USERNAME, null, buildTrainerUpdateDto()));
 
         assertEquals("Trainer ID cannot be null", exception.getMessage());
 
@@ -704,7 +659,7 @@ class GymFacadeTest {
 
     @Test
     void shouldThrowNullPointerWhenUpdatingWithNullTrainerDto() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.updateTrainer(DEFAULT_TRAINER_ID, null));
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.updateTrainer(USERNAME, DEFAULT_TRAINER_ID, null));
 
         assertEquals("TrainerUpdateDto cannot be null", exception.getMessage());
 
@@ -719,7 +674,7 @@ class GymFacadeTest {
         when(trainerService.getTrainer(DEFAULT_TRAINER_ID)).thenReturn(trainer);
         when(trainerMapper.toDto(trainer)).thenReturn(expected);
 
-        TrainerResponseDto actual = facade.getTrainer(DEFAULT_TRAINER_ID);
+        TrainerResponseDto actual = facade.getTrainer(USERNAME, DEFAULT_TRAINER_ID);
 
         assertNotNull(actual);
         assertEquals(expected, actual);
@@ -731,7 +686,7 @@ class GymFacadeTest {
     void shouldPropagateEntityNotFoundExceptionWhenGettingTrainer() {
         when(trainerService.getTrainer(DEFAULT_TRAINER_ID)).thenThrow(EntityNotFoundException.forId("Trainer", DEFAULT_TRAINER_ID));
 
-        assertThrows(EntityNotFoundException.class, () -> facade.getTrainer(DEFAULT_TRAINER_ID));
+        assertThrows(EntityNotFoundException.class, () -> facade.getTrainer(USERNAME, DEFAULT_TRAINER_ID));
 
         verify(trainerService).getTrainer(DEFAULT_TRAINER_ID);
         verifyNoInteractions(trainerMapper);
@@ -739,7 +694,7 @@ class GymFacadeTest {
 
     @Test
     void shouldThrowNullPointerWhenGettingNullTrainerId() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.getTrainer(null));
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.getTrainer(USERNAME, null));
 
         assertEquals("Trainer ID cannot be null", exception.getMessage());
 
@@ -756,7 +711,7 @@ class GymFacadeTest {
         when(trainerService.getAllTrainers()).thenReturn(trainers);
         when(trainerMapper.toDtoList(trainers)).thenReturn(expected);
 
-        List<TrainerResponseDto> actual = facade.getAllTrainers();
+        List<TrainerResponseDto> actual = facade.getAllTrainers(USERNAME);
 
         assertNotNull(actual);
         assertEquals(expected, actual);
@@ -769,7 +724,7 @@ class GymFacadeTest {
         when(trainerService.getAllTrainers()).thenReturn(List.of());
         when(trainerMapper.toDtoList(List.of())).thenReturn(List.of());
 
-        List<TrainerResponseDto> actual = facade.getAllTrainers();
+        List<TrainerResponseDto> actual = facade.getAllTrainers(USERNAME);
 
         assertNotNull(actual);
         assertTrue(actual.isEmpty());
@@ -868,67 +823,13 @@ class GymFacadeTest {
     }
 
     @Test
-    void shouldCheckTrainerUsernameAndPasswordMatch() {
-        String username = "username";
-        String password = "password";
-
-        when(trainerService.doesUsernameAndPasswordMatch(username, password)).thenReturn(true);
-
-        boolean actual = facade.doesTrainerUsernameAndPasswordMatch(username, password);
-
-        assertTrue(actual);
-        verify(trainerService).doesUsernameAndPasswordMatch(username, password);
-    }
-
-    @Test
-    void shouldReturnFalseWhenTrainerUsernameAndPasswordDoNotMatch() {
-        String username = "username";
-        String password = "password";
-
-        when(trainerService.doesUsernameAndPasswordMatch(username, password)).thenReturn(false);
-
-        boolean actual = facade.doesTrainerUsernameAndPasswordMatch(username, password);
-
-        assertFalse(actual);
-        verify(trainerService).doesUsernameAndPasswordMatch(username, password);
-    }
-
-    @Test
-    void shouldPropagateEntityNotFoundExceptionWhenCheckingTrainerMatch() {
-        String username = "username";
-        String password = "password";
-
-        when(trainerService.doesUsernameAndPasswordMatch(username, password)).thenThrow(EntityNotFoundException.forUsername("Trainer", username));
-
-        assertThrows(EntityNotFoundException.class, () -> facade.doesTrainerUsernameAndPasswordMatch(username, password));
-
-        verify(trainerService).doesUsernameAndPasswordMatch(username, password);
-    }
-
-    @Test
-    void shouldThrowNullPointerWhenCheckingTrainerMatchWithNullUsername() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.doesTrainerUsernameAndPasswordMatch(null, "password"));
-
-        assertEquals("Username cannot be null", exception.getMessage());
-        verifyNoInteractions(trainerService);
-    }
-
-    @Test
-    void shouldThrowNullPointerWhenCheckingTrainerMatchWithNullPassword() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.doesTrainerUsernameAndPasswordMatch("username", null));
-
-        assertEquals("Password cannot be null", exception.getMessage());
-        verifyNoInteractions(trainerService);
-    }
-
-    @Test
     void shouldUpdateTrainerPassword() {
         String newPassword = "newPassword";
         PasswordUpdateDto passwordDto = PasswordUpdateDto.builder().password(newPassword).build();
 
         doNothing().when(businessValidator).validate(passwordDto);
 
-        facade.updateTrainerPassword(DEFAULT_TRAINER_ID, passwordDto);
+        facade.updateTrainerPassword(USERNAME, DEFAULT_TRAINER_ID, passwordDto);
 
         verify(businessValidator).validate(passwordDto);
         verify(trainerService).updateTrainerPassword(DEFAULT_TRAINER_ID, newPassword);
@@ -942,7 +843,7 @@ class GymFacadeTest {
         doThrow(new ValidationException("Validation error"))
                 .when(businessValidator).validate(passwordDto);
 
-        assertThrows(ValidationException.class, () -> facade.updateTrainerPassword(DEFAULT_TRAINER_ID, passwordDto));
+        assertThrows(ValidationException.class, () -> facade.updateTrainerPassword(USERNAME, DEFAULT_TRAINER_ID, passwordDto));
 
         verify(businessValidator).validate(passwordDto);
         verifyNoInteractions(trainerService);
@@ -957,7 +858,7 @@ class GymFacadeTest {
         doThrow(EntityNotFoundException.forId("Trainer", DEFAULT_TRAINER_ID))
                 .when(trainerService).updateTrainerPassword(DEFAULT_TRAINER_ID, newPassword);
 
-        assertThrows(EntityNotFoundException.class, () -> facade.updateTrainerPassword(DEFAULT_TRAINER_ID, passwordDto));
+        assertThrows(EntityNotFoundException.class, () -> facade.updateTrainerPassword(USERNAME, DEFAULT_TRAINER_ID, passwordDto));
 
         verify(trainerService).updateTrainerPassword(DEFAULT_TRAINER_ID, newPassword);
     }
@@ -965,7 +866,7 @@ class GymFacadeTest {
     @Test
     void shouldThrowNullPointerWhenUpdatingTrainerPasswordWithNullTrainerId() {
         PasswordUpdateDto passwordDto = PasswordUpdateDto.builder().password("password").build();
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.updateTrainerPassword(null, passwordDto));
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.updateTrainerPassword(USERNAME, null, passwordDto));
 
         assertEquals("Trainer ID cannot be null", exception.getMessage());
         verifyNoInteractions(businessValidator, trainerService);
@@ -973,7 +874,7 @@ class GymFacadeTest {
 
     @Test
     void shouldThrowNullPointerWhenUpdatingTrainerPasswordWithNullPasswordDto() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.updateTrainerPassword(DEFAULT_TRAINER_ID, null));
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.updateTrainerPassword(USERNAME, DEFAULT_TRAINER_ID, null));
 
         assertEquals("PasswordUpdateDto cannot be null", exception.getMessage());
         verifyNoInteractions(businessValidator, trainerService);
@@ -981,7 +882,7 @@ class GymFacadeTest {
 
     @Test
     void shouldActivateTrainer() {
-        facade.activateTrainer(DEFAULT_TRAINER_ID);
+        facade.activateTrainer(USERNAME, DEFAULT_TRAINER_ID);
 
         verify(trainerService).activateTrainer(DEFAULT_TRAINER_ID);
     }
@@ -991,7 +892,7 @@ class GymFacadeTest {
         doThrow(EntityNotFoundException.forId("Trainer", DEFAULT_TRAINER_ID))
                 .when(trainerService).activateTrainer(DEFAULT_TRAINER_ID);
 
-        assertThrows(EntityNotFoundException.class, () -> facade.activateTrainer(DEFAULT_TRAINER_ID));
+        assertThrows(EntityNotFoundException.class, () -> facade.activateTrainer(USERNAME, DEFAULT_TRAINER_ID));
 
         verify(trainerService).activateTrainer(DEFAULT_TRAINER_ID);
     }
@@ -1001,14 +902,14 @@ class GymFacadeTest {
         doThrow(new IllegalStateException("Already active"))
                 .when(trainerService).activateTrainer(DEFAULT_TRAINER_ID);
 
-        assertThrows(IllegalStateException.class, () -> facade.activateTrainer(DEFAULT_TRAINER_ID));
+        assertThrows(IllegalStateException.class, () -> facade.activateTrainer(USERNAME, DEFAULT_TRAINER_ID));
 
         verify(trainerService).activateTrainer(DEFAULT_TRAINER_ID);
     }
 
     @Test
     void shouldThrowNullPointerWhenActivatingNullTrainerId() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.activateTrainer(null));
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.activateTrainer(USERNAME, null));
 
         assertEquals("Trainer ID cannot be null", exception.getMessage());
         verifyNoInteractions(trainerService);
@@ -1016,7 +917,7 @@ class GymFacadeTest {
 
     @Test
     void shouldDeactivateTrainer() {
-        facade.deactivateTrainer(DEFAULT_TRAINER_ID);
+        facade.deactivateTrainer(USERNAME, DEFAULT_TRAINER_ID);
 
         verify(trainerService).deactivateTrainer(DEFAULT_TRAINER_ID);
     }
@@ -1026,7 +927,7 @@ class GymFacadeTest {
         doThrow(EntityNotFoundException.forId("Trainer", DEFAULT_TRAINER_ID))
                 .when(trainerService).deactivateTrainer(DEFAULT_TRAINER_ID);
 
-        assertThrows(EntityNotFoundException.class, () -> facade.deactivateTrainer(DEFAULT_TRAINER_ID));
+        assertThrows(EntityNotFoundException.class, () -> facade.deactivateTrainer(USERNAME, DEFAULT_TRAINER_ID));
 
         verify(trainerService).deactivateTrainer(DEFAULT_TRAINER_ID);
     }
@@ -1036,14 +937,14 @@ class GymFacadeTest {
         doThrow(new IllegalStateException("Already deactivated"))
                 .when(trainerService).deactivateTrainer(DEFAULT_TRAINER_ID);
 
-        assertThrows(IllegalStateException.class, () -> facade.deactivateTrainer(DEFAULT_TRAINER_ID));
+        assertThrows(IllegalStateException.class, () -> facade.deactivateTrainer(USERNAME, DEFAULT_TRAINER_ID));
 
         verify(trainerService).deactivateTrainer(DEFAULT_TRAINER_ID);
     }
 
     @Test
     void shouldThrowNullPointerWhenDeactivatingNullTrainerId() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.deactivateTrainer(null));
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.deactivateTrainer(USERNAME, null));
 
         assertEquals("Trainer ID cannot be null", exception.getMessage());
         verifyNoInteractions(trainerService);
@@ -1060,7 +961,7 @@ class GymFacadeTest {
         when(trainingService.createTraining(training)).thenReturn(training);
         when(trainingMapper.toDto(training)).thenReturn(expected);
 
-        TrainingResponseDto actual = facade.createTraining(createDto);
+        TrainingResponseDto actual = facade.createTraining(USERNAME, createDto);
 
         assertNotNull(actual);
         assertEquals(expected, actual);
@@ -1077,7 +978,7 @@ class GymFacadeTest {
         doThrow(new ValidationException("Validation error"))
                 .when(businessValidator).validate(createDto);
 
-        assertThrows(ValidationException.class, () -> facade.createTraining(createDto));
+        assertThrows(ValidationException.class, () -> facade.createTraining(USERNAME, createDto));
 
         verify(businessValidator).validate(createDto);
         verifyNoInteractions(trainingMapper, trainingService);
@@ -1092,7 +993,7 @@ class GymFacadeTest {
         when(trainingMapper.toEntity(createDto)).thenReturn(training);
         when(trainingService.createTraining(training)).thenThrow(new RuntimeException("Service error"));
 
-        assertThrows(RuntimeException.class, () -> facade.createTraining(createDto));
+        assertThrows(RuntimeException.class, () -> facade.createTraining(USERNAME, createDto));
 
         verify(trainingService).createTraining(training);
         verifyNoInteractions(traineeService, trainerService);
@@ -1100,7 +1001,7 @@ class GymFacadeTest {
 
     @Test
     void shouldThrowNullPointerWhenCreatingNullTrainingDto() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.createTraining(null));
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.createTraining(USERNAME, null));
 
         assertEquals("TrainingCreateDto cannot be null", exception.getMessage());
 
@@ -1115,7 +1016,7 @@ class GymFacadeTest {
         when(trainingService.getTraining(DEFAULT_TRAINING_ID)).thenReturn(training);
         when(trainingMapper.toDto(training)).thenReturn(expected);
 
-        TrainingResponseDto actual = facade.getTraining(DEFAULT_TRAINING_ID);
+        TrainingResponseDto actual = facade.getTraining(USERNAME, DEFAULT_TRAINING_ID);
 
         assertNotNull(actual);
         assertEquals(expected, actual);
@@ -1127,7 +1028,7 @@ class GymFacadeTest {
     void shouldPropagateEntityNotFoundExceptionWhenGettingTraining() {
         when(trainingService.getTraining(DEFAULT_TRAINING_ID)).thenThrow(EntityNotFoundException.forId("Training", DEFAULT_TRAINING_ID));
 
-        assertThrows(EntityNotFoundException.class, () -> facade.getTraining(DEFAULT_TRAINING_ID));
+        assertThrows(EntityNotFoundException.class, () -> facade.getTraining(USERNAME, DEFAULT_TRAINING_ID));
 
         verify(trainingService).getTraining(DEFAULT_TRAINING_ID);
         verifyNoInteractions(trainingMapper);
@@ -1135,7 +1036,7 @@ class GymFacadeTest {
 
     @Test
     void shouldThrowNullPointerWhenGettingNullTrainingId() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.getTraining(null));
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.getTraining(USERNAME, null));
 
         assertEquals("Training ID cannot be null", exception.getMessage());
 
@@ -1152,7 +1053,7 @@ class GymFacadeTest {
         when(trainingService.getAllTrainings()).thenReturn(trainings);
         when(trainingMapper.toDtoList(trainings)).thenReturn(expected);
 
-        List<TrainingResponseDto> actual = facade.getAllTrainings();
+        List<TrainingResponseDto> actual = facade.getAllTrainings(USERNAME);
 
         assertNotNull(actual);
         assertEquals(expected, actual);
@@ -1165,7 +1066,7 @@ class GymFacadeTest {
         when(trainingService.getAllTrainings()).thenReturn(List.of());
         when(trainingMapper.toDtoList(List.of())).thenReturn(List.of());
 
-        List<TrainingResponseDto> actual = facade.getAllTrainings();
+        List<TrainingResponseDto> actual = facade.getAllTrainings(USERNAME);
 
         assertNotNull(actual);
         assertTrue(actual.isEmpty());
@@ -1185,7 +1086,7 @@ class GymFacadeTest {
         when(trainingService.getTrainingsByTraineeCriteria(filter)).thenReturn(trainings);
         when(trainingMapper.toDtoList(trainings)).thenReturn(expected);
 
-        List<TrainingResponseDto> actual = facade.getTrainingsByTraineeCriteria(filter);
+        List<TrainingResponseDto> actual = facade.getTrainingsByTraineeCriteria(USERNAME, filter);
 
         assertNotNull(actual);
         assertEquals(expected, actual);
@@ -1196,7 +1097,7 @@ class GymFacadeTest {
 
     @Test
     void shouldThrowNullPointerWhenTraineeFilterIsNull() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.getTrainingsByTraineeCriteria(null));
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.getTrainingsByTraineeCriteria(USERNAME, null));
 
         assertEquals("Filter cannot be null", exception.getMessage());
         verifyNoInteractions(businessValidator, trainingService, trainingMapper);
@@ -1214,7 +1115,7 @@ class GymFacadeTest {
         when(trainingService.getTrainingsByTrainerCriteria(filter)).thenReturn(trainings);
         when(trainingMapper.toDtoList(trainings)).thenReturn(expected);
 
-        List<TrainingResponseDto> actual = facade.getTrainingsByTrainerCriteria(filter);
+        List<TrainingResponseDto> actual = facade.getTrainingsByTrainerCriteria(USERNAME, filter);
 
         assertNotNull(actual);
         assertEquals(expected, actual);
@@ -1225,7 +1126,7 @@ class GymFacadeTest {
 
     @Test
     void shouldThrowNullPointerWhenTrainerFilterIsNull() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.getTrainingsByTrainerCriteria(null));
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.getTrainingsByTrainerCriteria(USERNAME, null));
 
         assertEquals("Filter cannot be null", exception.getMessage());
         verifyNoInteractions(businessValidator, trainingService, trainingMapper);

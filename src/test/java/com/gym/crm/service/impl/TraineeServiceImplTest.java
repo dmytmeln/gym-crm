@@ -237,12 +237,13 @@ class TraineeServiceImplTest {
     }
 
     @Test
-    void shouldThrowEntityNotFoundWhenCheckingPasswordForUnknownUsername() {
+    void shouldReturnFalseWhenCheckingPasswordForUnknownUsername() {
         String nonExistingUsername = "unknown";
         when(dao.findByUsername(nonExistingUsername)).thenReturn(Optional.empty());
 
-        assertThrows(EntityNotFoundException.class, () -> service.doesUsernameAndPasswordMatch(nonExistingUsername, "password"));
+        boolean result = service.doesUsernameAndPasswordMatch(nonExistingUsername, "password");
 
+        assertFalse(result);
         verify(dao).findByUsername(nonExistingUsername);
     }
 
