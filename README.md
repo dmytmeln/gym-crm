@@ -1,5 +1,9 @@
 # Gym CRM
 
+![Build](https://github.com/dmytmeln/gym-crm/actions/workflows/ci.yml/badge.svg?branch=develop)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=dmytmeln_gym-crm&metric=coverage)](https://sonarcloud.io/summary/overall?id=dmytmeln_gym-crm)
+[![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=dmytmeln_gym-crm&metric=alert_status)](https://sonarcloud.io/summary/overall?id=dmytmeln_gym-crm)
+
 ## Prerequisites
 
 - **Java Development Kit (JDK) 17**
