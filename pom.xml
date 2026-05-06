@@ -190,7 +190,7 @@
                 <version>${jacoco-maven-plugin.version}</version>
                 <configuration>
                     <excludes>
-                        <!--untested packages-->
+                        <exclude>com/gym/crm/config/**</exclude>
                     </excludes>
                 </configuration>
                 <executions>
