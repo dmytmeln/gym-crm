@@ -48,6 +48,7 @@ public class HibernateConfig {
                 .applySetting(AvailableSettings.HBM2DDL_AUTO, hbm2ddlAuto)
                 .applySetting(AvailableSettings.SHOW_SQL, showSql)
                 .applySetting(AvailableSettings.FORMAT_SQL, formatSql)
+                .applySetting(AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS, "thread")
                 .build();
 
         Metadata metadata = new MetadataSources(registry)

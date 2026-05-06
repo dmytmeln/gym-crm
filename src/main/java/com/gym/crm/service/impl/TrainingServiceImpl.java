@@ -12,6 +12,7 @@ import com.gym.crm.entity.Training;
 import com.gym.crm.entity.TrainingType;
 import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.service.TrainingService;
+import com.gym.crm.transaction.Transaction;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -49,6 +50,7 @@ public class TrainingServiceImpl implements TrainingService {
     }
 
     @Override
+    @Transaction
     public Training createTraining(Training training) {
         Objects.requireNonNull(training, "Training cannot be null");
         Objects.requireNonNull(training.getTrainee(), "Trainee cannot be null");

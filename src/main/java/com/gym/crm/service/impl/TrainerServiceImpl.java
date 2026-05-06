@@ -9,6 +9,7 @@ import com.gym.crm.entity.User;
 import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.service.TrainerService;
 import com.gym.crm.service.common.ProfileCredentialGenerator;
+import com.gym.crm.transaction.Transaction;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -131,6 +132,7 @@ public class TrainerServiceImpl implements TrainerService {
     }
 
     @Override
+    @Transaction
     public Trainer updateTrainer(Trainer trainer) {
         Objects.requireNonNull(trainer, "Trainer cannot be null");
         Objects.requireNonNull(trainer.getUser(), "Trainer user cannot be null");

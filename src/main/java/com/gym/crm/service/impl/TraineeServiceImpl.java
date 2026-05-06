@@ -8,6 +8,7 @@ import com.gym.crm.entity.User;
 import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.service.TraineeService;
 import com.gym.crm.service.common.ProfileCredentialGenerator;
+import com.gym.crm.transaction.Transaction;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -134,6 +135,7 @@ public class TraineeServiceImpl implements TraineeService {
     }
 
     @Override
+    @Transaction
     public Trainee updateTraineeTrainers(Long traineeId, List<Long> trainerIds) {
         Objects.requireNonNull(traineeId, "Trainee ID cannot be null");
         Objects.requireNonNull(trainerIds, "Trainer IDs cannot be null");
