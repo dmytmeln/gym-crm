@@ -3,10 +3,10 @@ package com.gym.crm.dao.impl;
 import com.gym.crm.dao.TrainingDao;
 import com.gym.crm.dao.helper.TraineeTrainingCriteriaBuilder;
 import com.gym.crm.dao.helper.TrainerTrainingCriteriaBuilder;
-import com.gym.crm.dao.helper.TransactionManager;
 import com.gym.crm.dto.filter.TraineeTrainingSearchFilter;
 import com.gym.crm.dto.filter.TrainerTrainingSearchFilter;
 import com.gym.crm.entity.Training;
+import com.gym.crm.transaction.TransactionManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
