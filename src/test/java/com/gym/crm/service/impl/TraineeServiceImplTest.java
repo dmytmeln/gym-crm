@@ -4,6 +4,7 @@ import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.dao.TrainerDao;
 import com.gym.crm.entity.Trainee;
 import com.gym.crm.entity.Trainer;
+import com.gym.crm.entity.User;
 import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.service.TraineeService;
 import com.gym.crm.service.common.ProfileCredentialGenerator;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Collections;
 import java.util.List;
@@ -56,6 +58,9 @@ class TraineeServiceImplTest {
     @Mock
     private ProfileCredentialGenerator generator;
 
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
     private TraineeService service;
 
     @BeforeEach
@@ -64,6 +69,7 @@ class TraineeServiceImplTest {
         implementation.setTraineeDao(dao);
         implementation.setTrainerDao(trainerDao);
         implementation.setCredentialGenerator(generator);
+        implementation.setPasswordEncoder(passwordEncoder);
         service = implementation;
     }
 
@@ -71,20 +77,23 @@ class TraineeServiceImplTest {
     void shouldCreateTraineeWithGeneratedCredentials() {
         Trainee traineeWithoutCredentials = buildTraineeWithoutCredentials();
         Trainee expected = buildTraineeWithId();
+        String encodedPassword = "encoded-" + DEFAULT_PASSWORD;
 
         when(generator.generateUsername(DEFAULT_FIRST_NAME, DEFAULT_LAST_NAME)).thenReturn(DEFAULT_USERNAME);
         when(generator.generatePassword()).thenReturn(DEFAULT_PASSWORD);
+        when(passwordEncoder.encode(DEFAULT_PASSWORD)).thenReturn(encodedPassword);
         when(dao.save(any(Trainee.class))).thenReturn(expected);
 
         Trainee actual = service.createTrainee(traineeWithoutCredentials);
 
         verify(generator).generateUsername(DEFAULT_FIRST_NAME, DEFAULT_LAST_NAME);
         verify(generator).generatePassword();
+        verify(passwordEncoder).encode(DEFAULT_PASSWORD);
         ArgumentCaptor<Trainee> traineeCaptor = ArgumentCaptor.forClass(Trainee.class);
         verify(dao).save(traineeCaptor.capture());
         Trainee traineeWithCredentials = traineeCaptor.getValue();
         assertEquals(DEFAULT_USERNAME, traineeWithCredentials.getUser().getUsername());
-        assertEquals(DEFAULT_PASSWORD, traineeWithCredentials.getUser().getPassword());
+        assertEquals(encodedPassword, traineeWithCredentials.getUser().getPassword());
         assertEquals(DEFAULT_FIRST_NAME, traineeWithCredentials.getUser().getFirstName());
         assertEquals(DEFAULT_LAST_NAME, traineeWithCredentials.getUser().getLastName());
         assertEquals(expected, actual);
@@ -197,25 +206,33 @@ class TraineeServiceImplTest {
     @Test
     void shouldReturnTrueWhenUsernameAndPasswordMatch() {
         Trainee trainee = buildTraineeWithUsername(DEFAULT_USERNAME);
+        User userWithPassword = trainee.getUser().toBuilder().password("encodedPassword").build();
+        trainee = trainee.toBuilder().user(userWithPassword).build();
 
         when(dao.findByUsername(DEFAULT_USERNAME)).thenReturn(Optional.of(trainee));
+        when(passwordEncoder.matches(DEFAULT_PASSWORD, "encodedPassword")).thenReturn(true);
 
         boolean result = service.doesUsernameAndPasswordMatch(DEFAULT_USERNAME, DEFAULT_PASSWORD);
 
         assertTrue(result);
         verify(dao).findByUsername(DEFAULT_USERNAME);
+        verify(passwordEncoder).matches(DEFAULT_PASSWORD, "encodedPassword");
     }
 
     @Test
     void shouldReturnFalseWhenPasswordDoesNotMatch() {
         Trainee trainee = buildTraineeWithUsername(DEFAULT_USERNAME);
+        User userWithPassword = trainee.getUser().toBuilder().password("encodedPassword").build();
+        trainee = trainee.toBuilder().user(userWithPassword).build();
 
         when(dao.findByUsername(DEFAULT_USERNAME)).thenReturn(Optional.of(trainee));
+        when(passwordEncoder.matches("wrongPassword", "encodedPassword")).thenReturn(false);
 
         boolean result = service.doesUsernameAndPasswordMatch(DEFAULT_USERNAME, "wrongPassword");
 
         assertFalse(result);
         verify(dao).findByUsername(DEFAULT_USERNAME);
+        verify(passwordEncoder).matches("wrongPassword", "encodedPassword");
     }
 
     @Test
@@ -390,14 +407,16 @@ class TraineeServiceImplTest {
     void shouldUpdateTraineePasswordSuccessfully() {
         Trainee trainee = buildTraineeWithId();
         String newPassword = "newSecurePassword123";
+        String encodedNewPassword = "encoded-" + newPassword;
 
         when(dao.findById(DEFAULT_TRAINEE_ID)).thenReturn(Optional.of(trainee));
+        when(passwordEncoder.encode(newPassword)).thenReturn(encodedNewPassword);
 
         service.updateTraineePassword(DEFAULT_TRAINEE_ID, newPassword);
 
         ArgumentCaptor<Trainee> captor = ArgumentCaptor.forClass(Trainee.class);
         verify(dao).update(captor.capture());
-        assertEquals(newPassword, captor.getValue().getUser().getPassword());
+        assertEquals(encodedNewPassword, captor.getValue().getUser().getPassword());
     }
 
     @Test
