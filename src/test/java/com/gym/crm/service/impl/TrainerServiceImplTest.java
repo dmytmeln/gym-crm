@@ -16,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 import java.util.Optional;
@@ -59,6 +60,9 @@ class TrainerServiceImplTest {
     @Mock
     private ProfileCredentialGenerator generator;
 
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
     private TrainerService service;
 
     @BeforeEach
@@ -68,6 +72,7 @@ class TrainerServiceImplTest {
         implementation.setTraineeDao(traineeDao);
         implementation.setTrainingTypeDao(trainingTypeDao);
         implementation.setCredentialGenerator(generator);
+        implementation.setPasswordEncoder(passwordEncoder);
         service = implementation;
     }
 
@@ -75,21 +80,24 @@ class TrainerServiceImplTest {
     void shouldCreateTrainerWithGeneratedCredentials() {
         Trainer trainerWithoutCredentials = buildTrainerWithoutCredentials();
         Trainer expected = buildTrainerWithId(DEFAULT_TRAINER_ID);
+        String encodedPassword = "encoded-" + DEFAULT_PASSWORD;
 
         when(trainingTypeDao.findById(DEFAULT_SPECIALIZATION_ID)).thenReturn(Optional.of(trainerWithoutCredentials.getSpecialization()));
         when(generator.generateUsername(DEFAULT_FIRST_NAME, DEFAULT_LAST_NAME)).thenReturn(DEFAULT_USERNAME);
         when(generator.generatePassword()).thenReturn(DEFAULT_PASSWORD);
+        when(passwordEncoder.encode(DEFAULT_PASSWORD)).thenReturn(encodedPassword);
         when(dao.save(any(Trainer.class))).thenReturn(expected);
 
         Trainer actual = service.createTrainer(trainerWithoutCredentials);
 
         verify(generator).generateUsername(DEFAULT_FIRST_NAME, DEFAULT_LAST_NAME);
         verify(generator).generatePassword();
+        verify(passwordEncoder).encode(DEFAULT_PASSWORD);
         ArgumentCaptor<Trainer> trainerCaptor = ArgumentCaptor.forClass(Trainer.class);
         verify(dao).save(trainerCaptor.capture());
         Trainer trainerWithCredentials = trainerCaptor.getValue();
         assertEquals(DEFAULT_USERNAME, trainerWithCredentials.getUser().getUsername());
-        assertEquals(DEFAULT_PASSWORD, trainerWithCredentials.getUser().getPassword());
+        assertEquals(encodedPassword, trainerWithCredentials.getUser().getPassword());
         assertEquals(DEFAULT_FIRST_NAME, trainerWithCredentials.getUser().getFirstName());
         assertEquals(DEFAULT_LAST_NAME, trainerWithCredentials.getUser().getLastName());
         assertEquals(expected.getSpecialization(), trainerWithCredentials.getSpecialization());
@@ -246,13 +254,17 @@ class TrainerServiceImplTest {
     @Test
     void shouldReturnTrueWhenUsernameAndPasswordMatch() {
         Trainer trainer = buildTrainerWithId(DEFAULT_TRAINER_ID);
+        User userWithPassword = trainer.getUser().toBuilder().password("encodedPassword").build();
+        trainer = trainer.toBuilder().user(userWithPassword).build();
 
         when(dao.findByUsername(DEFAULT_USERNAME)).thenReturn(Optional.of(trainer));
+        when(passwordEncoder.matches(DEFAULT_PASSWORD, "encodedPassword")).thenReturn(true);
 
         boolean result = service.doesUsernameAndPasswordMatch(DEFAULT_USERNAME, DEFAULT_PASSWORD);
 
         assertTrue(result);
         verify(dao).findByUsername(DEFAULT_USERNAME);
+        verify(passwordEncoder).matches(DEFAULT_PASSWORD, "encodedPassword");
     }
 
     @Test
@@ -410,15 +422,17 @@ class TrainerServiceImplTest {
     void shouldUpdateTrainerPassword() {
         Trainer trainer = buildTrainerWithId(DEFAULT_TRAINER_ID);
         String newPassword = "newPassword";
+        String encodedNewPassword = "encoded-" + newPassword;
 
         when(dao.findById(DEFAULT_TRAINER_ID)).thenReturn(Optional.of(trainer));
+        when(passwordEncoder.encode(newPassword)).thenReturn(encodedNewPassword);
 
         service.updateTrainerPassword(DEFAULT_TRAINER_ID, newPassword);
 
         verify(dao).findById(DEFAULT_TRAINER_ID);
         ArgumentCaptor<Trainer> trainerCaptor = ArgumentCaptor.forClass(Trainer.class);
         verify(dao).update(trainerCaptor.capture());
-        assertEquals(newPassword, trainerCaptor.getValue().getUser().getPassword());
+        assertEquals(encodedNewPassword, trainerCaptor.getValue().getUser().getPassword());
     }
 
     @Test

@@ -12,6 +12,7 @@ import com.gym.crm.service.common.ProfileCredentialGenerator;
 import com.gym.crm.transaction.Transaction;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -26,6 +27,7 @@ public class TrainerServiceImpl implements TrainerService {
     private TraineeDao traineeDao;
     private TrainingTypeDao trainingTypeDao;
     private ProfileCredentialGenerator credentialGenerator;
+    private PasswordEncoder passwordEncoder;
 
     @Autowired
     public void setTrainerDao(TrainerDao trainerDao) {
@@ -47,6 +49,11 @@ public class TrainerServiceImpl implements TrainerService {
         this.trainingTypeDao = trainingTypeDao;
     }
 
+    @Autowired
+    public void setPasswordEncoder(PasswordEncoder passwordEncoder) {
+        this.passwordEncoder = passwordEncoder;
+    }
+
     @Override
     public Trainer createTrainer(Trainer trainer) {
         Objects.requireNonNull(trainer, "Trainer cannot be null");
@@ -61,7 +68,7 @@ public class TrainerServiceImpl implements TrainerService {
 
         User user = trainer.getUser().toBuilder()
                 .username(username)
-                .password(password)
+                .password(passwordEncoder.encode(password))
                 .build();
         Trainer trainerWithCredentialsAndSpecialization = trainer.toBuilder()
                 .user(user)
@@ -121,8 +128,8 @@ public class TrainerServiceImpl implements TrainerService {
         }
 
         Trainer trainer = trainerOptional.get();
-        boolean passwordsMatch = Objects.equals(trainer.getUser().getPassword(), password);
-        if (!passwordsMatch) {
+        boolean passwordMatches = passwordEncoder.matches(password, trainer.getUser().getPassword());
+        if (!passwordMatches) {
             log.warn("Passwords do not match for trainer username: {}", username);
             return false;
         }
@@ -175,7 +182,7 @@ public class TrainerServiceImpl implements TrainerService {
                 .orElseThrow(() -> EntityNotFoundException.forId("Trainer", trainerId));
 
         User updatedUser = trainer.getUser().toBuilder()
-                .password(newPassword)
+                .password(passwordEncoder.encode(newPassword))
                 .build();
         Trainer updatedTrainer = trainer.toBuilder()
                 .user(updatedUser)

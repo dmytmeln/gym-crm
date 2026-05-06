@@ -11,6 +11,7 @@ import com.gym.crm.service.common.ProfileCredentialGenerator;
 import com.gym.crm.transaction.Transaction;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -24,6 +25,7 @@ public class TraineeServiceImpl implements TraineeService {
     private TraineeDao traineeDao;
     private TrainerDao trainerDao;
     private ProfileCredentialGenerator credentialGenerator;
+    private PasswordEncoder passwordEncoder;
 
     @Autowired
     public void setTraineeDao(TraineeDao traineeDao) {
@@ -40,6 +42,11 @@ public class TraineeServiceImpl implements TraineeService {
         this.credentialGenerator = credentialGenerator;
     }
 
+    @Autowired
+    public void setPasswordEncoder(PasswordEncoder passwordEncoder) {
+        this.passwordEncoder = passwordEncoder;
+    }
+
     @Override
     public Trainee createTrainee(Trainee trainee) {
         Objects.requireNonNull(trainee, "Trainee cannot be null");
@@ -51,7 +58,7 @@ public class TraineeServiceImpl implements TraineeService {
 
         User userWithCredentials = trainee.getUser().toBuilder()
                 .username(username)
-                .password(password)
+                .password(passwordEncoder.encode(password))
                 .build();
         Trainee traineeWithCredentials = trainee.toBuilder()
                 .user(userWithCredentials)
@@ -97,8 +104,8 @@ public class TraineeServiceImpl implements TraineeService {
         }
 
         Trainee trainee = traineeOptional.get();
-        boolean passwordsMatch = Objects.equals(trainee.getUser().getPassword(), password);
-        if (!passwordsMatch) {
+        boolean passwordMatches = passwordEncoder.matches(password, trainee.getUser().getPassword());
+        if (!passwordMatches) {
             log.warn("Passwords do not match for trainee username: {}", username);
             return false;
         }
@@ -164,7 +171,7 @@ public class TraineeServiceImpl implements TraineeService {
                 .orElseThrow(() -> EntityNotFoundException.forId("Trainee", traineeId));
 
         User updatedUser = trainee.getUser().toBuilder()
-                .password(newPassword)
+                .password(passwordEncoder.encode(newPassword))
                 .build();
         Trainee updatedTrainee = trainee.toBuilder()
                 .user(updatedUser)
