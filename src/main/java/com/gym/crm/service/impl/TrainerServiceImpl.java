@@ -23,6 +23,8 @@ import java.util.Optional;
 @Service
 public class TrainerServiceImpl implements TrainerService {
 
+    private static final String ID_NULL_MSG = "Trainer ID cannot be null";
+
     private TrainerDao trainerDao;
     private TraineeDao traineeDao;
     private TrainingTypeDao trainingTypeDao;
@@ -84,7 +86,7 @@ public class TrainerServiceImpl implements TrainerService {
 
     @Override
     public Trainer getTrainer(Long trainerId) {
-        Objects.requireNonNull(trainerId, "Trainer ID cannot be null");
+        Objects.requireNonNull(trainerId, ID_NULL_MSG);
 
         return trainerDao.findById(trainerId)
                 .orElseThrow(() -> EntityNotFoundException.forId("Trainer", trainerId));
@@ -143,7 +145,7 @@ public class TrainerServiceImpl implements TrainerService {
     public Trainer updateTrainer(Trainer trainer) {
         Objects.requireNonNull(trainer, "Trainer cannot be null");
         Objects.requireNonNull(trainer.getUser(), "Trainer user cannot be null");
-        Objects.requireNonNull(trainer.getId(), "Trainer ID cannot be null");
+        Objects.requireNonNull(trainer.getId(), ID_NULL_MSG);
         log.info("Updating trainer with ID: {}", trainer.getId());
 
         Trainer existingTrainer = trainerDao.findById(trainer.getId())
@@ -174,7 +176,7 @@ public class TrainerServiceImpl implements TrainerService {
 
     @Override
     public void updateTrainerPassword(Long trainerId, String newPassword) {
-        Objects.requireNonNull(trainerId, "Trainer ID cannot be null");
+        Objects.requireNonNull(trainerId, ID_NULL_MSG);
         Objects.requireNonNull(newPassword, "Password cannot be null");
         log.info("Updating password for trainer with ID: {}", trainerId);
 
@@ -194,7 +196,7 @@ public class TrainerServiceImpl implements TrainerService {
 
     @Override
     public void activateTrainer(Long trainerId) {
-        Objects.requireNonNull(trainerId, "Trainer ID cannot be null");
+        Objects.requireNonNull(trainerId, ID_NULL_MSG);
         log.info("Activating trainer with ID: {}", trainerId);
         Trainer trainer = trainerDao.findById(trainerId)
                 .orElseThrow(() -> EntityNotFoundException.forId("Trainer", trainerId));
@@ -216,7 +218,7 @@ public class TrainerServiceImpl implements TrainerService {
 
     @Override
     public void deactivateTrainer(Long trainerId) {
-        Objects.requireNonNull(trainerId, "Trainer ID cannot be null");
+        Objects.requireNonNull(trainerId, ID_NULL_MSG);
         log.info("Deactivating trainer with ID: {}", trainerId);
         Trainer trainer = trainerDao.findById(trainerId)
                 .orElseThrow(() -> EntityNotFoundException.forId("Trainer", trainerId));

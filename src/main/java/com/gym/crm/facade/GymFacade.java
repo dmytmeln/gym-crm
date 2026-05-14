@@ -38,6 +38,10 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class GymFacade {
 
+    private static final String USERNAME_NULL_MSG = "Username cannot be null";
+    private static final String TRAINER_ID_NULL_MSG = "Trainer ID cannot be null";
+    private static final String TRAINEE_ID_NULL_MSG = "Trainee ID cannot be null";
+
     private final TraineeService traineeService;
     private final TrainerService trainerService;
     private final TrainingService trainingService;
@@ -85,7 +89,7 @@ public class GymFacade {
 
     @Authenticated(Role.TRAINEE)
     public TraineeResponseDto getTrainee(String username, Long traineeId) {
-        Objects.requireNonNull(traineeId, "Trainee ID cannot be null");
+        Objects.requireNonNull(traineeId, TRAINEE_ID_NULL_MSG);
 
         Trainee trainee = traineeService.getTrainee(traineeId);
         return traineeMapper.toDto(trainee);
@@ -93,7 +97,7 @@ public class GymFacade {
 
     @Authenticated(Role.TRAINEE)
     public TraineeResponseDto getTraineeByUsername(String username) {
-        Objects.requireNonNull(username, "Username cannot be null");
+        Objects.requireNonNull(username, USERNAME_NULL_MSG);
 
         Trainee trainee = traineeService.getTraineeByUsername(username);
         return traineeMapper.toDto(trainee);
@@ -108,7 +112,7 @@ public class GymFacade {
 
     @Authenticated(Role.TRAINEE)
     public TraineeResponseDto updateTrainee(String username, Long traineeId, TraineeUpdateDto traineeUpdateDto) {
-        Objects.requireNonNull(traineeId, "Trainee ID cannot be null");
+        Objects.requireNonNull(traineeId, TRAINEE_ID_NULL_MSG);
         Objects.requireNonNull(traineeUpdateDto, "TraineeUpdateDto cannot be null");
         validator.validate(traineeUpdateDto);
 
@@ -120,7 +124,7 @@ public class GymFacade {
 
     @Authenticated(Role.TRAINEE)
     public TraineeResponseDto updateTraineeTrainers(String username, Long traineeId, List<Long> trainerIds) {
-        Objects.requireNonNull(traineeId, "Trainee ID cannot be null");
+        Objects.requireNonNull(traineeId, TRAINEE_ID_NULL_MSG);
         Objects.requireNonNull(trainerIds, "Trainer IDs cannot be null");
 
         Trainee trainee = traineeService.updateTraineeTrainers(traineeId, trainerIds);
@@ -130,7 +134,7 @@ public class GymFacade {
 
     @Authenticated(Role.TRAINEE)
     public void updateTraineePassword(String username, Long traineeId, PasswordUpdateDto passwordUpdateDto) {
-        Objects.requireNonNull(traineeId, "Trainee ID cannot be null");
+        Objects.requireNonNull(traineeId, TRAINEE_ID_NULL_MSG);
         Objects.requireNonNull(passwordUpdateDto, "PasswordUpdateDto cannot be null");
         validator.validate(passwordUpdateDto);
 
@@ -139,28 +143,28 @@ public class GymFacade {
 
     @Authenticated(Role.TRAINEE)
     public void activateTrainee(String username, Long traineeId) {
-        Objects.requireNonNull(traineeId, "Trainee ID cannot be null");
+        Objects.requireNonNull(traineeId, TRAINEE_ID_NULL_MSG);
 
         traineeService.activateTrainee(traineeId);
     }
 
     @Authenticated(Role.TRAINEE)
     public void deactivateTrainee(String username, Long traineeId) {
-        Objects.requireNonNull(traineeId, "Trainee ID cannot be null");
+        Objects.requireNonNull(traineeId, TRAINEE_ID_NULL_MSG);
 
         traineeService.deactivateTrainee(traineeId);
     }
 
     @Authenticated(Role.TRAINEE)
     public boolean deleteTrainee(String username, Long traineeId) {
-        Objects.requireNonNull(traineeId, "Trainee ID cannot be null");
+        Objects.requireNonNull(traineeId, TRAINEE_ID_NULL_MSG);
 
         return traineeService.deleteTrainee(traineeId);
     }
 
     @Authenticated(Role.TRAINEE)
     public boolean deleteTraineeByUsername(String username) {
-        Objects.requireNonNull(username, "Username cannot be null");
+        Objects.requireNonNull(username, USERNAME_NULL_MSG);
 
         return traineeService.deleteTraineeByUsername(username);
     }
@@ -177,7 +181,7 @@ public class GymFacade {
 
     @Authenticated(Role.TRAINER)
     public TrainerResponseDto getTrainer(String username, Long trainerId) {
-        Objects.requireNonNull(trainerId, "Trainer ID cannot be null");
+        Objects.requireNonNull(trainerId, TRAINER_ID_NULL_MSG);
 
         Trainer trainer = trainerService.getTrainer(trainerId);
         return trainerMapper.toDto(trainer);
@@ -185,7 +189,7 @@ public class GymFacade {
 
     @Authenticated(Role.TRAINER)
     public TrainerResponseDto getTrainerByUsername(String username) {
-        Objects.requireNonNull(username, "Username cannot be null");
+        Objects.requireNonNull(username, USERNAME_NULL_MSG);
 
         Trainer trainer = trainerService.getTrainerByUsername(username);
         return trainerMapper.toDto(trainer);
@@ -208,7 +212,7 @@ public class GymFacade {
 
     @Authenticated(Role.TRAINER)
     public TrainerResponseDto updateTrainer(String username, Long trainerId, TrainerUpdateDto trainerUpdateDto) {
-        Objects.requireNonNull(trainerId, "Trainer ID cannot be null");
+        Objects.requireNonNull(trainerId, TRAINER_ID_NULL_MSG);
         Objects.requireNonNull(trainerUpdateDto, "TrainerUpdateDto cannot be null");
         validator.validate(trainerUpdateDto);
 
@@ -220,7 +224,7 @@ public class GymFacade {
 
     @Authenticated(Role.TRAINER)
     public void updateTrainerPassword(String username, Long trainerId, PasswordUpdateDto passwordUpdateDto) {
-        Objects.requireNonNull(trainerId, "Trainer ID cannot be null");
+        Objects.requireNonNull(trainerId, TRAINER_ID_NULL_MSG);
         Objects.requireNonNull(passwordUpdateDto, "PasswordUpdateDto cannot be null");
         validator.validate(passwordUpdateDto);
 
@@ -229,14 +233,14 @@ public class GymFacade {
 
     @Authenticated(Role.TRAINER)
     public void activateTrainer(String username, Long trainerId) {
-        Objects.requireNonNull(trainerId, "Trainer ID cannot be null");
+        Objects.requireNonNull(trainerId, TRAINER_ID_NULL_MSG);
 
         trainerService.activateTrainer(trainerId);
     }
 
     @Authenticated(Role.TRAINER)
     public void deactivateTrainer(String username, Long trainerId) {
-        Objects.requireNonNull(trainerId, "Trainer ID cannot be null");
+        Objects.requireNonNull(trainerId, TRAINER_ID_NULL_MSG);
 
         trainerService.deactivateTrainer(trainerId);
     }

@@ -8,6 +8,8 @@ import com.gym.crm.entity.User;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -114,26 +116,20 @@ class ProfileCredentialGeneratorTest {
         verify(trainerDao).findAll();
     }
 
-    @Test
-    void shouldIgnoreUsersWithDifferentFirstName() {
+    @ParameterizedTest
+    @CsvSource({
+            "sophia.miller, Liam.Miller",
+            "liam.wilson, Liam.Miller",
+            "liam.miller, Liam.Miller1"
+    })
+    void shouldHandleUsernameMatching(String existingUsername, String expectedUsername) {
         when(traineeDao.findAll()).thenReturn(List.of(
-                Trainee.builder().user(User.builder().username("sophia.miller").build()).build()));
+                Trainee.builder().user(User.builder().username(existingUsername).build()).build()));
         when(trainerDao.findAll()).thenReturn(Collections.emptyList());
 
         String actual = generator.generateUsername(FIRST_NAME, LAST_NAME);
 
-        assertEquals("Liam.Miller", actual);
-    }
-
-    @Test
-    void shouldIgnoreUsersWithDifferentLastName() {
-        when(traineeDao.findAll()).thenReturn(List.of(
-                Trainee.builder().user(User.builder().username("liam.wilson").build()).build()));
-        when(trainerDao.findAll()).thenReturn(Collections.emptyList());
-
-        String actual = generator.generateUsername(FIRST_NAME, LAST_NAME);
-
-        assertEquals("Liam.Miller", actual);
+        assertEquals(expectedUsername, actual);
     }
 
     @Test
@@ -145,17 +141,6 @@ class ProfileCredentialGeneratorTest {
         String actual = generator.generateUsername(FIRST_NAME, LAST_NAME);
 
         assertEquals("Liam.Miller", actual);
-    }
-
-    @Test
-    void shouldMatchExistingUsernameCaseInsensitively() {
-        when(traineeDao.findAll()).thenReturn(List.of(
-                Trainee.builder().user(User.builder().username("liam.miller").build()).build()));
-        when(trainerDao.findAll()).thenReturn(Collections.emptyList());
-
-        String actual = generator.generateUsername(FIRST_NAME, LAST_NAME);
-
-        assertEquals("Liam.Miller1", actual);
     }
 
     @Test

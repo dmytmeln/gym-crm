@@ -7,6 +7,10 @@ public class SecurityContext {
 
     private static final ThreadLocal<UserCredentials> currentUser = new ThreadLocal<>();
 
+    private SecurityContext() {
+        throw new UnsupportedOperationException("Utility class cannot be instantiated");
+    }
+
     public static void setCurrentUser(UserCredentials userCredentials) {
         log.debug("Setting current user in security context: {}", userCredentials.username());
         currentUser.set(userCredentials);

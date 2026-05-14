@@ -18,7 +18,7 @@ import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class DtoValidationTest {
+class DtoValidationTest {
 
     private static Validator validator;
 

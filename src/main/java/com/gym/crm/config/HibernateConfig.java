@@ -10,6 +10,8 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.JdbcSettings;
+import org.hibernate.cfg.SchemaToolingSettings;
 import org.hibernate.service.ServiceRegistry;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -44,10 +46,10 @@ public class HibernateConfig {
     @DependsOn("liquibase")
     public SessionFactory sessionFactory(DataSource dataSource) {
         ServiceRegistry registry = new StandardServiceRegistryBuilder()
-                .applySetting(AvailableSettings.JAKARTA_JTA_DATASOURCE, dataSource)
-                .applySetting(AvailableSettings.HBM2DDL_AUTO, hbm2ddlAuto)
-                .applySetting(AvailableSettings.SHOW_SQL, showSql)
-                .applySetting(AvailableSettings.FORMAT_SQL, formatSql)
+                .applySetting(JdbcSettings.JAKARTA_JTA_DATASOURCE, dataSource)
+                .applySetting(SchemaToolingSettings.HBM2DDL_AUTO, hbm2ddlAuto)
+                .applySetting(JdbcSettings.SHOW_SQL, showSql)
+                .applySetting(JdbcSettings.FORMAT_SQL, formatSql)
                 .applySetting(AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS, "thread")
                 .build();
 

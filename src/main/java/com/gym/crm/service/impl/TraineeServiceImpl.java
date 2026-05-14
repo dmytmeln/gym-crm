@@ -22,6 +22,9 @@ import java.util.Optional;
 @Service
 public class TraineeServiceImpl implements TraineeService {
 
+    private static final String ID_NULL_MSG = "Trainee ID cannot be null";
+    private static final String USERNAME_NULL_MSG = "Trainee username cannot be null";
+
     private TraineeDao traineeDao;
     private TrainerDao trainerDao;
     private ProfileCredentialGenerator credentialGenerator;
@@ -72,7 +75,7 @@ public class TraineeServiceImpl implements TraineeService {
 
     @Override
     public Trainee getTrainee(Long traineeId) {
-        Objects.requireNonNull(traineeId, "Trainee ID cannot be null");
+        Objects.requireNonNull(traineeId, ID_NULL_MSG);
 
         return traineeDao.findById(traineeId)
                 .orElseThrow(() -> EntityNotFoundException.forId("Trainee", traineeId));
@@ -80,7 +83,7 @@ public class TraineeServiceImpl implements TraineeService {
 
     @Override
     public Trainee getTraineeByUsername(String username) {
-        Objects.requireNonNull(username, "Trainee username cannot be null");
+        Objects.requireNonNull(username, USERNAME_NULL_MSG);
 
         return traineeDao.findByUsername(username)
                 .orElseThrow(() -> EntityNotFoundException.forUsername("Trainee", username));
@@ -93,7 +96,7 @@ public class TraineeServiceImpl implements TraineeService {
 
     @Override
     public boolean doesUsernameAndPasswordMatch(String username, String password) {
-        Objects.requireNonNull(username, "Trainee username cannot be null");
+        Objects.requireNonNull(username, USERNAME_NULL_MSG);
         Objects.requireNonNull(password, "Password cannot be null");
         log.info("Checking if username and password match for trainee username: {}", username);
 
@@ -118,7 +121,7 @@ public class TraineeServiceImpl implements TraineeService {
     public Trainee updateTrainee(Trainee trainee) {
         Objects.requireNonNull(trainee, "Trainee cannot be null");
         Objects.requireNonNull(trainee.getUser(), "User cannot be null");
-        Objects.requireNonNull(trainee.getId(), "Trainee ID cannot be null");
+        Objects.requireNonNull(trainee.getId(), ID_NULL_MSG);
         log.info("Updating trainee with ID: {}", trainee.getId());
 
         Trainee existingTrainee = traineeDao.findById(trainee.getId())
@@ -144,7 +147,7 @@ public class TraineeServiceImpl implements TraineeService {
     @Override
     @Transaction
     public Trainee updateTraineeTrainers(Long traineeId, List<Long> trainerIds) {
-        Objects.requireNonNull(traineeId, "Trainee ID cannot be null");
+        Objects.requireNonNull(traineeId, ID_NULL_MSG);
         Objects.requireNonNull(trainerIds, "Trainer IDs cannot be null");
         log.info("Updating trainers for trainee with ID: {}", traineeId);
 
@@ -163,7 +166,7 @@ public class TraineeServiceImpl implements TraineeService {
 
     @Override
     public void updateTraineePassword(Long traineeId, String newPassword) {
-        Objects.requireNonNull(traineeId, "Trainee ID cannot be null");
+        Objects.requireNonNull(traineeId, ID_NULL_MSG);
         Objects.requireNonNull(newPassword, "Password cannot be null");
         log.info("Updating password for trainee with ID: {}", traineeId);
 
@@ -183,7 +186,7 @@ public class TraineeServiceImpl implements TraineeService {
 
     @Override
     public void activateTrainee(Long traineeId) {
-        Objects.requireNonNull(traineeId, "Trainee ID cannot be null");
+        Objects.requireNonNull(traineeId, ID_NULL_MSG);
         log.info("Activating trainee with ID: {}", traineeId);
         Trainee trainee = traineeDao.findById(traineeId)
                 .orElseThrow(() -> EntityNotFoundException.forId("Trainee", traineeId));
@@ -205,7 +208,7 @@ public class TraineeServiceImpl implements TraineeService {
 
     @Override
     public void deactivateTrainee(Long traineeId) {
-        Objects.requireNonNull(traineeId, "Trainee ID cannot be null");
+        Objects.requireNonNull(traineeId, ID_NULL_MSG);
         log.info("Deactivating trainee with ID: {}", traineeId);
         Trainee trainee = traineeDao.findById(traineeId)
                 .orElseThrow(() -> EntityNotFoundException.forId("Trainee", traineeId));
@@ -227,7 +230,7 @@ public class TraineeServiceImpl implements TraineeService {
 
     @Override
     public boolean deleteTrainee(Long traineeId) {
-        Objects.requireNonNull(traineeId, "Trainee ID cannot be null");
+        Objects.requireNonNull(traineeId, ID_NULL_MSG);
         log.info("Deleting trainee with ID: {}", traineeId);
 
         boolean deleted = traineeDao.deleteById(traineeId);
@@ -242,7 +245,7 @@ public class TraineeServiceImpl implements TraineeService {
 
     @Override
     public boolean deleteTraineeByUsername(String username) {
-        Objects.requireNonNull(username, "Trainee username cannot be null");
+        Objects.requireNonNull(username, USERNAME_NULL_MSG);
         log.info("Deleting trainee with username: {}", username);
 
         boolean deleted = traineeDao.deleteByUsername(username);
