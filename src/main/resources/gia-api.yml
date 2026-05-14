@@ -712,7 +712,7 @@ paths:
       tags:
         - User Profile
       summary: Change login password
-      description: Changes the password for a given trainer
+      description: Changes the password for a given user
       operationId: changePassword
       requestBody:
         required: true
@@ -755,7 +755,7 @@ components:
     Username:
       name: username
       in: path
-      description: The username of the trainee
+      description: The username of the user
       required: true
       schema:
         type: string
@@ -1015,36 +1015,20 @@ components:
               type: string
               description: Training type name
               example: Cardio
-            traineeName:
-              type: string
-              description: Trainee's username
-              example: ricardo.milos
-            trainerName:
-              type: string
-              description: Trainer username
-              example: ronnie.coleman
     GetTraineeTrainingResponse:
       allOf:
-        - $ref: '#/components/schemas/TrainingKeys'
+        - $ref: '#/components/schemas/TrainingDefinition'
         - type: object
           properties:
-            trainingType:
-              type: string
-              description: Training type name
-              example: Cardio
             trainerName:
               type: string
               description: Trainer username
               example: ronnie.coleman
     GetTrainerTrainingResponse:
       allOf:
-        - $ref: '#/components/schemas/TrainingKeys'
+        - $ref: '#/components/schemas/TrainingDefinition'
         - type: object
           properties:
-            trainingType:
-              type: string
-              description: Training type name
-              example: Cardio
             traineeName:
               type: string
               description: Trainee's username
@@ -1072,7 +1056,7 @@ components:
       properties:
         username:
           type: string
-          description: Trainee  username
+          description: Trainee username
         firstName:
           type: string
           description: Trainee first name
@@ -1189,7 +1173,7 @@ components:
       properties:
         username:
           type: string
-          description: Trainer's username
+          description: User's username
           maxLength: 220
           example: ricardo.milos
         password:
