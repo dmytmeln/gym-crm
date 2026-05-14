@@ -2,6 +2,7 @@ package com.gym.crm.facade;
 
 import com.gym.crm.GymCrmApplication;
 import com.gym.crm.config.BaseDbIntegrationTest;
+import com.gym.crm.dto.LoginRequestDto;
 import com.gym.crm.dto.PasswordUpdateDto;
 import com.gym.crm.dto.TraineeCreateDto;
 import com.gym.crm.dto.TraineeCreateResponseDto;
@@ -16,6 +17,7 @@ import com.gym.crm.dto.TrainingResponseDto;
 import com.gym.crm.dto.filter.TraineeTrainingSearchFilter;
 import com.gym.crm.dto.filter.TrainerTrainingSearchFilter;
 import com.gym.crm.exception.ValidationException;
+import com.gym.crm.security.AuthenticationException;
 import com.gym.crm.security.Role;
 import com.gym.crm.security.SecurityContext;
 import com.gym.crm.security.UserCredentials;
@@ -152,6 +154,14 @@ class GymFacadeIntegrationTest extends BaseDbIntegrationTest {
         PasswordUpdateDto passwordDto = new PasswordUpdateDto(newPassword);
 
         facade.updateTraineePassword(TRAINEE_USERNAME, TRAINEE_ID, passwordDto);
+
+        facade.logout();
+        facade.login(new LoginRequestDto(TRAINEE_USERNAME, newPassword, Role.TRAINEE));
+        assertNotNull(SecurityContext.getCurrentUser());
+        assertEquals(TRAINEE_USERNAME, SecurityContext.getCurrentUser().username());
+        facade.logout();
+        assertThrows(AuthenticationException.class, () ->
+                facade.login(new LoginRequestDto(TRAINEE_USERNAME, TRAINEE_PASSWORD, Role.TRAINEE)));
     }
 
     @Test
@@ -267,6 +277,14 @@ class GymFacadeIntegrationTest extends BaseDbIntegrationTest {
         PasswordUpdateDto passwordDto = new PasswordUpdateDto(newPassword);
 
         facade.updateTrainerPassword(TRAINER_USERNAME, TRAINER_ID, passwordDto);
+
+        facade.logout();
+        facade.login(new LoginRequestDto(TRAINER_USERNAME, newPassword, Role.TRAINER));
+        assertNotNull(SecurityContext.getCurrentUser());
+        assertEquals(TRAINER_USERNAME, SecurityContext.getCurrentUser().username());
+        facade.logout();
+        assertThrows(AuthenticationException.class, () ->
+                facade.login(new LoginRequestDto(TRAINER_USERNAME, TRAINER_PASSWORD, Role.TRAINER)));
     }
 
     @Test

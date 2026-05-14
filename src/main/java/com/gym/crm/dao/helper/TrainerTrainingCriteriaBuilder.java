@@ -35,6 +35,7 @@ public class TrainerTrainingCriteriaBuilder extends TrainingCriteriaBuilder<Trai
 
     @Override
     protected void addSpecificFilters(CriteriaBuilder cb, Root<Training> root, TrainerTrainingSearchFilter criteria, List<Predicate> predicates) {
+        // No additional filters are required as traineeName is handled by addPartnerNameFilter in the base class
     }
 
 }

@@ -14,8 +14,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-import static java.util.stream.Collectors.toList;
-
 @Slf4j
 @Component
 public class ProfileCredentialGenerator {
@@ -72,7 +70,7 @@ public class ProfileCredentialGenerator {
     private List<String> findUsernamesWithSameBase(String baseUsername) {
         return findAllUsernames()
                 .filter(username -> matchesBaseUsername(username, baseUsername))
-                .collect(toList());
+                .toList();
     }
 
     private Stream<String> findAllUsernames() {
