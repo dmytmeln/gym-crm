@@ -395,11 +395,13 @@ class GymFacadeTest {
         LoginChangeDto dto = new LoginChangeDto(USERNAME, "oldPassword123", "newPassword123");
 
         when(authMapper.toDto(request)).thenReturn(dto);
+        doNothing().when(businessValidator).validate(request);
         doNothing().when(businessValidator).validate(dto);
 
         facade.changePassword(USERNAME, request);
 
         verify(authMapper).toDto(request);
+        verify(businessValidator).validate(request);
         verify(businessValidator).validate(dto);
         verify(authenticationService).changePassword(dto);
     }
@@ -410,10 +412,12 @@ class GymFacadeTest {
         LoginChangeDto dto = new LoginChangeDto(USERNAME, "oldPassword", "newPassword");
 
         when(authMapper.toDto(request)).thenReturn(dto);
+        doNothing().when(businessValidator).validate(request);
         doThrow(new ValidationException("Validation error"))
                 .when(businessValidator).validate(dto);
 
         assertThrows(ValidationException.class, () -> facade.changePassword(USERNAME, request));
+        verify(businessValidator).validate(request);
         verify(businessValidator).validate(dto);
         verifyNoInteractions(authenticationService);
     }

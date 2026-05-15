@@ -103,7 +103,7 @@ class GymFacadeAuthenticationTest extends BaseDbIntegrationTest {
 
     @Test
     void shouldThrowExceptionOnInvalidLogin() {
-        LoginRequest loginDto = new LoginRequest().username("invalid").password("wrong");
+        LoginRequest loginDto = new LoginRequest().username("invalid").password("wrongPassword123");
         assertThatThrownBy(() -> gymFacade.login(loginDto))
                 .isInstanceOf(AuthenticationException.class)
                 .hasMessage("Invalid username or password");

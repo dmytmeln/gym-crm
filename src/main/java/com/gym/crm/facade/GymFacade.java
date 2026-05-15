@@ -3,6 +3,7 @@ package com.gym.crm.facade;
 import com.gia.openapi.model.LoginChangeRequest;
 import com.gia.openapi.model.LoginRequest;
 import com.gym.crm.dto.LoginChangeDto;
+import com.gym.crm.dto.LoginRequestDto;
 import com.gym.crm.dto.TraineeCreateDto;
 import com.gym.crm.dto.TraineeCreateResponseDto;
 import com.gym.crm.dto.TraineeResponseDto;
@@ -77,13 +78,17 @@ public class GymFacade {
 
     public void login(LoginRequest loginRequest) {
         Objects.requireNonNull(loginRequest, "LoginRequestDto cannot be null");
+        validator.validate(loginRequest);
+        LoginRequestDto dto = authMapper.toDto(loginRequest);
+        validator.validate(dto);
 
-        authenticationService.login(authMapper.toDto(loginRequest));
+        authenticationService.login(dto);
     }
 
     @Authenticated({Role.TRAINEE, Role.TRAINER})
     public void changePassword(String username, LoginChangeRequest loginChangeRequest) {
         Objects.requireNonNull(loginChangeRequest, "LoginChangeRequest cannot be null");
+        validator.validate(loginChangeRequest);
         LoginChangeDto loginChangeDto = authMapper.toDto(loginChangeRequest);
         validator.validate(loginChangeDto);
 
