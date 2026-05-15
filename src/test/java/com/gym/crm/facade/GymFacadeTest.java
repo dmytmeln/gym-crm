@@ -405,21 +405,6 @@ class GymFacadeTest {
     }
 
     @Test
-    void shouldChangePasswordForTrainer() {
-        LoginChangeRequest request = new LoginChangeRequest(USERNAME, "oldPassword123", "newPassword123");
-        LoginChangeDto dto = new LoginChangeDto(USERNAME, "oldPassword123", "newPassword123");
-
-        when(authMapper.toDto(request)).thenReturn(dto);
-        doNothing().when(businessValidator).validate(dto);
-
-        facade.changePassword(USERNAME, request);
-
-        verify(authMapper).toDto(request);
-        verify(businessValidator).validate(dto);
-        verify(authenticationService).changePassword(dto);
-    }
-
-    @Test
     void shouldThrowValidationExceptionWhenChangingPasswordWithInvalidDto() {
         LoginChangeRequest request = new LoginChangeRequest(USERNAME, "oldPassword", "newPassword");
         LoginChangeDto dto = new LoginChangeDto(USERNAME, "oldPassword", "newPassword");

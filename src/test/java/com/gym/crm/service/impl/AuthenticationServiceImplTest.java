@@ -49,7 +49,7 @@ class AuthenticationServiceImplTest {
 
     @Test
     void shouldLoginWhenCredentialsMatchTrainer() {
-        LoginRequestDto loginRequestDto = buildLoginRequestDto(USERNAME, PASSWORD);
+        LoginRequestDto loginRequestDto = buildLoginRequestDto();
 
         when(trainerService.doesUsernameAndPasswordMatch(USERNAME, PASSWORD)).thenReturn(true);
 
@@ -63,7 +63,7 @@ class AuthenticationServiceImplTest {
 
     @Test
     void shouldLoginWhenCredentialsMatchTrainee() {
-        LoginRequestDto loginRequestDto = buildLoginRequestDto(USERNAME, PASSWORD);
+        LoginRequestDto loginRequestDto = buildLoginRequestDto();
 
         when(trainerService.doesUsernameAndPasswordMatch(USERNAME, PASSWORD)).thenReturn(false);
         when(traineeService.doesUsernameAndPasswordMatch(USERNAME, PASSWORD)).thenReturn(true);
@@ -78,7 +78,7 @@ class AuthenticationServiceImplTest {
 
     @Test
     void shouldThrowExceptionWhenLoginCredentialsAreInvalid() {
-        LoginRequestDto loginRequestDto = buildLoginRequestDto(USERNAME, PASSWORD);
+        LoginRequestDto loginRequestDto = buildLoginRequestDto();
 
         when(trainerService.doesUsernameAndPasswordMatch(USERNAME, PASSWORD)).thenReturn(false);
         when(traineeService.doesUsernameAndPasswordMatch(USERNAME, PASSWORD)).thenReturn(false);
@@ -88,7 +88,7 @@ class AuthenticationServiceImplTest {
 
     @Test
     void shouldChangePasswordForTrainee() {
-        LoginChangeDto loginChangeDto = buildLoginChangeDto(USERNAME, PASSWORD, NEW_PASSWORD);
+        LoginChangeDto loginChangeDto = buildLoginChangeDto();
         SecurityContext.setCurrentUser(new UserCredentials(USERNAME, Role.TRAINEE));
 
         service.changePassword(loginChangeDto);
@@ -98,7 +98,7 @@ class AuthenticationServiceImplTest {
 
     @Test
     void shouldChangePasswordForTrainer() {
-        LoginChangeDto loginChangeDto = buildLoginChangeDto(USERNAME, PASSWORD, NEW_PASSWORD);
+        LoginChangeDto loginChangeDto = buildLoginChangeDto();
         SecurityContext.setCurrentUser(new UserCredentials(USERNAME, Role.TRAINER));
 
         service.changePassword(loginChangeDto);
@@ -106,12 +106,12 @@ class AuthenticationServiceImplTest {
         verify(trainerService).updateTrainerPassword(loginChangeDto);
     }
 
-    private LoginRequestDto buildLoginRequestDto(String username, String password) {
-        return new LoginRequestDto(username, password);
+    private LoginRequestDto buildLoginRequestDto() {
+        return new LoginRequestDto(USERNAME, PASSWORD);
     }
 
-    private LoginChangeDto buildLoginChangeDto(String username, String oldPassword, String newPassword) {
-        return new LoginChangeDto(username, oldPassword, newPassword);
+    private LoginChangeDto buildLoginChangeDto() {
+        return new LoginChangeDto(USERNAME, PASSWORD, NEW_PASSWORD);
     }
 
 }
