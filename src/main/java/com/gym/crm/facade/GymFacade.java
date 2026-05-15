@@ -1,7 +1,8 @@
 package com.gym.crm.facade;
 
-import com.gym.crm.dto.LoginRequestDto;
-import com.gym.crm.dto.PasswordUpdateDto;
+import com.gia.openapi.model.LoginChangeRequest;
+import com.gia.openapi.model.LoginRequest;
+import com.gym.crm.dto.LoginChangeDto;
 import com.gym.crm.dto.TraineeCreateDto;
 import com.gym.crm.dto.TraineeCreateResponseDto;
 import com.gym.crm.dto.TraineeResponseDto;
@@ -17,6 +18,7 @@ import com.gym.crm.dto.filter.TrainerTrainingSearchFilter;
 import com.gym.crm.entity.Trainee;
 import com.gym.crm.entity.Trainer;
 import com.gym.crm.entity.Training;
+import com.gym.crm.mapper.AuthMapper;
 import com.gym.crm.mapper.TraineeMapper;
 import com.gym.crm.mapper.TrainerMapper;
 import com.gym.crm.mapper.TrainingMapper;
@@ -51,6 +53,7 @@ public class GymFacade {
     private TraineeMapper traineeMapper;
     private TrainerMapper trainerMapper;
     private TrainingMapper trainingMapper;
+    private AuthMapper authMapper;
 
     @Autowired
     public void setTraineeMapper(TraineeMapper traineeMapper) {
@@ -67,14 +70,24 @@ public class GymFacade {
         this.trainingMapper = trainingMapper;
     }
 
-    public void login(LoginRequestDto loginRequestDto) {
-        Objects.requireNonNull(loginRequestDto, "LoginRequestDto cannot be null");
-
-        authenticationService.login(loginRequestDto);
+    @Autowired
+    public void setAuthMapper(AuthMapper authMapper) {
+        this.authMapper = authMapper;
     }
 
-    public void logout() {
-        authenticationService.logout();
+    public void login(LoginRequest loginRequest) {
+        Objects.requireNonNull(loginRequest, "LoginRequestDto cannot be null");
+
+        authenticationService.login(authMapper.toDto(loginRequest));
+    }
+
+    @Authenticated({Role.TRAINEE, Role.TRAINER})
+    public void changePassword(String username, LoginChangeRequest loginChangeRequest) {
+        Objects.requireNonNull(loginChangeRequest, "LoginChangeRequest cannot be null");
+        LoginChangeDto loginChangeDto = authMapper.toDto(loginChangeRequest);
+        validator.validate(loginChangeDto);
+
+        authenticationService.changePassword(loginChangeDto);
     }
 
     public TraineeCreateResponseDto createTrainee(TraineeCreateDto traineeCreateDto) {
@@ -130,15 +143,6 @@ public class GymFacade {
         Trainee trainee = traineeService.updateTraineeTrainers(traineeId, trainerIds);
 
         return traineeMapper.toDto(trainee);
-    }
-
-    @Authenticated(Role.TRAINEE)
-    public void updateTraineePassword(String username, Long traineeId, PasswordUpdateDto passwordUpdateDto) {
-        Objects.requireNonNull(traineeId, TRAINEE_ID_NULL_MSG);
-        Objects.requireNonNull(passwordUpdateDto, "PasswordUpdateDto cannot be null");
-        validator.validate(passwordUpdateDto);
-
-        traineeService.updateTraineePassword(traineeId, passwordUpdateDto.password());
     }
 
     @Authenticated(Role.TRAINEE)
@@ -220,15 +224,6 @@ public class GymFacade {
         Trainer updatedTrainer = trainerService.updateTrainer(trainer);
 
         return trainerMapper.toDto(updatedTrainer);
-    }
-
-    @Authenticated(Role.TRAINER)
-    public void updateTrainerPassword(String username, Long trainerId, PasswordUpdateDto passwordUpdateDto) {
-        Objects.requireNonNull(trainerId, TRAINER_ID_NULL_MSG);
-        Objects.requireNonNull(passwordUpdateDto, "PasswordUpdateDto cannot be null");
-        validator.validate(passwordUpdateDto);
-
-        trainerService.updateTrainerPassword(trainerId, passwordUpdateDto.password());
     }
 
     @Authenticated(Role.TRAINER)

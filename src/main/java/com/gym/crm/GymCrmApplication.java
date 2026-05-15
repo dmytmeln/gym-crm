@@ -6,12 +6,21 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.web.bind.annotation.RestController;
+import com.gym.crm.config.WebConfig;
 
 @Slf4j
 @Configuration
 @EnableAspectJAutoProxy
-@ComponentScan("com.gym.crm")
+@ComponentScan(
+    basePackages = "com.gym.crm",
+    excludeFilters = {
+        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = WebConfig.class),
+        @ComponentScan.Filter(type = FilterType.ANNOTATION, value = RestController.class)
+    }
+)
 @PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
 public class GymCrmApplication {
     public static void main(String[] args) {

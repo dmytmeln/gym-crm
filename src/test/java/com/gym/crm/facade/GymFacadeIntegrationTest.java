@@ -1,9 +1,9 @@
 package com.gym.crm.facade;
 
+import com.gia.openapi.model.LoginChangeRequest;
+import com.gia.openapi.model.LoginRequest;
 import com.gym.crm.GymCrmApplication;
 import com.gym.crm.config.BaseDbIntegrationTest;
-import com.gym.crm.dto.LoginRequestDto;
-import com.gym.crm.dto.PasswordUpdateDto;
 import com.gym.crm.dto.TraineeCreateDto;
 import com.gym.crm.dto.TraineeCreateResponseDto;
 import com.gym.crm.dto.TraineeResponseDto;
@@ -47,10 +47,10 @@ class GymFacadeIntegrationTest extends BaseDbIntegrationTest {
 
     private static final Long TRAINEE_ID = 1L;
     private static final String TRAINEE_USERNAME = "liam.miller";
-    private static final String TRAINEE_PASSWORD = "pass123";
+    private static final String TRAINEE_PASSWORD = "password123";
     private static final Long TRAINER_ID = 1L;
     private static final String TRAINER_USERNAME = "marcus.stone";
-    private static final String TRAINER_PASSWORD = "pass111";
+    private static final String TRAINER_PASSWORD = "password123";
     private static final Long TRAINING_ID = 1L;
     private static final String TRAINING_NAME = "Morning HIIT";
     private static final int TRAINING_DURATION = 60;
@@ -59,7 +59,7 @@ class GymFacadeIntegrationTest extends BaseDbIntegrationTest {
     private GymFacade facade;
 
     @AfterEach
-    void logout() {
+    void tearDown() {
         SecurityContext.clear();
     }
 
@@ -151,17 +151,20 @@ class GymFacadeIntegrationTest extends BaseDbIntegrationTest {
     void shouldUpdateTraineePassword() {
         authenticateAsTrainee();
         String newPassword = "newPass999";
-        PasswordUpdateDto passwordDto = new PasswordUpdateDto(newPassword);
+        LoginChangeRequest request = new LoginChangeRequest()
+                .username(TRAINEE_USERNAME)
+                .oldPassword(TRAINEE_PASSWORD)
+                .newPassword(newPassword);
 
-        facade.updateTraineePassword(TRAINEE_USERNAME, TRAINEE_ID, passwordDto);
+        facade.changePassword(TRAINEE_USERNAME, request);
 
-        facade.logout();
-        facade.login(new LoginRequestDto(TRAINEE_USERNAME, newPassword, Role.TRAINEE));
+        SecurityContext.clear();
+        facade.login(new LoginRequest().username(TRAINEE_USERNAME).password(newPassword));
         assertNotNull(SecurityContext.getCurrentUser());
         assertEquals(TRAINEE_USERNAME, SecurityContext.getCurrentUser().username());
-        facade.logout();
+        SecurityContext.clear();
         assertThrows(AuthenticationException.class, () ->
-                facade.login(new LoginRequestDto(TRAINEE_USERNAME, TRAINEE_PASSWORD, Role.TRAINEE)));
+                facade.login(new LoginRequest().username(TRAINEE_USERNAME).password(TRAINEE_PASSWORD)));
     }
 
     @Test
@@ -274,17 +277,20 @@ class GymFacadeIntegrationTest extends BaseDbIntegrationTest {
     void shouldUpdateTrainerPassword() {
         authenticateAsTrainer();
         String newPassword = "newTrainerPass";
-        PasswordUpdateDto passwordDto = new PasswordUpdateDto(newPassword);
+        LoginChangeRequest request = new LoginChangeRequest()
+                .username(TRAINER_USERNAME)
+                .oldPassword(TRAINER_PASSWORD)
+                .newPassword(newPassword);
 
-        facade.updateTrainerPassword(TRAINER_USERNAME, TRAINER_ID, passwordDto);
+        facade.changePassword(TRAINER_USERNAME, request);
 
-        facade.logout();
-        facade.login(new LoginRequestDto(TRAINER_USERNAME, newPassword, Role.TRAINER));
+        SecurityContext.clear();
+        facade.login(new LoginRequest().username(TRAINER_USERNAME).password(newPassword));
         assertNotNull(SecurityContext.getCurrentUser());
         assertEquals(TRAINER_USERNAME, SecurityContext.getCurrentUser().username());
-        facade.logout();
+        SecurityContext.clear();
         assertThrows(AuthenticationException.class, () ->
-                facade.login(new LoginRequestDto(TRAINER_USERNAME, TRAINER_PASSWORD, Role.TRAINER)));
+                facade.login(new LoginRequest().username(TRAINER_USERNAME).password(TRAINER_PASSWORD)));
     }
 
     @Test

@@ -1,7 +1,9 @@
 package com.gym.crm.service.impl;
 
+import com.gym.crm.dto.LoginChangeDto;
 import com.gym.crm.dto.LoginRequestDto;
 import com.gym.crm.security.AuthenticationException;
+import com.gym.crm.security.Role;
 import com.gym.crm.security.SecurityContext;
 import com.gym.crm.security.UserCredentials;
 import com.gym.crm.service.AuthenticationService;
@@ -24,29 +26,42 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public void login(LoginRequestDto loginRequestDto) {
         Objects.requireNonNull(loginRequestDto, "AuthenticateRequestDto cannot be null");
-        log.info("Login attempt for username: {} with role: {}", loginRequestDto.username(), loginRequestDto.role());
+        log.info("Login attempt for username: {}", loginRequestDto.username());
 
-        if (!doesUsernameAndPasswordMatch(loginRequestDto)) {
+        Role role = deduceRole(loginRequestDto.username(), loginRequestDto.password());
+        if (role == null) {
             throw new AuthenticationException("Invalid username or password");
         }
 
-        UserCredentials authenticatedUser = new UserCredentials(loginRequestDto.username(), loginRequestDto.role());
+        UserCredentials authenticatedUser = new UserCredentials(loginRequestDto.username(), role);
         SecurityContext.setCurrentUser(authenticatedUser);
-        log.info("Login successful for username: {}", loginRequestDto.username());
+        log.info("Login successful for username: {} with role: {}", loginRequestDto.username(), role);
     }
 
     @Override
-    public void logout() {
-        SecurityContext.clear();
+    public void changePassword(LoginChangeDto loginChangeDto) {
+        Objects.requireNonNull(loginChangeDto, "LoginChangeDto cannot be null");
+        log.info("Change password attempt for username: {}", loginChangeDto.username());
+
+        Role role = SecurityContext.getCurrentUser().role();
+        switch (role) {
+            case TRAINEE -> traineeService.updateTraineePassword(loginChangeDto);
+            case TRAINER -> trainerService.updateTrainerPassword(loginChangeDto);
+        }
+        
+        log.info("Password changed successfully for username: {}", loginChangeDto.username());
     }
 
-    private boolean doesUsernameAndPasswordMatch(LoginRequestDto loginRequestDto) {
-        return switch (loginRequestDto.role()) {
-            case TRAINER ->
-                    trainerService.doesUsernameAndPasswordMatch(loginRequestDto.username(), loginRequestDto.password());
-            case TRAINEE ->
-                    traineeService.doesUsernameAndPasswordMatch(loginRequestDto.username(), loginRequestDto.password());
-        };
+    private Role deduceRole(String username, String password) {
+        if (trainerService.doesUsernameAndPasswordMatch(username, password)) {
+            return Role.TRAINER;
+        }
+
+        if (traineeService.doesUsernameAndPasswordMatch(username, password)) {
+            return Role.TRAINEE;
+        }
+
+        return null;
     }
 
 }

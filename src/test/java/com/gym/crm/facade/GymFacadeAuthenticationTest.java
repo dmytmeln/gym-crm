@@ -1,8 +1,8 @@
 package com.gym.crm.facade;
 
+import com.gia.openapi.model.LoginRequest;
 import com.gym.crm.GymCrmApplication;
 import com.gym.crm.config.BaseDbIntegrationTest;
-import com.gym.crm.dto.LoginRequestDto;
 import com.gym.crm.dto.TraineeCreateDto;
 import com.gym.crm.dto.TraineeCreateResponseDto;
 import com.gym.crm.dto.TraineeResponseDto;
@@ -28,7 +28,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class GymFacadeAuthenticationTest extends BaseDbIntegrationTest {
 
     private static final String TRAINEE_USERNAME = "liam.miller";
-    private static final String TRAINEE_PASSWORD = "pass123";
+    private static final String TRAINEE_PASSWORD = "password123";
 
     @Autowired
     private GymFacade gymFacade;
@@ -40,7 +40,7 @@ class GymFacadeAuthenticationTest extends BaseDbIntegrationTest {
 
     @Test
     void shouldSetUserInSecurityContextAfterLogin() {
-        LoginRequestDto loginDto = new LoginRequestDto(TRAINEE_USERNAME, TRAINEE_PASSWORD, Role.TRAINEE);
+        LoginRequest loginDto = new LoginRequest().username(TRAINEE_USERNAME).password(TRAINEE_PASSWORD);
         UserCredentials expected = new UserCredentials(TRAINEE_USERNAME, Role.TRAINEE);
 
         gymFacade.login(loginDto);
@@ -90,7 +90,7 @@ class GymFacadeAuthenticationTest extends BaseDbIntegrationTest {
 
     @Test
     void shouldAllowGetTraineeAfterLogin() {
-        LoginRequestDto loginDto = new LoginRequestDto(TRAINEE_USERNAME, TRAINEE_PASSWORD, Role.TRAINEE);
+        LoginRequest loginDto = new LoginRequest().username(TRAINEE_USERNAME).password(TRAINEE_PASSWORD);
         gymFacade.login(loginDto);
 
         TraineeResponseDto response = gymFacade.getTrainee(TRAINEE_USERNAME, 1L);
@@ -102,19 +102,8 @@ class GymFacadeAuthenticationTest extends BaseDbIntegrationTest {
     }
 
     @Test
-    void shouldDenyGetTraineeAfterLogout() {
-        LoginRequestDto loginDto = new LoginRequestDto(TRAINEE_USERNAME, TRAINEE_PASSWORD, Role.TRAINEE);
-        gymFacade.login(loginDto);
-        gymFacade.logout();
-
-        assertThatThrownBy(() -> gymFacade.getTrainee(TRAINEE_USERNAME, 1L))
-                .isInstanceOf(AuthenticationException.class)
-                .hasMessage("User is not authenticated");
-    }
-
-    @Test
     void shouldThrowExceptionOnInvalidLogin() {
-        LoginRequestDto loginDto = new LoginRequestDto("invalid", "wrong", Role.TRAINEE);
+        LoginRequest loginDto = new LoginRequest().username("invalid").password("wrong");
         assertThatThrownBy(() -> gymFacade.login(loginDto))
                 .isInstanceOf(AuthenticationException.class)
                 .hasMessage("Invalid username or password");

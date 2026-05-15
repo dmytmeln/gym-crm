@@ -3,12 +3,15 @@ package com.gym.crm.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-public record LoginRequestDto(
+public record LoginChangeDto(
         @NotBlank(message = "Username is required")
         @Size(max = 220, message = "Username must not exceed 220 characters")
         String username,
-        @NotBlank(message = "Password is required")
+        @NotBlank(message = "Old password is required")
         @Size(min = 10, message = "Password must be at least 10 characters long")
-        String password
+        String oldPassword,
+        @NotBlank(message = "New password is required")
+        @Size(min = 10, message = "Password must be at least 10 characters long")
+        String newPassword
 ) {
 }

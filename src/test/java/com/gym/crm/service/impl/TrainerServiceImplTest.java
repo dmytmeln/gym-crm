@@ -3,6 +3,7 @@ package com.gym.crm.service.impl;
 import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.dao.TrainerDao;
 import com.gym.crm.dao.TrainingTypeDao;
+import com.gym.crm.dto.LoginChangeDto;
 import com.gym.crm.entity.Trainee;
 import com.gym.crm.entity.Trainer;
 import com.gym.crm.entity.TrainingType;
@@ -423,13 +424,14 @@ class TrainerServiceImplTest {
         Trainer trainer = buildTrainerWithId(DEFAULT_TRAINER_ID);
         String newPassword = "newPassword";
         String encodedNewPassword = "encoded-" + newPassword;
+        com.gym.crm.dto.LoginChangeDto dto = new com.gym.crm.dto.LoginChangeDto(trainer.getUser().getUsername(), "oldPassword", newPassword);
 
-        when(dao.findById(DEFAULT_TRAINER_ID)).thenReturn(Optional.of(trainer));
+        when(dao.findByUsername(trainer.getUser().getUsername())).thenReturn(Optional.of(trainer));
+        when(passwordEncoder.matches("oldPassword", trainer.getUser().getPassword())).thenReturn(true);
         when(passwordEncoder.encode(newPassword)).thenReturn(encodedNewPassword);
 
-        service.updateTrainerPassword(DEFAULT_TRAINER_ID, newPassword);
+        service.updateTrainerPassword(dto);
 
-        verify(dao).findById(DEFAULT_TRAINER_ID);
         ArgumentCaptor<Trainer> trainerCaptor = ArgumentCaptor.forClass(Trainer.class);
         verify(dao).update(trainerCaptor.capture());
         assertEquals(encodedNewPassword, trainerCaptor.getValue().getUser().getPassword());
@@ -437,25 +439,19 @@ class TrainerServiceImplTest {
 
     @Test
     void shouldThrowExceptionWhenUpdatingPasswordForUnknownTrainer() {
-        when(dao.findById(DEFAULT_TRAINER_ID)).thenReturn(Optional.empty());
+        com.gym.crm.dto.LoginChangeDto dto = new com.gym.crm.dto.LoginChangeDto("nonexistent", "oldPassword", "newPassword");
+        when(dao.findByUsername("nonexistent")).thenReturn(Optional.empty());
 
-        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> service.updateTrainerPassword(DEFAULT_TRAINER_ID, "pass"));
+        com.gym.crm.security.AuthenticationException exception = assertThrows(com.gym.crm.security.AuthenticationException.class, () -> service.updateTrainerPassword(dto));
 
-        assertEquals("Trainer not found with id: " + DEFAULT_TRAINER_ID, exception.getMessage());
+        assertEquals("Invalid username or password", exception.getMessage());
     }
 
     @Test
-    void shouldThrowNullPointerWhenUpdatingPasswordWithNullId() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.updateTrainerPassword(null, "pass"));
+    void shouldThrowNullPointerWhenUpdatingPasswordWithNullDto() {
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.updateTrainerPassword(null));
 
-        assertEquals("Trainer ID cannot be null", exception.getMessage());
-    }
-
-    @Test
-    void shouldThrowNullPointerWhenUpdatingPasswordWithNullPassword() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.updateTrainerPassword(DEFAULT_TRAINER_ID, null));
-
-        assertEquals("Password cannot be null", exception.getMessage());
+        assertEquals("LoginChangeDto cannot be null", exception.getMessage());
     }
 
     @Test

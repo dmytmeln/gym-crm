@@ -2,6 +2,7 @@ datasource:
   jdbc-url: ${DB_URL:jdbc:mysql://localhost:3306/gym_db}
   username: ${DB_USERNAME:gym}
   password: ${DB_PASSWORD:gym}
+  driver-class-name: com.mysql.cj.jdbc.Driver
 
   hikari:
     max-pool-size: 10

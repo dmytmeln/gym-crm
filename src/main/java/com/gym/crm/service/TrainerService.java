@@ -1,5 +1,6 @@
 package com.gym.crm.service;
 
+import com.gym.crm.dto.LoginChangeDto;
 import com.gym.crm.entity.Trainer;
 
 import java.util.List;
@@ -20,7 +21,7 @@ public interface TrainerService {
 
     Trainer updateTrainer(Trainer trainer);
 
-    void updateTrainerPassword(Long trainerId, String newPassword);
+    void updateTrainerPassword(LoginChangeDto loginChangeDto);
 
     void activateTrainer(Long trainerId);
 

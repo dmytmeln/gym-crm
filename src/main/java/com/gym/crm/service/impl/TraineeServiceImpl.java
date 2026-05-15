@@ -2,10 +2,12 @@ package com.gym.crm.service.impl;
 
 import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.dao.TrainerDao;
+import com.gym.crm.dto.LoginChangeDto;
 import com.gym.crm.entity.Trainee;
 import com.gym.crm.entity.Trainer;
 import com.gym.crm.entity.User;
 import com.gym.crm.exception.EntityNotFoundException;
+import com.gym.crm.security.AuthenticationException;
 import com.gym.crm.service.TraineeService;
 import com.gym.crm.service.common.ProfileCredentialGenerator;
 import com.gym.crm.transaction.Transaction;
@@ -165,23 +167,24 @@ public class TraineeServiceImpl implements TraineeService {
     }
 
     @Override
-    public void updateTraineePassword(Long traineeId, String newPassword) {
-        Objects.requireNonNull(traineeId, ID_NULL_MSG);
-        Objects.requireNonNull(newPassword, "Password cannot be null");
-        log.info("Updating password for trainee with ID: {}", traineeId);
+    public void updateTraineePassword(LoginChangeDto loginChangeDto) {
+        Objects.requireNonNull(loginChangeDto, "LoginChangeDto cannot be null");
+        log.info("Updating password for trainee with username: {}", loginChangeDto.username());
 
-        Trainee trainee = traineeDao.findById(traineeId)
-                .orElseThrow(() -> EntityNotFoundException.forId("Trainee", traineeId));
+        if (!doesUsernameAndPasswordMatch(loginChangeDto.username(), loginChangeDto.oldPassword())) {
+            throw new AuthenticationException("Invalid username or password");
+        }
 
+        Trainee trainee = getTraineeByUsername(loginChangeDto.username());
         User updatedUser = trainee.getUser().toBuilder()
-                .password(passwordEncoder.encode(newPassword))
+                .password(passwordEncoder.encode(loginChangeDto.newPassword()))
                 .build();
         Trainee updatedTrainee = trainee.toBuilder()
                 .user(updatedUser)
                 .build();
 
         traineeDao.update(updatedTrainee);
-        log.info("Password for trainee with ID: {} updated successfully", traineeId);
+        log.info("Password for trainee with username: {} updated successfully", loginChangeDto.username());
     }
 
     @Override
