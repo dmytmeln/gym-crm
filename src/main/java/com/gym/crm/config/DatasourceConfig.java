@@ -12,6 +12,7 @@ public class DatasourceConfig {
     private String jdbcUrl;
     private String username;
     private String password;
+    private String driverClassName;
     private int maxPoolSize;
     private int minIdle;
     private long connectionTimeout;
@@ -33,27 +34,32 @@ public class DatasourceConfig {
         this.password = password;
     }
 
-    @Value("${datasource.hikari.maxPoolSize:10}")
+    @Value("${datasource.driver-class-name}")
+    public void setDriverClassName(String driverClassName) {
+        this.driverClassName = driverClassName;
+    }
+
+    @Value("${datasource.hikari.max-pool-size:10}")
     public void setMaxPoolSize(int maxPoolSize) {
         this.maxPoolSize = maxPoolSize;
     }
 
-    @Value("${datasource.hikari.minIdle:2}")
+    @Value("${datasource.hikari.min-idle:2}")
     public void setMinIdle(int minIdle) {
         this.minIdle = minIdle;
     }
 
-    @Value("${datasource.hikari.connectionTimeout:30000}")
+    @Value("${datasource.hikari.connection-timeout:30000}")
     public void setConnectionTimeout(long connectionTimeout) {
         this.connectionTimeout = connectionTimeout;
     }
 
-    @Value("${datasource.hikari.idleTimeout:600000}")
+    @Value("${datasource.hikari.idle-timeout:600000}")
     public void setIdleTimeout(long idleTimeout) {
         this.idleTimeout = idleTimeout;
     }
 
-    @Value("${datasource.hikari.maxLifetime:1800000}")
+    @Value("${datasource.hikari.max-lifetime:1800000}")
     public void setMaxLifetime(long maxLifetime) {
         this.maxLifetime = maxLifetime;
     }
@@ -64,6 +70,7 @@ public class DatasourceConfig {
         config.setJdbcUrl(jdbcUrl);
         config.setUsername(username);
         config.setPassword(password);
+        config.setDriverClassName(driverClassName);
         config.setMaximumPoolSize(maxPoolSize);
         config.setMinimumIdle(minIdle);
         config.setConnectionTimeout(connectionTimeout);

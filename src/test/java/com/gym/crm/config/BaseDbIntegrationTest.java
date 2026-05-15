@@ -18,6 +18,7 @@ public abstract class BaseDbIntegrationTest {
         registry.add("datasource.jdbc-url", MY_SQL_CONTAINER::getJdbcUrl);
         registry.add("datasource.username", MY_SQL_CONTAINER::getUsername);
         registry.add("datasource.password", MY_SQL_CONTAINER::getPassword);
+        registry.add("datasource.driver-class-name", () -> "com.mysql.cj.jdbc.Driver");
     }
 
 }

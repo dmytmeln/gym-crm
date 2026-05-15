@@ -1,4 +1,0 @@
-username,firstName,lastName,password,isActive,address,dateOfBirth
-liam.miller,Liam,Miller,password123,true,123 Main St,1990-05-15
-sophia.wilson,Sophia,Wilson,password456,true,456 Oak Ave,1985-08-20
-bob.wilson,Bob,Wilson,password789,false,789 Pine Rd,1992-11-30

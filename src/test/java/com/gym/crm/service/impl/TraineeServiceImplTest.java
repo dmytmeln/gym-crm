@@ -408,11 +408,13 @@ class TraineeServiceImplTest {
         Trainee trainee = buildTraineeWithId();
         String newPassword = "newSecurePassword123";
         String encodedNewPassword = "encoded-" + newPassword;
+        com.gym.crm.dto.LoginChangeDto dto = new com.gym.crm.dto.LoginChangeDto(trainee.getUser().getUsername(), "oldPassword", newPassword);
 
-        when(dao.findById(DEFAULT_TRAINEE_ID)).thenReturn(Optional.of(trainee));
+        when(dao.findByUsername(trainee.getUser().getUsername())).thenReturn(Optional.of(trainee));
+        when(passwordEncoder.matches("oldPassword", trainee.getUser().getPassword())).thenReturn(true);
         when(passwordEncoder.encode(newPassword)).thenReturn(encodedNewPassword);
 
-        service.updateTraineePassword(DEFAULT_TRAINEE_ID, newPassword);
+        service.updateTraineePassword(dto);
 
         ArgumentCaptor<Trainee> captor = ArgumentCaptor.forClass(Trainee.class);
         verify(dao).update(captor.capture());
@@ -421,30 +423,22 @@ class TraineeServiceImplTest {
 
     @Test
     void shouldThrowEntityNotFoundWhenUpdatingPasswordForUnknownTrainee() {
-        when(dao.findById(NON_EXISTENT_TRAINEE_ID)).thenReturn(Optional.empty());
+        com.gym.crm.dto.LoginChangeDto dto = new com.gym.crm.dto.LoginChangeDto("nonexistent", "oldPassword", "newPassword");
+        when(dao.findByUsername("nonexistent")).thenReturn(Optional.empty());
 
-        EntityNotFoundException exception = assertThrows(
-                EntityNotFoundException.class,
-                () -> service.updateTraineePassword(NON_EXISTENT_TRAINEE_ID, "newPassword"));
+        com.gym.crm.security.AuthenticationException exception = assertThrows(
+                com.gym.crm.security.AuthenticationException.class,
+                () -> service.updateTraineePassword(dto));
 
-        assertEquals("Trainee not found with id: " + NON_EXISTENT_TRAINEE_ID, exception.getMessage());
-        verify(dao).findById(NON_EXISTENT_TRAINEE_ID);
+        assertEquals("Invalid username or password", exception.getMessage());
         verify(dao, never()).update(any(Trainee.class));
     }
 
     @Test
-    void shouldThrowNullPointerWhenUpdatingPasswordWithNullTraineeId() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.updateTraineePassword(null, "password"));
+    void shouldThrowNullPointerWhenUpdatingPasswordWithNullDto() {
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.updateTraineePassword(null));
 
-        assertEquals("Trainee ID cannot be null", exception.getMessage());
-        verifyNoInteractions(dao);
-    }
-
-    @Test
-    void shouldThrowNullPointerWhenUpdatingPasswordWithNullPassword() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.updateTraineePassword(DEFAULT_TRAINEE_ID, null));
-
-        assertEquals("Password cannot be null", exception.getMessage());
+        assertEquals("LoginChangeDto cannot be null", exception.getMessage());
         verifyNoInteractions(dao);
     }
 

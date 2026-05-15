@@ -1,6 +1,7 @@
 package com.gym.crm.facade;
 
-import com.gym.crm.dto.PasswordUpdateDto;
+import com.gia.openapi.model.LoginChangeRequest;
+import com.gym.crm.dto.LoginChangeDto;
 import com.gym.crm.dto.TraineeCreateDto;
 import com.gym.crm.dto.TraineeCreateResponseDto;
 import com.gym.crm.dto.TraineeResponseDto;
@@ -18,6 +19,7 @@ import com.gym.crm.entity.Trainer;
 import com.gym.crm.entity.Training;
 import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.exception.ValidationException;
+import com.gym.crm.mapper.AuthMapper;
 import com.gym.crm.mapper.TraineeMapper;
 import com.gym.crm.mapper.TrainerMapper;
 import com.gym.crm.mapper.TrainingMapper;
@@ -91,6 +93,9 @@ class GymFacadeTest {
     @Mock
     private TrainingMapper trainingMapper;
 
+    @Mock
+    private AuthMapper authMapper;
+
     private GymFacade facade;
 
     @BeforeEach
@@ -99,6 +104,7 @@ class GymFacadeTest {
         facade.setTraineeMapper(traineeMapper);
         facade.setTrainerMapper(trainerMapper);
         facade.setTrainingMapper(trainingMapper);
+        facade.setAuthMapper(authMapper);
     }
 
     @Test
@@ -384,61 +390,44 @@ class GymFacadeTest {
     }
 
     @Test
-    void shouldUpdateTraineePassword() {
-        String newPassword = "newPassword";
-        PasswordUpdateDto passwordDto = PasswordUpdateDto.builder().password(newPassword).build();
+    void shouldChangePasswordForTrainee() {
+        LoginChangeRequest request = new LoginChangeRequest(USERNAME, "oldPassword123", "newPassword123");
+        LoginChangeDto dto = new LoginChangeDto(USERNAME, "oldPassword123", "newPassword123");
 
-        doNothing().when(businessValidator).validate(passwordDto);
+        when(authMapper.toDto(request)).thenReturn(dto);
+        doNothing().when(businessValidator).validate(request);
+        doNothing().when(businessValidator).validate(dto);
 
-        facade.updateTraineePassword(USERNAME, DEFAULT_TRAINEE_ID, passwordDto);
+        facade.changePassword(USERNAME, request);
 
-        verify(businessValidator).validate(passwordDto);
-        verify(traineeService).updateTraineePassword(DEFAULT_TRAINEE_ID, newPassword);
+        verify(authMapper).toDto(request);
+        verify(businessValidator).validate(request);
+        verify(businessValidator).validate(dto);
+        verify(authenticationService).changePassword(dto);
     }
 
     @Test
-    void shouldThrowValidationExceptionWhenUpdatingTraineePasswordWithInvalidDto() {
-        String newPassword = "newPassword";
-        PasswordUpdateDto passwordDto = PasswordUpdateDto.builder().password(newPassword).build();
+    void shouldThrowValidationExceptionWhenChangingPasswordWithInvalidDto() {
+        LoginChangeRequest request = new LoginChangeRequest(USERNAME, "oldPassword", "newPassword");
+        LoginChangeDto dto = new LoginChangeDto(USERNAME, "oldPassword", "newPassword");
 
+        when(authMapper.toDto(request)).thenReturn(dto);
+        doNothing().when(businessValidator).validate(request);
         doThrow(new ValidationException("Validation error"))
-                .when(businessValidator).validate(passwordDto);
+                .when(businessValidator).validate(dto);
 
-        assertThrows(ValidationException.class, () -> facade.updateTraineePassword(USERNAME, DEFAULT_TRAINEE_ID, passwordDto));
-
-        verify(businessValidator).validate(passwordDto);
-        verifyNoInteractions(traineeService);
+        assertThrows(ValidationException.class, () -> facade.changePassword(USERNAME, request));
+        verify(businessValidator).validate(request);
+        verify(businessValidator).validate(dto);
+        verifyNoInteractions(authenticationService);
     }
 
     @Test
-    void shouldPropagateEntityNotFoundExceptionWhenUpdatingTraineePassword() {
-        String newPassword = "newPassword";
-        PasswordUpdateDto passwordDto = PasswordUpdateDto.builder().password(newPassword).build();
+    void shouldThrowNullPointerWhenChangingPasswordWithNullRequest() {
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.changePassword(USERNAME, null));
 
-        doNothing().when(businessValidator).validate(passwordDto);
-        doThrow(EntityNotFoundException.forId("Trainee", DEFAULT_TRAINEE_ID))
-                .when(traineeService).updateTraineePassword(DEFAULT_TRAINEE_ID, newPassword);
-
-        assertThrows(EntityNotFoundException.class, () -> facade.updateTraineePassword(USERNAME, DEFAULT_TRAINEE_ID, passwordDto));
-
-        verify(traineeService).updateTraineePassword(DEFAULT_TRAINEE_ID, newPassword);
-    }
-
-    @Test
-    void shouldThrowNullPointerWhenUpdatingTraineePasswordWithNullTraineeId() {
-        PasswordUpdateDto passwordDto = PasswordUpdateDto.builder().password("password").build();
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.updateTraineePassword(USERNAME, null, passwordDto));
-
-        assertEquals("Trainee ID cannot be null", exception.getMessage());
-        verifyNoInteractions(businessValidator, traineeService);
-    }
-
-    @Test
-    void shouldThrowNullPointerWhenUpdatingTraineePasswordWithNullPasswordDto() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.updateTraineePassword(USERNAME, DEFAULT_TRAINEE_ID, null));
-
-        assertEquals("PasswordUpdateDto cannot be null", exception.getMessage());
-        verifyNoInteractions(businessValidator, traineeService);
+        assertEquals("LoginChangeRequest cannot be null", exception.getMessage());
+        verifyNoInteractions(authMapper, businessValidator, authenticationService);
     }
 
     @Test
@@ -820,64 +809,6 @@ class GymFacadeTest {
 
         assertEquals("Trainee username cannot be null", exception.getMessage());
         verifyNoInteractions(trainerService, trainerMapper);
-    }
-
-    @Test
-    void shouldUpdateTrainerPassword() {
-        String newPassword = "newPassword";
-        PasswordUpdateDto passwordDto = PasswordUpdateDto.builder().password(newPassword).build();
-
-        doNothing().when(businessValidator).validate(passwordDto);
-
-        facade.updateTrainerPassword(USERNAME, DEFAULT_TRAINER_ID, passwordDto);
-
-        verify(businessValidator).validate(passwordDto);
-        verify(trainerService).updateTrainerPassword(DEFAULT_TRAINER_ID, newPassword);
-    }
-
-    @Test
-    void shouldThrowValidationExceptionWhenUpdatingTrainerPasswordWithInvalidDto() {
-        String newPassword = "newPassword";
-        PasswordUpdateDto passwordDto = PasswordUpdateDto.builder().password(newPassword).build();
-
-        doThrow(new ValidationException("Validation error"))
-                .when(businessValidator).validate(passwordDto);
-
-        assertThrows(ValidationException.class, () -> facade.updateTrainerPassword(USERNAME, DEFAULT_TRAINER_ID, passwordDto));
-
-        verify(businessValidator).validate(passwordDto);
-        verifyNoInteractions(trainerService);
-    }
-
-    @Test
-    void shouldPropagateEntityNotFoundExceptionWhenUpdatingTrainerPassword() {
-        String newPassword = "newPassword";
-        PasswordUpdateDto passwordDto = PasswordUpdateDto.builder().password(newPassword).build();
-
-        doNothing().when(businessValidator).validate(passwordDto);
-        doThrow(EntityNotFoundException.forId("Trainer", DEFAULT_TRAINER_ID))
-                .when(trainerService).updateTrainerPassword(DEFAULT_TRAINER_ID, newPassword);
-
-        assertThrows(EntityNotFoundException.class, () -> facade.updateTrainerPassword(USERNAME, DEFAULT_TRAINER_ID, passwordDto));
-
-        verify(trainerService).updateTrainerPassword(DEFAULT_TRAINER_ID, newPassword);
-    }
-
-    @Test
-    void shouldThrowNullPointerWhenUpdatingTrainerPasswordWithNullTrainerId() {
-        PasswordUpdateDto passwordDto = PasswordUpdateDto.builder().password("password").build();
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.updateTrainerPassword(USERNAME, null, passwordDto));
-
-        assertEquals("Trainer ID cannot be null", exception.getMessage());
-        verifyNoInteractions(businessValidator, trainerService);
-    }
-
-    @Test
-    void shouldThrowNullPointerWhenUpdatingTrainerPasswordWithNullPasswordDto() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.updateTrainerPassword(USERNAME, DEFAULT_TRAINER_ID, null));
-
-        assertEquals("PasswordUpdateDto cannot be null", exception.getMessage());
-        verifyNoInteractions(businessValidator, trainerService);
     }
 
     @Test

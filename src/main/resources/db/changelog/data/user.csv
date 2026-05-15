@@ -1,7 +1,7 @@
 first_name,last_name,username,password,is_active
-Liam,Miller,liam.miller,$2a$10$f2my97ZZOsTKgcJOpPRTpuNbEX4QUH6yKwLrVdHm/FpHD5b7bP.8u,true
-Sophia,Wilson,sophia.wilson,$2a$10$xZpBUZTd5h9pUtD18Cue9.yjL/qdBUXW8P/TDhnqym9aC.DOXWGYi,true
-Bob,Wilson,bob.wilson,$2a$10$eF3c7xCiyUlE6SWJ6z.62eZT34wtHPHDv5beKs8VKLF8FVCFMjAUu,false
-Marcus,Stone,marcus.stone,$2a$10$6sLy6H3mZE0vRbc0bet4T.VJ3H4F6PLEnZ7JWoKlqLkNnkoxHCeZ6,true
-Sarah,Adams,sarah.adams,$2a$10$zcHAQNyAwSXbOVV8p60X3OZySmL69U6V89WvqO3u8MdO8QZPnk6Hi,true
-Alex,Morgan,alex.morgan,$2a$10$kswtNcJ8M/rHSQMGLzj3ier3YDqqoOTEDubSCsUi2mVKF2Zg6YWcG,true
+Liam,Miller,liam.miller,$2a$10$TBu5GORg5TJMXR7sulyWP.jTe8jrnm9QESKPp6c/IvoejT06MbcOO,true
+Sophia,Wilson,sophia.wilson,$2a$10$TBu5GORg5TJMXR7sulyWP.jTe8jrnm9QESKPp6c/IvoejT06MbcOO,true
+Bob,Wilson,bob.wilson,$2a$10$TBu5GORg5TJMXR7sulyWP.jTe8jrnm9QESKPp6c/IvoejT06MbcOO,false
+Marcus,Stone,marcus.stone,$2a$10$TBu5GORg5TJMXR7sulyWP.jTe8jrnm9QESKPp6c/IvoejT06MbcOO,true
+Sarah,Adams,sarah.adams,$2a$10$TBu5GORg5TJMXR7sulyWP.jTe8jrnm9QESKPp6c/IvoejT06MbcOO,true
+Alex,Morgan,alex.morgan,$2a$10$TBu5GORg5TJMXR7sulyWP.jTe8jrnm9QESKPp6c/IvoejT06MbcOO,true

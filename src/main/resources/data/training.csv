@@ -1,5 +1,0 @@
-traineeId,trainerId,trainingName,trainingTypeName,trainingDuration,trainingDate
-1,1,Morning Cardio Session,CARDIO,60,2026-04-01
-2,2,Strength Training,STRENGTH,90,2026-04-02
-1,3,Yoga Class,YOGA,45,2026-04-03
-3,1,Evening Run,CARDIO,30,2026-04-05
