@@ -31,35 +31,34 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("${app.api.base-path}/trainees")
 @RequiredArgsConstructor
 public class TraineeRestController {
 
     private final GymFacade facade;
 
-    @PostMapping("/trainees/register")
+    @PostMapping("/register")
     public ResponseEntity<TraineeCreateResponse> registerTrainee(@Valid @RequestBody TraineeCreateRequest traineeCreateRequest) {
         return ResponseEntity.ok(facade.createTrainee(traineeCreateRequest));
     }
 
-    @GetMapping("/trainees/{username}")
+    @GetMapping("/{username}")
     public ResponseEntity<TraineeGetResponse> getTraineeProfile(@PathVariable String username) {
         return ResponseEntity.ok(facade.getTraineeByUsername(username));
     }
 
-    @GetMapping("/trainees/{username}/available-trainers")
+    @GetMapping("/{username}/available-trainers")
     public ResponseEntity<List<AssignedTrainerResponse>> getAvailableTrainers(@PathVariable String username) {
         return ResponseEntity.ok(facade.getAvailableTrainersForTrainee(username));
     }
 
-    @GetMapping("/trainees/{username}/trainings")
+    @GetMapping("/{username}/trainings")
     public ResponseEntity<List<GetTraineeTrainingResponse>> getTraineeTrainings(
             @PathVariable String username,
             @RequestParam(value = "fromDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
             @RequestParam(value = "toDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
             @RequestParam(value = "trainerName", required = false) String trainerName,
             @RequestParam(value = "trainingType", required = false) String trainingType) {
-
         TraineeTrainingSearchFilter filter = TraineeTrainingSearchFilter.builder()
                 .username(username)
                 .fromDate(fromDate)
@@ -71,30 +70,29 @@ public class TraineeRestController {
         return ResponseEntity.ok(facade.getTraineeTrainingsByCriteria(username, filter));
     }
 
-    @PutMapping("/trainees/{username}")
+    @PutMapping("/{username}")
     public ResponseEntity<TraineeUpdateResponse> updateTraineeProfile(
             @PathVariable String username,
             @Valid @RequestBody TraineeUpdateRequest traineeUpdateRequest) {
         return ResponseEntity.ok(facade.updateTrainee(username, traineeUpdateRequest));
     }
 
-    @PutMapping("/trainees/{username}/trainers")
+    @PutMapping("/{username}/trainers")
     public ResponseEntity<TraineeAssignedTrainersUpdateResponse> updateTraineeTrainers(
             @PathVariable String username,
             @Valid @RequestBody TraineeAssignedTrainersUpdateRequest traineeAssignedTrainersUpdateRequest) {
         return ResponseEntity.ok(facade.updateTraineeTrainers(username, traineeAssignedTrainersUpdateRequest));
     }
 
-    @PatchMapping("/trainees/{username}/activation")
+    @PatchMapping("/{username}/activation")
     public ResponseEntity<Void> changeTraineeActivationStatus(
             @PathVariable String username,
             @Valid @RequestBody ActivationStatusRequest activationStatusRequest) {
-
         facade.updateTraineeActivationStatus(username, activationStatusRequest);
         return ResponseEntity.ok().build();
     }
 
-    @DeleteMapping("/trainees/{username}")
+    @DeleteMapping("/{username}")
     public ResponseEntity<Void> deleteTraineeProfile(@PathVariable String username) {
         facade.deleteTraineeByUsername(username);
         return ResponseEntity.ok().build();

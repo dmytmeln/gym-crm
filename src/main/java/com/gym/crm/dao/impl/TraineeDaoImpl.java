@@ -1,11 +1,8 @@
 package com.gym.crm.dao.impl;
 
 import com.gym.crm.dao.TraineeDao;
-import com.gym.crm.dao.helper.TraineeTrainingCriteriaBuilder;
-import com.gym.crm.dto.filter.TraineeTrainingSearchFilter;
 import com.gym.crm.entity.Trainee;
 import com.gym.crm.entity.Trainer;
-import com.gym.crm.entity.Training;
 import com.gym.crm.transaction.TransactionManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -16,10 +13,9 @@ import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
-public class HibernateTraineeDao implements TraineeDao {
+public class TraineeDaoImpl implements TraineeDao {
 
     private final TransactionManager transactionManager;
-    private final TraineeTrainingCriteriaBuilder traineeTrainingCriteriaBuilder;
 
     @Override
     public Trainee save(Trainee entity) {
@@ -81,12 +77,7 @@ public class HibernateTraineeDao implements TraineeDao {
     }
 
     @Override
-    public List<Training> findTrainingsByCriteria(TraineeTrainingSearchFilter filter) {
-        return transactionManager.executeReturningWithinTx(session -> traineeTrainingCriteriaBuilder.findTrainings(session, filter));
-    }
-
-    @Override
-    public List<Trainer> findAvailableTrainers(String traineeUsername) {
+    public List<Trainer> findTraineeAvailableTrainers(String traineeUsername) {
         return transactionManager.executeReturningWithinTx(session -> session
                 .createQuery("""
                                 SELECT t FROM Trainer t LEFT JOIN FETCH t.user LEFT JOIN FETCH t.specialization
@@ -98,13 +89,13 @@ public class HibernateTraineeDao implements TraineeDao {
     }
 
     @Override
-    public List<Trainer> findTrainersByUsernames(List<String> usernames) {
-        if (usernames == null || usernames.isEmpty()) {
+    public List<Trainer> findTraineeTrainersByUsernames(List<String> trainerUsernames) {
+        if (trainerUsernames == null || trainerUsernames.isEmpty()) {
             return List.of();
         }
         return transactionManager.executeReturningWithinTx(session -> session
                 .createQuery("SELECT t FROM Trainer t JOIN FETCH t.user WHERE t.user.username IN (:usernames)", Trainer.class)
-                .setParameter("usernames", usernames)
+                .setParameter("usernames", trainerUsernames)
                 .getResultList());
     }
 

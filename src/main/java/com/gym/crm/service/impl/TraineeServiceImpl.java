@@ -1,6 +1,7 @@
 package com.gym.crm.service.impl;
 
 import com.gym.crm.dao.TraineeDao;
+import com.gym.crm.dao.TrainingDao;
 import com.gym.crm.dto.LoginChangeDto;
 import com.gym.crm.dto.filter.TraineeTrainingSearchFilter;
 import com.gym.crm.entity.Trainee;
@@ -28,12 +29,18 @@ public class TraineeServiceImpl implements TraineeService {
     private static final String USERNAME_NULL_MSG = "Trainee username cannot be null";
 
     private TraineeDao traineeDao;
+    private TrainingDao trainingDao;
     private ProfileCredentialGenerator credentialGenerator;
     private PasswordEncoder passwordEncoder;
 
     @Autowired
     public void setTraineeDao(TraineeDao traineeDao) {
         this.traineeDao = traineeDao;
+    }
+
+    @Autowired
+    public void setTrainingDao(TrainingDao trainingDao) {
+        this.trainingDao = trainingDao;
     }
 
     @Autowired
@@ -85,7 +92,7 @@ public class TraineeServiceImpl implements TraineeService {
         traineeDao.findByUsername(username)
                 .orElseThrow(() -> EntityNotFoundException.forUsername("Trainee", username));
 
-        return traineeDao.findAvailableTrainers(username);
+        return traineeDao.findTraineeAvailableTrainers(username);
     }
 
     @Override
@@ -93,7 +100,7 @@ public class TraineeServiceImpl implements TraineeService {
         Objects.requireNonNull(filter, "Filter cannot be null");
         log.info("Getting trainings by criteria for trainee: {}", filter.getUsername());
 
-        return traineeDao.findTrainingsByCriteria(filter);
+        return trainingDao.findTraineeTrainingsByCriteria(filter);
     }
 
     @Override
@@ -156,7 +163,7 @@ public class TraineeServiceImpl implements TraineeService {
 
         Trainee trainee = traineeDao.findByUsername(username)
                 .orElseThrow(() -> EntityNotFoundException.forUsername("Trainee", username));
-        List<Trainer> trainers = traineeDao.findTrainersByUsernames(trainerUsernames);
+        List<Trainer> trainers = traineeDao.findTraineeTrainersByUsernames(trainerUsernames);
 
         if (trainers.size() != trainerUsernames.size()) {
             log.warn("Some trainers were not found for usernames: {}", trainerUsernames);

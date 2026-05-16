@@ -1,9 +1,7 @@
 package com.gym.crm.dao;
 
-import com.gym.crm.dto.filter.TraineeTrainingSearchFilter;
 import com.gym.crm.entity.Trainee;
 import com.gym.crm.entity.Trainer;
-import com.gym.crm.entity.Training;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,11 +16,9 @@ public interface TraineeDao {
 
     List<Trainee> findAll();
 
-    List<Training> findTrainingsByCriteria(TraineeTrainingSearchFilter filter);
+    List<Trainer> findTraineeAvailableTrainers(String traineeUsername);
 
-    List<Trainer> findAvailableTrainers(String traineeUsername);
-
-    List<Trainer> findTrainersByUsernames(List<String> usernames);
+    List<Trainer> findTraineeTrainersByUsernames(List<String> trainerUsernames);
 
     Trainee update(Trainee entity);
 

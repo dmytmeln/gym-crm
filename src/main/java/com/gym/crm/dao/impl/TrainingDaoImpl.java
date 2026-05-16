@@ -1,7 +1,9 @@
 package com.gym.crm.dao.impl;
 
 import com.gym.crm.dao.TrainingDao;
+import com.gym.crm.dao.helper.TraineeTrainingCriteriaBuilder;
 import com.gym.crm.dao.helper.TrainerTrainingCriteriaBuilder;
+import com.gym.crm.dto.filter.TraineeTrainingSearchFilter;
 import com.gym.crm.dto.filter.TrainerTrainingSearchFilter;
 import com.gym.crm.entity.Training;
 import com.gym.crm.transaction.TransactionManager;
@@ -14,10 +16,11 @@ import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
-public class HibernateTrainingDao implements TrainingDao {
+public class TrainingDaoImpl implements TrainingDao {
 
     private final TransactionManager transactionManager;
     private final TrainerTrainingCriteriaBuilder trainerTrainingCriteriaBuilder;
+    private final TraineeTrainingCriteriaBuilder traineeTrainingCriteriaBuilder;
 
     @Override
     public Training save(Training entity) {
@@ -53,6 +56,11 @@ public class HibernateTrainingDao implements TrainingDao {
     @Override
     public List<Training> findAllByTrainerCriteria(TrainerTrainingSearchFilter filter) {
         return transactionManager.executeReturningWithinTx(session -> trainerTrainingCriteriaBuilder.findTrainings(session, filter));
+    }
+
+    @Override
+    public List<Training> findTraineeTrainingsByCriteria(TraineeTrainingSearchFilter filter) {
+        return transactionManager.executeReturningWithinTx(session -> traineeTrainingCriteriaBuilder.findTrainings(session, filter));
     }
 
 }

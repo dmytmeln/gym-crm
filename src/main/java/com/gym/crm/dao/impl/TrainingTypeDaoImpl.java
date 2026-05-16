@@ -11,7 +11,7 @@ import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
-public class HibernateTrainingTypeDao implements TrainingTypeDao {
+public class TrainingTypeDaoImpl implements TrainingTypeDao {
 
     private final TransactionManager transactionManager;
 

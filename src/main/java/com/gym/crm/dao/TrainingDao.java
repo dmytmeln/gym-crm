@@ -1,5 +1,6 @@
 package com.gym.crm.dao;
 
+import com.gym.crm.dto.filter.TraineeTrainingSearchFilter;
 import com.gym.crm.dto.filter.TrainerTrainingSearchFilter;
 import com.gym.crm.entity.Training;
 
@@ -15,5 +16,7 @@ public interface TrainingDao {
     List<Training> findAll();
 
     List<Training> findAllByTrainerCriteria(TrainerTrainingSearchFilter filter);
+
+    List<Training> findTraineeTrainingsByCriteria(TraineeTrainingSearchFilter filter);
 
 }

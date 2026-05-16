@@ -12,7 +12,7 @@ import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
-public class HibernateTrainerDao implements TrainerDao {
+public class TrainerDaoImpl implements TrainerDao {
 
     private final TransactionManager transactionManager;
 

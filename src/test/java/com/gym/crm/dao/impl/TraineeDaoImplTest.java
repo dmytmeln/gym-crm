@@ -1,7 +1,5 @@
 package com.gym.crm.dao.impl;
 
-import com.gym.crm.dao.helper.TraineeTrainingCriteriaBuilder;
-import com.gym.crm.dto.filter.TraineeTrainingSearchFilter;
 import com.gym.crm.entity.Trainee;
 import com.gym.crm.entity.Trainer;
 import com.gym.crm.entity.Training;
@@ -21,8 +19,8 @@ import static com.gym.crm.test.helper.EntityRecursiveComparisonConfigs.getTraini
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@SpringJUnitConfig({HibernateTraineeDao.class, TraineeTrainingCriteriaBuilder.class})
-class HibernateTraineeDaoTest extends AbstractDaoTest<HibernateTraineeDao> {
+@SpringJUnitConfig(TraineeDaoImpl.class)
+class TraineeDaoImplTest extends AbstractDaoTest<TraineeDaoImpl> {
 
     private static final long EXISTING_ID = 1L;
     private static final long EXISTING_USER_ID = 1L;
@@ -323,59 +321,12 @@ class HibernateTraineeDaoTest extends AbstractDaoTest<HibernateTraineeDao> {
     }
 
     @Test
-    void shouldFindTrainingsByCriteriaWithAllFilters() {
-        TraineeTrainingSearchFilter filter = TraineeTrainingSearchFilter.builder()
-                .username("liam.miller")
-                .fromDate(LocalDate.of(2025, 1, 1))
-                .toDate(LocalDate.of(2025, 1, 31))
-                .trainerName("Marcus Stone")
-                .trainingTypeName("CARDIO")
-                .build();
-        Training expected = testDbClient.findTraining(1L);
-
-        List<Training> actual = dao.findTrainingsByCriteria(filter);
-
-        assertThat(actual).hasSize(1);
-        assertThat(actual.get(0))
-                .usingRecursiveComparison(getTrainingConfigForExisting())
-                .isEqualTo(expected);
-    }
-
-    @Test
-    void shouldFindTrainingsByCriteriaWithPartialFilters() {
-        TraineeTrainingSearchFilter filter = TraineeTrainingSearchFilter.builder()
-                .username("sophia.wilson")
-                .trainingTypeName("STRENGTH")
-                .build();
-        Training expected = testDbClient.findTraining(2L);
-
-        List<Training> actual = dao.findTrainingsByCriteria(filter);
-
-        assertThat(actual).hasSize(1);
-        assertThat(actual.get(0))
-                .usingRecursiveComparison(getTrainingConfigForExisting())
-                .isEqualTo(expected);
-    }
-
-    @Test
-    void shouldReturnEmptyListWhenNoTrainingsMatchCriteria() {
-        TraineeTrainingSearchFilter filter = TraineeTrainingSearchFilter.builder()
-                .username("liam.miller")
-                .trainerName("Sarah Adams")
-                .build();
-
-        List<Training> actual = dao.findTrainingsByCriteria(filter);
-
-        assertThat(actual).isEmpty();
-    }
-
-    @Test
-    void shouldFindAvailableTrainers() {
+    void shouldFindTraineeAvailableTrainers() {
         List<Trainer> expected = List.of(
                 Trainer.builder().id(2L).build(),
                 Trainer.builder().id(3L).build());
 
-        List<Trainer> actual = dao.findAvailableTrainers(EXISTING_USERNAME);
+        List<Trainer> actual = dao.findTraineeAvailableTrainers(EXISTING_USERNAME);
 
         assertThat(actual)
                 .hasSize(2)

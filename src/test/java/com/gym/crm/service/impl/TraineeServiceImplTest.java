@@ -1,6 +1,7 @@
 package com.gym.crm.service.impl;
 
 import com.gym.crm.dao.TraineeDao;
+import com.gym.crm.dao.TrainingDao;
 import com.gym.crm.dto.LoginChangeDto;
 import com.gym.crm.dto.filter.TraineeTrainingSearchFilter;
 import com.gym.crm.entity.Trainee;
@@ -52,6 +53,9 @@ class TraineeServiceImplTest {
     private TraineeDao dao;
 
     @Mock
+    private TrainingDao trainingDao;
+
+    @Mock
     private ProfileCredentialGenerator generator;
 
     @Mock
@@ -63,6 +67,7 @@ class TraineeServiceImplTest {
     void setUp() {
         TraineeServiceImpl implementation = new TraineeServiceImpl();
         implementation.setTraineeDao(dao);
+        implementation.setTrainingDao(trainingDao);
         implementation.setCredentialGenerator(generator);
         implementation.setPasswordEncoder(passwordEncoder);
         service = implementation;
@@ -148,12 +153,12 @@ class TraineeServiceImplTest {
         Trainee trainee = buildTraineeWithUsername(DEFAULT_USERNAME);
 
         when(dao.findByUsername(DEFAULT_USERNAME)).thenReturn(Optional.of(trainee));
-        when(dao.findAvailableTrainers(DEFAULT_USERNAME)).thenReturn(expected);
+        when(dao.findTraineeAvailableTrainers(DEFAULT_USERNAME)).thenReturn(expected);
 
         List<Trainer> actual = service.getAvailableTrainers(DEFAULT_USERNAME);
 
         assertEquals(expected, actual);
-        verify(dao).findAvailableTrainers(DEFAULT_USERNAME);
+        verify(dao).findTraineeAvailableTrainers(DEFAULT_USERNAME);
     }
 
     @Test
@@ -169,12 +174,12 @@ class TraineeServiceImplTest {
         when(filter.getUsername()).thenReturn(DEFAULT_USERNAME);
         List<Training> expected = List.of();
 
-        when(dao.findTrainingsByCriteria(filter)).thenReturn(expected);
+        when(trainingDao.findTraineeTrainingsByCriteria(filter)).thenReturn(expected);
 
         List<Training> actual = service.getTrainingsByCriteria(filter);
 
         assertEquals(expected, actual);
-        verify(dao).findTrainingsByCriteria(filter);
+        verify(trainingDao).findTraineeTrainingsByCriteria(filter);
     }
 
     @Test
@@ -258,14 +263,14 @@ class TraineeServiceImplTest {
         List<String> trainerUsernames = List.of("trainer1");
 
         when(dao.findByUsername(DEFAULT_USERNAME)).thenReturn(Optional.of(trainee));
-        when(dao.findTrainersByUsernames(trainerUsernames)).thenReturn(List.of(trainer1));
+        when(dao.findTraineeTrainersByUsernames(trainerUsernames)).thenReturn(List.of(trainer1));
         when(dao.update(any(Trainee.class))).thenReturn(trainee);
 
         Trainee result = service.updateTraineeTrainers(DEFAULT_USERNAME, trainerUsernames);
 
         assertNotNull(result);
         verify(dao).findByUsername(DEFAULT_USERNAME);
-        verify(dao).findTrainersByUsernames(trainerUsernames);
+        verify(dao).findTraineeTrainersByUsernames(trainerUsernames);
         verify(dao).update(any(Trainee.class));
     }
 
@@ -276,14 +281,14 @@ class TraineeServiceImplTest {
         List<String> trainerUsernames = List.of("trainer1", "nonexistent_trainer");
 
         when(dao.findByUsername(DEFAULT_USERNAME)).thenReturn(Optional.of(trainee));
-        when(dao.findTrainersByUsernames(trainerUsernames)).thenReturn(List.of(trainer1));
+        when(dao.findTraineeTrainersByUsernames(trainerUsernames)).thenReturn(List.of(trainer1));
         when(dao.update(any(Trainee.class))).thenReturn(trainee);
 
         Trainee result = service.updateTraineeTrainers(DEFAULT_USERNAME, trainerUsernames);
 
         assertNotNull(result);
         verify(dao).findByUsername(DEFAULT_USERNAME);
-        verify(dao).findTrainersByUsernames(trainerUsernames);
+        verify(dao).findTraineeTrainersByUsernames(trainerUsernames);
         verify(dao).update(any(Trainee.class));
     }
 
@@ -297,7 +302,7 @@ class TraineeServiceImplTest {
                 () -> service.updateTraineeTrainers(DEFAULT_USERNAME, trainerUsernames));
 
         assertEquals("Trainee not found with username: " + DEFAULT_USERNAME, exception.getMessage());
-        verify(dao, never()).findTrainersByUsernames(any());
+        verify(dao, never()).findTraineeTrainersByUsernames(any());
         verify(dao, never()).update(any(Trainee.class));
     }
 

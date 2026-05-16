@@ -44,7 +44,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(MockitoExtension.class)
 class TraineeRestControllerTest {
 
-    private static final String BASE_PATH = "/api/v1/trainees";
+    private static final String BASE_PATH = "/api/v1";
     private static final String USERNAME = "liam.miller";
     private static final String FIRST_NAME = "Liam";
     private static final String LAST_NAME = "Miller";
@@ -70,6 +70,7 @@ class TraineeRestControllerTest {
 
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setValidator(validatorFactoryBean)
+                .addPlaceholderValue("app.api.base-path", BASE_PATH)
                 .build();
     }
 
@@ -82,7 +83,7 @@ class TraineeRestControllerTest {
 
         when(facade.createTrainee(any(TraineeCreateRequest.class))).thenReturn(response);
 
-        String content = mockMvc.perform(post(BASE_PATH + "/register")
+        String content = mockMvc.perform(post(BASE_PATH + "/trainees/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isOk())
@@ -100,7 +101,7 @@ class TraineeRestControllerTest {
     void shouldFailRegisterTraineeWhenFirstNameIsNull() throws Exception {
         TraineeCreateRequest invalidRequest = buildTraineeCreateRequest(null, LAST_NAME);
 
-        mockMvc.perform(post(BASE_PATH + "/register")
+        mockMvc.perform(post(BASE_PATH + "/trainees/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest());
@@ -112,7 +113,7 @@ class TraineeRestControllerTest {
     void shouldFailRegisterTraineeWhenLastNameIsNull() throws Exception {
         TraineeCreateRequest invalidRequest = buildTraineeCreateRequest(FIRST_NAME, null);
 
-        mockMvc.perform(post(BASE_PATH + "/register")
+        mockMvc.perform(post(BASE_PATH + "/trainees/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest());
@@ -129,7 +130,7 @@ class TraineeRestControllerTest {
 
         when(facade.getTraineeByUsername(USERNAME)).thenReturn(response);
 
-        String content = mockMvc.perform(get(BASE_PATH + "/{username}", USERNAME))
+        String content = mockMvc.perform(get(BASE_PATH + "/trainees/{username}", USERNAME))
                 .andExpect(status().isOk())
                 .andReturn()
                 .getResponse()
@@ -152,7 +153,7 @@ class TraineeRestControllerTest {
 
         when(facade.getAvailableTrainersForTrainee(USERNAME)).thenReturn(List.of(trainerResponse));
 
-        String content = mockMvc.perform(get(BASE_PATH + "/{username}/available-trainers", USERNAME))
+        String content = mockMvc.perform(get(BASE_PATH + "/trainees/{username}/available-trainers", USERNAME))
                 .andExpect(status().isOk())
                 .andReturn()
                 .getResponse()
@@ -178,7 +179,7 @@ class TraineeRestControllerTest {
 
         when(facade.getTraineeTrainingsByCriteria(eq(USERNAME), any())).thenReturn(List.of(trainingResponse));
 
-        String content = mockMvc.perform(get(BASE_PATH + "/{username}/trainings", USERNAME)
+        String content = mockMvc.perform(get(BASE_PATH + "/trainees/{username}/trainings", USERNAME)
                         .param("fromDate", "2025-07-01")
                         .param("toDate", "2025-07-31")
                         .param("trainerName", "ronnie.coleman")
@@ -201,7 +202,7 @@ class TraineeRestControllerTest {
     void shouldGetTraineeTrainingsWithNoOptionalFilters() throws Exception {
         when(facade.getTraineeTrainingsByCriteria(eq(USERNAME), any())).thenReturn(List.of());
 
-        mockMvc.perform(get(BASE_PATH + "/{username}/trainings", USERNAME))
+        mockMvc.perform(get(BASE_PATH + "/trainees/{username}/trainings", USERNAME))
                 .andExpect(status().isOk());
 
         verify(facade).getTraineeTrainingsByCriteria(eq(USERNAME), any());
@@ -218,7 +219,7 @@ class TraineeRestControllerTest {
 
         when(facade.updateTrainee(eq(USERNAME), any(TraineeUpdateRequest.class))).thenReturn(response);
 
-        String content = mockMvc.perform(put(BASE_PATH + "/{username}", USERNAME)
+        String content = mockMvc.perform(put(BASE_PATH + "/trainees/{username}", USERNAME)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isOk())
@@ -237,7 +238,7 @@ class TraineeRestControllerTest {
     void shouldFailUpdateTraineeProfileWhenFirstNameIsNull() throws Exception {
         TraineeUpdateRequest invalidRequest = buildTraineeUpdateRequest(null, LAST_NAME);
 
-        mockMvc.perform(put(BASE_PATH + "/{username}", USERNAME)
+        mockMvc.perform(put(BASE_PATH + "/trainees/{username}", USERNAME)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest());
@@ -249,7 +250,7 @@ class TraineeRestControllerTest {
     void shouldFailUpdateTraineeProfileWhenLastNameIsNull() throws Exception {
         TraineeUpdateRequest invalidRequest = buildTraineeUpdateRequest(FIRST_NAME, null);
 
-        mockMvc.perform(put(BASE_PATH + "/{username}", USERNAME)
+        mockMvc.perform(put(BASE_PATH + "/trainees/{username}", USERNAME)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest());
@@ -263,7 +264,7 @@ class TraineeRestControllerTest {
         invalidRequest.firstName(FIRST_NAME);
         invalidRequest.lastName(LAST_NAME);
 
-        mockMvc.perform(put(BASE_PATH + "/{username}", USERNAME)
+        mockMvc.perform(put(BASE_PATH + "/trainees/{username}", USERNAME)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest());
@@ -284,7 +285,7 @@ class TraineeRestControllerTest {
 
         when(facade.updateTraineeTrainers(eq(USERNAME), any())).thenReturn(response);
 
-        String content = mockMvc.perform(put(BASE_PATH + "/{username}/trainers", USERNAME)
+        String content = mockMvc.perform(put(BASE_PATH + "/trainees/{username}/trainers", USERNAME)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isOk())
@@ -304,7 +305,7 @@ class TraineeRestControllerTest {
         TraineeAssignedTrainersUpdateRequest invalidRequest = new TraineeAssignedTrainersUpdateRequest();
         invalidRequest.setTrainerUsernames(null);
 
-        mockMvc.perform(put(BASE_PATH + "/{username}/trainers", USERNAME)
+        mockMvc.perform(put(BASE_PATH + "/trainees/{username}/trainers", USERNAME)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest());
@@ -316,7 +317,7 @@ class TraineeRestControllerTest {
     void shouldFailUpdateTraineeTrainersWhenTrainerUsernamesIsEmpty() throws Exception {
         TraineeAssignedTrainersUpdateRequest invalidRequest = buildTraineeAssignedTrainersUpdateRequest(List.of());
 
-        mockMvc.perform(put(BASE_PATH + "/{username}/trainers", USERNAME)
+        mockMvc.perform(put(BASE_PATH + "/trainees/{username}/trainers", USERNAME)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest());
@@ -328,7 +329,7 @@ class TraineeRestControllerTest {
     void shouldChangeTraineeActivationStatusWhenRequestIsValid() throws Exception {
         ActivationStatusRequest validRequest = new ActivationStatusRequest(true);
 
-        mockMvc.perform(patch(BASE_PATH + "/{username}/activation", USERNAME)
+        mockMvc.perform(patch(BASE_PATH + "/trainees/{username}/activation", USERNAME)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isOk());
@@ -341,7 +342,7 @@ class TraineeRestControllerTest {
         ActivationStatusRequest invalidRequest = new ActivationStatusRequest();
         invalidRequest.setIsActive(null);
 
-        mockMvc.perform(patch(BASE_PATH + "/{username}/activation", USERNAME)
+        mockMvc.perform(patch(BASE_PATH + "/trainees/{username}/activation", USERNAME)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest());
@@ -351,7 +352,7 @@ class TraineeRestControllerTest {
 
     @Test
     void shouldDeleteTraineeProfileWhenUsernameIsValid() throws Exception {
-        mockMvc.perform(delete(BASE_PATH + "/{username}", USERNAME))
+        mockMvc.perform(delete(BASE_PATH + "/trainees/{username}", USERNAME))
                 .andExpect(status().isOk());
 
         verify(facade).deleteTraineeByUsername(USERNAME);

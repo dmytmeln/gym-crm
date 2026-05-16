@@ -17,8 +17,8 @@ import static com.gym.crm.test.helper.EntityRecursiveComparisonConfigs.getTraini
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@SpringJUnitConfig(HibernateTrainerDao.class)
-class HibernateTrainerDaoTest extends AbstractDaoTest<HibernateTrainerDao> {
+@SpringJUnitConfig(TrainerDaoImpl.class)
+class TrainerDaoImplTest extends AbstractDaoTest<TrainerDaoImpl> {
 
     private static final long EXISTING_ID = 1L;
     private static final long EXISTING_USER_ID = 4L;
