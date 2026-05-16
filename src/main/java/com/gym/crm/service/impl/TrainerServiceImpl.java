@@ -1,9 +1,12 @@
 package com.gym.crm.service.impl;
 
 import com.gym.crm.dao.TrainerDao;
+import com.gym.crm.dao.TrainingDao;
 import com.gym.crm.dao.TrainingTypeDao;
 import com.gym.crm.dto.LoginChangeDto;
+import com.gym.crm.dto.filter.TrainerTrainingSearchFilter;
 import com.gym.crm.entity.Trainer;
+import com.gym.crm.entity.Training;
 import com.gym.crm.entity.TrainingType;
 import com.gym.crm.entity.User;
 import com.gym.crm.exception.EntityNotFoundException;
@@ -24,10 +27,11 @@ import java.util.Optional;
 @Service
 public class TrainerServiceImpl implements TrainerService {
 
-    private static final String ID_NULL_MSG = "Trainer ID cannot be null";
+    private static final String USERNAME_NULL_MSG = "Trainer username cannot be null";
 
     private TrainerDao trainerDao;
     private TrainingTypeDao trainingTypeDao;
+    private TrainingDao trainingDao;
     private ProfileCredentialGenerator credentialGenerator;
     private PasswordEncoder passwordEncoder;
 
@@ -37,13 +41,18 @@ public class TrainerServiceImpl implements TrainerService {
     }
 
     @Autowired
-    public void setCredentialGenerator(ProfileCredentialGenerator credentialGenerator) {
-        this.credentialGenerator = credentialGenerator;
+    public void setTrainingTypeDao(TrainingTypeDao trainingTypeDao) {
+        this.trainingTypeDao = trainingTypeDao;
     }
 
     @Autowired
-    public void setTrainingTypeDao(TrainingTypeDao trainingTypeDao) {
-        this.trainingTypeDao = trainingTypeDao;
+    public void setTrainingDao(TrainingDao trainingDao) {
+        this.trainingDao = trainingDao;
+    }
+
+    @Autowired
+    public void setCredentialGenerator(ProfileCredentialGenerator credentialGenerator) {
+        this.credentialGenerator = credentialGenerator;
     }
 
     @Autowired
@@ -57,8 +66,9 @@ public class TrainerServiceImpl implements TrainerService {
         Objects.requireNonNull(trainer.getUser(), "Trainer user cannot be null");
         log.info("Creating trainer: {} {}", trainer.getUser().getFirstName(), trainer.getUser().getLastName());
 
-        TrainingType trainerSpecialization = trainingTypeDao.findById(trainer.getSpecialization().getId())
-                .orElseThrow(() -> EntityNotFoundException.forId("TrainingType", trainer.getSpecialization().getId()));
+        String trainingTypeName = trainer.getSpecialization().getTrainingTypeName();
+        TrainingType trainerSpecialization = trainingTypeDao.findByName(trainingTypeName)
+                .orElseThrow(() -> EntityNotFoundException.forName("TrainingType", trainingTypeName));
 
         String username = credentialGenerator.generateUsername(trainer.getUser().getFirstName(), trainer.getUser().getLastName());
         String password = credentialGenerator.generatePassword();
@@ -80,29 +90,24 @@ public class TrainerServiceImpl implements TrainerService {
     }
 
     @Override
-    public Trainer getTrainer(Long trainerId) {
-        Objects.requireNonNull(trainerId, ID_NULL_MSG);
-
-        return trainerDao.findById(trainerId)
-                .orElseThrow(() -> EntityNotFoundException.forId("Trainer", trainerId));
-    }
-
-    @Override
     public Trainer getTrainerByUsername(String username) {
-        Objects.requireNonNull(username, "Trainer username cannot be null");
+        Objects.requireNonNull(username, USERNAME_NULL_MSG);
 
         return trainerDao.findByUsername(username)
                 .orElseThrow(() -> EntityNotFoundException.forUsername("Trainer", username));
     }
 
     @Override
-    public List<Trainer> getAllTrainers() {
-        return trainerDao.findAll();
+    public List<Training> getTrainerTrainings(TrainerTrainingSearchFilter filter) {
+        Objects.requireNonNull(filter, "Filter cannot be null");
+        log.info("Getting trainings for trainer with username: {}", filter.getUsername());
+
+        return trainingDao.findTrainerTrainingsByCriteria(filter);
     }
 
     @Override
     public boolean doesUsernameAndPasswordMatch(String username, String password) {
-        Objects.requireNonNull(username, "Trainer username cannot be null");
+        Objects.requireNonNull(username, USERNAME_NULL_MSG);
         Objects.requireNonNull(password, "Password cannot be null");
         log.info("Checking if username and password match for trainer username: {}", username);
 
@@ -128,18 +133,11 @@ public class TrainerServiceImpl implements TrainerService {
     public Trainer updateTrainer(Trainer trainer) {
         Objects.requireNonNull(trainer, "Trainer cannot be null");
         Objects.requireNonNull(trainer.getUser(), "Trainer user cannot be null");
-        Objects.requireNonNull(trainer.getId(), ID_NULL_MSG);
-        log.info("Updating trainer with ID: {}", trainer.getId());
+        Objects.requireNonNull(trainer.getUser().getUsername(), USERNAME_NULL_MSG);
+        log.info("Updating trainer with username: {}", trainer.getUser().getUsername());
 
-        Trainer existingTrainer = trainerDao.findById(trainer.getId())
-                .orElseThrow(() -> EntityNotFoundException.forId("Trainer", trainer.getId()));
-
-        boolean hasSpecializationChanged = !Objects.equals(existingTrainer.getSpecialization().getId(), trainer.getSpecialization().getId());
-        if (hasSpecializationChanged) {
-            TrainingType trainerSpecialization = trainingTypeDao.findById(trainer.getSpecialization().getId())
-                    .orElseThrow(() -> EntityNotFoundException.forId("TrainingType", trainer.getSpecialization().getId()));
-            existingTrainer.setSpecialization(trainerSpecialization);
-        }
+        Trainer existingTrainer = trainerDao.findByUsername(trainer.getUser().getUsername())
+                .orElseThrow(() -> EntityNotFoundException.forUsername("Trainer", trainer.getUser().getUsername()));
 
         User updatedUser = existingTrainer.getUser().toBuilder()
                 .firstName(trainer.getUser().getFirstName())
@@ -179,47 +177,27 @@ public class TrainerServiceImpl implements TrainerService {
     }
 
     @Override
-    public void activateTrainer(Long trainerId) {
-        Objects.requireNonNull(trainerId, ID_NULL_MSG);
-        log.info("Activating trainer with ID: {}", trainerId);
-        Trainer trainer = trainerDao.findById(trainerId)
-                .orElseThrow(() -> EntityNotFoundException.forId("Trainer", trainerId));
+    public void updateActivationStatus(String username, boolean isActive) {
+        Objects.requireNonNull(username, USERNAME_NULL_MSG);
+        log.info("Updating activation status for trainer with username: {} to {}", username, isActive);
 
-        if (trainer.getUser().getIsActive()) {
-            throw new IllegalStateException("Trainer is already active");
+        Trainer trainer = trainerDao.findByUsername(username)
+                .orElseThrow(() -> EntityNotFoundException.forUsername("Trainer", username));
+
+        if (trainer.getUser().getIsActive() == isActive) {
+            log.warn("Trainer with username: {} is already {}", username, isActive ? "active" : "inactive");
+            return;
         }
 
         User updatedUser = trainer.getUser().toBuilder()
-                .isActive(true)
+                .isActive(isActive)
                 .build();
         Trainer updatedTrainer = trainer.toBuilder()
                 .user(updatedUser)
                 .build();
 
         trainerDao.update(updatedTrainer);
-        log.info("Trainer with ID: {} activated successfully", trainerId);
-    }
-
-    @Override
-    public void deactivateTrainer(Long trainerId) {
-        Objects.requireNonNull(trainerId, ID_NULL_MSG);
-        log.info("Deactivating trainer with ID: {}", trainerId);
-        Trainer trainer = trainerDao.findById(trainerId)
-                .orElseThrow(() -> EntityNotFoundException.forId("Trainer", trainerId));
-
-        if (!trainer.getUser().getIsActive()) {
-            throw new IllegalStateException("Trainer is already deactivated");
-        }
-
-        User updatedUser = trainer.getUser().toBuilder()
-                .isActive(false)
-                .build();
-        Trainer updatedTrainer = trainer.toBuilder()
-                .user(updatedUser)
-                .build();
-
-        trainerDao.update(updatedTrainer);
-        log.info("Trainer with ID: {} deactivated successfully", trainerId);
+        log.info("Activation status for trainer with username: {} updated successfully", username);
     }
 
 }

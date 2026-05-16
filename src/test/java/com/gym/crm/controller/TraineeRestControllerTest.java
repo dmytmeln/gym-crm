@@ -177,7 +177,7 @@ class TraineeRestControllerTest {
                 .trainingDate(LocalDate.of(2025, 7, 20))
                 .trainingDuration(55);
 
-        when(facade.getTraineeTrainingsByCriteria(eq(USERNAME), any())).thenReturn(List.of(trainingResponse));
+        when(facade.getTraineeTrainings(eq(USERNAME), any())).thenReturn(List.of(trainingResponse));
 
         String content = mockMvc.perform(get(BASE_PATH + "/trainees/{username}/trainings", USERNAME)
                         .param("fromDate", "2025-07-01")
@@ -195,17 +195,17 @@ class TraineeRestControllerTest {
         assertThat(actual.get(0).getTrainingName()).isEqualTo("Morning Cardio");
         assertThat(actual.get(0).getTrainingType()).isEqualTo("Cardio");
         assertThat(actual.get(0).getTrainerName()).isEqualTo("ronnie.coleman");
-        verify(facade).getTraineeTrainingsByCriteria(eq(USERNAME), any());
+        verify(facade).getTraineeTrainings(eq(USERNAME), any());
     }
 
     @Test
     void shouldGetTraineeTrainingsWithNoOptionalFilters() throws Exception {
-        when(facade.getTraineeTrainingsByCriteria(eq(USERNAME), any())).thenReturn(List.of());
+        when(facade.getTraineeTrainings(eq(USERNAME), any())).thenReturn(List.of());
 
         mockMvc.perform(get(BASE_PATH + "/trainees/{username}/trainings", USERNAME))
                 .andExpect(status().isOk());
 
-        verify(facade).getTraineeTrainingsByCriteria(eq(USERNAME), any());
+        verify(facade).getTraineeTrainings(eq(USERNAME), any());
     }
 
     @Test

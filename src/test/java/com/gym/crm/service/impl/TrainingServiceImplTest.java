@@ -4,7 +4,6 @@ import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.dao.TrainerDao;
 import com.gym.crm.dao.TrainingDao;
 import com.gym.crm.dao.TrainingTypeDao;
-import com.gym.crm.dto.filter.TrainerTrainingSearchFilter;
 import com.gym.crm.entity.Trainee;
 import com.gym.crm.entity.Trainer;
 import com.gym.crm.entity.Training;
@@ -30,7 +29,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -198,27 +196,6 @@ class TrainingServiceImplTest {
 
         assertNotNull(actual);
         assertEquals(expected, actual);
-    }
-
-    @Test
-    void shouldReturnTrainingsByTrainerCriteria() {
-        TrainerTrainingSearchFilter filter = mock(TrainerTrainingSearchFilter.class);
-        List<Training> expected = List.of(buildTrainingWithId(DEFAULT_TRAINING_ID));
-
-        when(trainingDao.findAllByTrainerCriteria(filter)).thenReturn(expected);
-
-        List<Training> actual = service.getTrainingsByTrainerCriteria(filter);
-
-        assertEquals(expected, actual);
-        verify(trainingDao).findAllByTrainerCriteria(filter);
-    }
-
-    @Test
-    void shouldThrowNullPointerWhenTrainerFilterIsNull() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.getTrainingsByTrainerCriteria(null));
-
-        assertEquals("Filter cannot be null", exception.getMessage());
-        verifyNoInteractions(trainingDao);
     }
 
 }

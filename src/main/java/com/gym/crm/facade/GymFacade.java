@@ -3,6 +3,7 @@ package com.gym.crm.facade;
 import com.gia.openapi.model.ActivationStatusRequest;
 import com.gia.openapi.model.AssignedTrainerResponse;
 import com.gia.openapi.model.GetTraineeTrainingResponse;
+import com.gia.openapi.model.GetTrainerTrainingResponse;
 import com.gia.openapi.model.LoginChangeRequest;
 import com.gia.openapi.model.LoginRequest;
 import com.gia.openapi.model.TraineeAssignedTrainersUpdateRequest;
@@ -12,12 +13,13 @@ import com.gia.openapi.model.TraineeCreateResponse;
 import com.gia.openapi.model.TraineeGetResponse;
 import com.gia.openapi.model.TraineeUpdateRequest;
 import com.gia.openapi.model.TraineeUpdateResponse;
+import com.gia.openapi.model.TrainerCreateRequest;
+import com.gia.openapi.model.TrainerCreateResponse;
+import com.gia.openapi.model.TrainerGetResponse;
+import com.gia.openapi.model.TrainerUpdateRequest;
+import com.gia.openapi.model.TrainerUpdateResponse;
 import com.gym.crm.dto.LoginChangeDto;
 import com.gym.crm.dto.LoginRequestDto;
-import com.gym.crm.dto.TrainerCreateDto;
-import com.gym.crm.dto.TrainerCreateResponseDto;
-import com.gym.crm.dto.TrainerResponseDto;
-import com.gym.crm.dto.TrainerUpdateDto;
 import com.gym.crm.dto.TrainingCreateDto;
 import com.gym.crm.dto.TrainingResponseDto;
 import com.gym.crm.dto.filter.TraineeTrainingSearchFilter;
@@ -48,7 +50,6 @@ import java.util.Objects;
 public class GymFacade {
 
     private static final String USERNAME_NULL_MSG = "Username cannot be null";
-    private static final String TRAINER_ID_NULL_MSG = "Trainer ID cannot be null";
 
     private final TraineeService traineeService;
     private final TrainerService trainerService;
@@ -127,7 +128,7 @@ public class GymFacade {
     }
 
     @Authenticated(Role.TRAINEE)
-    public List<GetTraineeTrainingResponse> getTraineeTrainingsByCriteria(String username, TraineeTrainingSearchFilter filter) {
+    public List<GetTraineeTrainingResponse> getTraineeTrainings(String username, TraineeTrainingSearchFilter filter) {
         Objects.requireNonNull(username, USERNAME_NULL_MSG);
         Objects.requireNonNull(filter, "Filter cannot be null");
         validator.validate(filter);
@@ -172,78 +173,51 @@ public class GymFacade {
         return traineeService.deleteTraineeByUsername(username);
     }
 
-    public TrainerCreateResponseDto createTrainer(TrainerCreateDto trainerCreateDto) {
-        Objects.requireNonNull(trainerCreateDto, "TrainerCreateDto cannot be null");
-        validator.validate(trainerCreateDto);
+    public TrainerCreateResponse createTrainer(TrainerCreateRequest request) {
+        Objects.requireNonNull(request, "TrainerCreateRequest cannot be null");
+        validator.validate(request);
 
-        Trainer trainer = trainerMapper.toEntity(trainerCreateDto);
+        Trainer trainer = trainerMapper.toEntity(request);
         Trainer createdTrainer = trainerService.createTrainer(trainer);
 
-        return trainerMapper.toCreateResponseDto(createdTrainer);
+        return trainerMapper.toCreateResponse(createdTrainer);
     }
 
     @Authenticated(Role.TRAINER)
-    public TrainerResponseDto getTrainerByUsername(String username) {
+    public TrainerGetResponse getTrainerByUsername(String username) {
         Objects.requireNonNull(username, USERNAME_NULL_MSG);
 
         Trainer trainer = trainerService.getTrainerByUsername(username);
-        return trainerMapper.toDto(trainer);
+        return trainerMapper.toGetResponse(trainer);
     }
 
     @Authenticated(Role.TRAINER)
-    public TrainerResponseDto getTrainer(String username, Long trainerId) {
+    public TrainerUpdateResponse updateTrainer(String username, TrainerUpdateRequest request) {
         Objects.requireNonNull(username, USERNAME_NULL_MSG);
-        Objects.requireNonNull(trainerId, TRAINER_ID_NULL_MSG);
+        Objects.requireNonNull(request, "TrainerUpdateRequest cannot be null");
+        validator.validate(request);
 
-        Trainer trainer = trainerService.getTrainer(trainerId);
-        return trainerMapper.toDto(trainer);
-    }
+        Trainer trainer = trainerMapper.toEntity(request, username);
+        Trainer updatedTrainer = trainerService.updateTrainer(trainer);
 
-    @Authenticated(Role.TRAINEE)
-    public List<TrainerResponseDto> getAllTrainers(String username) {
-        Objects.requireNonNull(username, USERNAME_NULL_MSG);
-
-        List<Trainer> trainers = trainerService.getAllTrainers();
-        return trainerMapper.toDtoList(trainers);
+        return trainerMapper.toUpdateResponse(updatedTrainer);
     }
 
     @Authenticated(Role.TRAINER)
-    public List<TrainingResponseDto> getTrainingsByTrainerCriteria(String username, TrainerTrainingSearchFilter filter) {
+    public void updateTrainerActivationStatus(String username, boolean isActive) {
+        Objects.requireNonNull(username, USERNAME_NULL_MSG);
+
+        trainerService.updateActivationStatus(username, isActive);
+    }
+
+    @Authenticated(Role.TRAINER)
+    public List<GetTrainerTrainingResponse> getTrainerTrainings(String username, TrainerTrainingSearchFilter filter) {
         Objects.requireNonNull(username, USERNAME_NULL_MSG);
         Objects.requireNonNull(filter, "Filter cannot be null");
         validator.validate(filter);
 
-        List<Training> trainings = trainingService.getTrainingsByTrainerCriteria(filter);
-        return trainingMapper.toDtoList(trainings);
-    }
-
-    @Authenticated(Role.TRAINER)
-    public TrainerResponseDto updateTrainer(String username, Long trainerId, TrainerUpdateDto trainerUpdateDto) {
-        Objects.requireNonNull(username, USERNAME_NULL_MSG);
-        Objects.requireNonNull(trainerId, TRAINER_ID_NULL_MSG);
-        Objects.requireNonNull(trainerUpdateDto, "TrainerUpdateDto cannot be null");
-        validator.validate(trainerUpdateDto);
-
-        Trainer trainer = trainerMapper.toEntity(trainerUpdateDto, trainerId);
-        Trainer updatedTrainer = trainerService.updateTrainer(trainer);
-
-        return trainerMapper.toDto(updatedTrainer);
-    }
-
-    @Authenticated(Role.TRAINER)
-    public void activateTrainer(String username, Long trainerId) {
-        Objects.requireNonNull(username, USERNAME_NULL_MSG);
-        Objects.requireNonNull(trainerId, TRAINER_ID_NULL_MSG);
-
-        trainerService.activateTrainer(trainerId);
-    }
-
-    @Authenticated(Role.TRAINER)
-    public void deactivateTrainer(String username, Long trainerId) {
-        Objects.requireNonNull(username, USERNAME_NULL_MSG);
-        Objects.requireNonNull(trainerId, TRAINER_ID_NULL_MSG);
-
-        trainerService.deactivateTrainer(trainerId);
+        List<Training> trainings = trainerService.getTrainerTrainings(filter);
+        return trainerMapper.toGetTrainerTrainingResponseList(trainings);
     }
 
     @Authenticated(Role.TRAINER)

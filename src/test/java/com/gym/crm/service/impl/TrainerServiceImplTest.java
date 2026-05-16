@@ -3,7 +3,6 @@ package com.gym.crm.service.impl;
 import com.gym.crm.dao.TrainerDao;
 import com.gym.crm.dao.TrainingTypeDao;
 import com.gym.crm.entity.Trainer;
-import com.gym.crm.entity.TrainingType;
 import com.gym.crm.entity.User;
 import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.service.TrainerService;
@@ -16,23 +15,21 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.List;
 import java.util.Optional;
 
 import static com.gym.crm.factory.TrainerTestFactory.DEFAULT_FIRST_NAME;
 import static com.gym.crm.factory.TrainerTestFactory.DEFAULT_LAST_NAME;
 import static com.gym.crm.factory.TrainerTestFactory.DEFAULT_PASSWORD;
-import static com.gym.crm.factory.TrainerTestFactory.DEFAULT_SPECIALIZATION_ID;
+import static com.gym.crm.factory.TrainerTestFactory.DEFAULT_SPECIALIZATION;
 import static com.gym.crm.factory.TrainerTestFactory.DEFAULT_TRAINER_ID;
 import static com.gym.crm.factory.TrainerTestFactory.DEFAULT_USERNAME;
-import static com.gym.crm.factory.TrainerTestFactory.SECONDARY_TRAINER_ID;
 import static com.gym.crm.factory.TrainerTestFactory.buildTrainerWithId;
 import static com.gym.crm.factory.TrainerTestFactory.buildTrainerWithoutCredentials;
 import static com.gym.crm.factory.TrainerTestFactory.getDefaultTrainerBuilder;
 import static com.gym.crm.factory.TrainerTestFactory.getDefaultTrainingTypeBuilder;
+import static com.gym.crm.factory.TrainerTestFactory.getDefaultUserBuilder;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -74,7 +71,7 @@ class TrainerServiceImplTest {
         Trainer expected = buildTrainerWithId(DEFAULT_TRAINER_ID);
         String encodedPassword = "encoded-" + DEFAULT_PASSWORD;
 
-        when(trainingTypeDao.findById(DEFAULT_SPECIALIZATION_ID)).thenReturn(Optional.of(trainerWithoutCredentials.getSpecialization()));
+        when(trainingTypeDao.findByName(DEFAULT_SPECIALIZATION)).thenReturn(Optional.of(trainerWithoutCredentials.getSpecialization()));
         when(generator.generateUsername(DEFAULT_FIRST_NAME, DEFAULT_LAST_NAME)).thenReturn(DEFAULT_USERNAME);
         when(generator.generatePassword()).thenReturn(DEFAULT_PASSWORD);
         when(passwordEncoder.encode(DEFAULT_PASSWORD)).thenReturn(encodedPassword);
@@ -108,12 +105,12 @@ class TrainerServiceImplTest {
     void shouldThrowExceptionWhenCreatingTrainerWithInvalidSpecialization() {
         Trainer trainer = buildTrainerWithoutCredentials();
 
-        when(trainingTypeDao.findById(DEFAULT_SPECIALIZATION_ID)).thenReturn(Optional.empty());
+        when(trainingTypeDao.findByName(DEFAULT_SPECIALIZATION)).thenReturn(Optional.empty());
 
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> service.createTrainer(trainer));
 
-        assertEquals("TrainingType not found with id: " + DEFAULT_SPECIALIZATION_ID, exception.getMessage());
-        verify(trainingTypeDao).findById(DEFAULT_SPECIALIZATION_ID);
+        assertEquals("TrainingType not found with name: " + DEFAULT_SPECIALIZATION, exception.getMessage());
+        verify(trainingTypeDao).findByName(DEFAULT_SPECIALIZATION);
         verifyNoInteractions(generator, dao);
     }
 
@@ -125,36 +122,6 @@ class TrainerServiceImplTest {
 
         assertEquals("Trainer user cannot be null", exception.getMessage());
         verifyNoInteractions(trainingTypeDao, generator, dao);
-    }
-
-    @Test
-    void shouldReturnTrainerWhenGettingExistingTrainer() {
-        Trainer expected = buildTrainerWithId();
-
-        when(dao.findById(DEFAULT_TRAINER_ID)).thenReturn(Optional.of(expected));
-
-        Trainer actual = service.getTrainer(DEFAULT_TRAINER_ID);
-
-        assertEquals(expected, actual);
-        verify(dao).findById(DEFAULT_TRAINER_ID);
-    }
-
-    @Test
-    void shouldThrowEntityNotFoundWhenGettingUnknownTrainer() {
-        when(dao.findById(DEFAULT_TRAINER_ID)).thenReturn(Optional.empty());
-
-        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> service.getTrainer(DEFAULT_TRAINER_ID));
-
-        assertEquals("Trainer not found with id: " + DEFAULT_TRAINER_ID, exception.getMessage());
-        verify(dao).findById(DEFAULT_TRAINER_ID);
-    }
-
-    @Test
-    void shouldThrowNullPointerWhenGettingNullTrainerId() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.getTrainer(null));
-
-        assertEquals("Trainer ID cannot be null", exception.getMessage());
-        verifyNoInteractions(dao, generator);
     }
 
     @Test
@@ -176,32 +143,6 @@ class TrainerServiceImplTest {
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> service.getTrainerByUsername(DEFAULT_USERNAME));
 
         assertEquals("Trainer not found with username: " + DEFAULT_USERNAME, exception.getMessage());
-    }
-
-    @Test
-    void shouldReturnAllTrainers() {
-        Trainer trainer1 = buildTrainerWithId(DEFAULT_TRAINER_ID);
-        Trainer trainer2 = buildTrainerWithId(SECONDARY_TRAINER_ID);
-        List<Trainer> expected = List.of(trainer1, trainer2);
-
-        when(dao.findAll()).thenReturn(expected);
-
-        List<Trainer> actual = service.getAllTrainers();
-
-        assertNotNull(actual);
-        assertEquals(expected, actual);
-    }
-
-    @Test
-    void shouldReturnEmptyTrainers() {
-        List<Trainer> expected = List.of();
-
-        when(dao.findAll()).thenReturn(expected);
-
-        List<Trainer> actual = service.getAllTrainers();
-
-        assertNotNull(actual);
-        assertEquals(expected, actual);
     }
 
     @Test
@@ -279,13 +220,12 @@ class TrainerServiceImplTest {
                 .specialization(getDefaultTrainingTypeBuilder().id(2L).trainingTypeName("Strength").build())
                 .build();
 
-        when(trainingTypeDao.findById(2L)).thenReturn(Optional.of(updateRequest.getSpecialization()));
-        when(dao.findById(DEFAULT_TRAINER_ID)).thenReturn(Optional.of(existingTrainer));
+        when(dao.findByUsername(DEFAULT_USERNAME)).thenReturn(Optional.of(existingTrainer));
         when(dao.update(any(Trainer.class))).thenReturn(expected);
 
         Trainer actual = service.updateTrainer(updateRequest);
 
-        verify(dao).findById(DEFAULT_TRAINER_ID);
+        verify(dao).findByUsername(DEFAULT_USERNAME);
         ArgumentCaptor<Trainer> trainerCaptor = ArgumentCaptor.forClass(Trainer.class);
         verify(dao).update(trainerCaptor.capture());
         Trainer mergedTrainer = trainerCaptor.getValue();
@@ -293,7 +233,6 @@ class TrainerServiceImplTest {
         assertEquals(DEFAULT_USERNAME, mergedTrainer.getUser().getUsername());
         assertEquals("Elena", mergedTrainer.getUser().getFirstName());
         assertEquals("Rodriguez", mergedTrainer.getUser().getLastName());
-        assertEquals("Strength", mergedTrainer.getSpecialization().getTrainingTypeName());
         assertEquals(expected, actual);
     }
 
@@ -301,12 +240,12 @@ class TrainerServiceImplTest {
     void shouldThrowEntityNotFoundWhenUpdatingUnknownTrainer() {
         Trainer updateRequest = buildTrainerWithId(DEFAULT_TRAINER_ID);
 
-        when(dao.findById(DEFAULT_TRAINER_ID)).thenReturn(Optional.empty());
+        when(dao.findByUsername(DEFAULT_USERNAME)).thenReturn(Optional.empty());
 
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> service.updateTrainer(updateRequest));
 
-        assertEquals("Trainer not found with id: " + DEFAULT_TRAINER_ID, exception.getMessage());
-        verify(dao).findById(DEFAULT_TRAINER_ID);
+        assertEquals("Trainer not found with username: " + DEFAULT_USERNAME, exception.getMessage());
+        verify(dao).findByUsername(DEFAULT_USERNAME);
         verify(dao, never()).update(any(Trainer.class));
     }
 
@@ -324,32 +263,14 @@ class TrainerServiceImplTest {
         User updatedUser = existingTrainer.getUser().toBuilder().firstName("NewName").build();
         Trainer updateRequest = existingTrainer.toBuilder().user(updatedUser).build();
 
-        when(dao.findById(DEFAULT_TRAINER_ID)).thenReturn(Optional.of(existingTrainer));
+        when(dao.findByUsername(DEFAULT_USERNAME)).thenReturn(Optional.of(existingTrainer));
         when(dao.update(any(Trainer.class))).thenReturn(updateRequest);
 
         service.updateTrainer(updateRequest);
 
-        verify(dao).findById(DEFAULT_TRAINER_ID);
-        verify(trainingTypeDao, never()).findById(any());
+        verify(dao).findByUsername(DEFAULT_USERNAME);
+        verify(trainingTypeDao, never()).findByName(any());
         verify(dao).update(any(Trainer.class));
-    }
-
-    @Test
-    void shouldThrowExceptionWhenUpdatingTrainerWithInvalidSpecialization() {
-        Trainer existingTrainer = buildTrainerWithId(DEFAULT_TRAINER_ID);
-        Trainer updateRequest = existingTrainer.toBuilder()
-                .specialization(TrainingType.builder().id(999L).build())
-                .build();
-
-        when(dao.findById(DEFAULT_TRAINER_ID)).thenReturn(Optional.of(existingTrainer));
-        when(trainingTypeDao.findById(999L)).thenReturn(Optional.empty());
-
-        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> service.updateTrainer(updateRequest));
-
-        assertEquals("TrainingType not found with id: 999", exception.getMessage());
-        verify(dao).findById(DEFAULT_TRAINER_ID);
-        verify(trainingTypeDao).findById(999L);
-        verify(dao, never()).update(any());
     }
 
     @Test
@@ -362,13 +283,15 @@ class TrainerServiceImplTest {
     }
 
     @Test
-    void shouldThrowNullPointerWhenUpdatingTrainerWithNullId() {
-        Trainer trainer = buildTrainerWithoutCredentials().toBuilder().id(null).build();
+    void shouldThrowNullPointerWhenUpdatingTrainerWithNullUsername() {
+        Trainer trainer = buildTrainerWithoutCredentials().toBuilder()
+                .user(getDefaultUserBuilder().username(null).build())
+                .build();
 
         NullPointerException exception = assertThrows(NullPointerException.class,
                 () -> service.updateTrainer(trainer));
 
-        assertEquals("Trainer ID cannot be null", exception.getMessage());
+        assertEquals("Trainer username cannot be null", exception.getMessage());
     }
 
     @Test
@@ -407,99 +330,81 @@ class TrainerServiceImplTest {
     }
 
     @Test
-    void shouldActivateTrainer() {
+    void shouldUpdateActivationStatusToActive() {
         Trainer trainer = buildTrainerWithId(DEFAULT_TRAINER_ID);
         User inactiveUser = trainer.getUser().toBuilder().isActive(false).build();
         trainer = trainer.toBuilder().user(inactiveUser).build();
 
-        when(dao.findById(DEFAULT_TRAINER_ID)).thenReturn(Optional.of(trainer));
+        when(dao.findByUsername(DEFAULT_USERNAME)).thenReturn(Optional.of(trainer));
 
-        service.activateTrainer(DEFAULT_TRAINER_ID);
+        service.updateActivationStatus(DEFAULT_USERNAME, true);
 
-        verify(dao).findById(DEFAULT_TRAINER_ID);
+        verify(dao).findByUsername(DEFAULT_USERNAME);
         ArgumentCaptor<Trainer> trainerCaptor = ArgumentCaptor.forClass(Trainer.class);
         verify(dao).update(trainerCaptor.capture());
         assertEquals(true, trainerCaptor.getValue().getUser().getIsActive());
     }
 
     @Test
-    void shouldThrowExceptionWhenActivatingAlreadyActiveTrainer() {
+    void shouldUpdateActivationStatusToInactive() {
         Trainer trainer = buildTrainerWithId(DEFAULT_TRAINER_ID);
         User activeUser = trainer.getUser().toBuilder().isActive(true).build();
         trainer = trainer.toBuilder().user(activeUser).build();
 
-        when(dao.findById(DEFAULT_TRAINER_ID)).thenReturn(Optional.of(trainer));
+        when(dao.findByUsername(DEFAULT_USERNAME)).thenReturn(Optional.of(trainer));
 
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> service.activateTrainer(DEFAULT_TRAINER_ID));
+        service.updateActivationStatus(DEFAULT_USERNAME, false);
 
-        assertEquals("Trainer is already active", exception.getMessage());
-        verify(dao, never()).update(any());
-    }
-
-    @Test
-    void shouldThrowNullPointerWhenActivatingWithNullId() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.activateTrainer(null));
-
-        assertEquals("Trainer ID cannot be null", exception.getMessage());
-        verifyNoInteractions(dao);
-    }
-
-    @Test
-    void shouldThrowEntityNotFoundWhenActivatingNonExistingTrainer() {
-        when(dao.findById(DEFAULT_TRAINER_ID)).thenReturn(Optional.empty());
-
-        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> service.activateTrainer(DEFAULT_TRAINER_ID));
-
-        assertEquals("Trainer not found with id: " + DEFAULT_TRAINER_ID, exception.getMessage());
-        verify(dao).findById(DEFAULT_TRAINER_ID);
-    }
-
-    @Test
-    void shouldDeactivateTrainer() {
-        Trainer trainer = buildTrainerWithId(DEFAULT_TRAINER_ID);
-        User activeUser = trainer.getUser().toBuilder().isActive(true).build();
-        trainer = trainer.toBuilder().user(activeUser).build();
-
-        when(dao.findById(DEFAULT_TRAINER_ID)).thenReturn(Optional.of(trainer));
-
-        service.deactivateTrainer(DEFAULT_TRAINER_ID);
-
-        verify(dao).findById(DEFAULT_TRAINER_ID);
+        verify(dao).findByUsername(DEFAULT_USERNAME);
         ArgumentCaptor<Trainer> trainerCaptor = ArgumentCaptor.forClass(Trainer.class);
         verify(dao).update(trainerCaptor.capture());
         assertEquals(false, trainerCaptor.getValue().getUser().getIsActive());
     }
 
     @Test
-    void shouldThrowExceptionWhenDeactivatingAlreadyDeactivatedTrainer() {
+    void shouldDoNothingWhenUpdatingToAlreadyActiveStatus() {
         Trainer trainer = buildTrainerWithId(DEFAULT_TRAINER_ID);
-        User inactiveUser = trainer.getUser().toBuilder().isActive(false).build();
-        trainer = trainer.toBuilder().user(inactiveUser).build();
+        User activeUser = trainer.getUser().toBuilder().isActive(true).build();
+        trainer = trainer.toBuilder().user(activeUser).build();
 
-        when(dao.findById(DEFAULT_TRAINER_ID)).thenReturn(Optional.of(trainer));
+        when(dao.findByUsername(DEFAULT_USERNAME)).thenReturn(Optional.of(trainer));
 
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> service.deactivateTrainer(DEFAULT_TRAINER_ID));
+        service.updateActivationStatus(DEFAULT_USERNAME, true);
 
-        assertEquals("Trainer is already deactivated", exception.getMessage());
+        verify(dao).findByUsername(DEFAULT_USERNAME);
         verify(dao, never()).update(any());
     }
 
     @Test
-    void shouldThrowNullPointerWhenDeactivatingWithNullId() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.deactivateTrainer(null));
+    void shouldDoNothingWhenUpdatingToAlreadyInactiveStatus() {
+        Trainer trainer = buildTrainerWithId(DEFAULT_TRAINER_ID);
+        User inactiveUser = trainer.getUser().toBuilder().isActive(false).build();
+        trainer = trainer.toBuilder().user(inactiveUser).build();
 
-        assertEquals("Trainer ID cannot be null", exception.getMessage());
+        when(dao.findByUsername(DEFAULT_USERNAME)).thenReturn(Optional.of(trainer));
+
+        service.updateActivationStatus(DEFAULT_USERNAME, false);
+
+        verify(dao).findByUsername(DEFAULT_USERNAME);
+        verify(dao, never()).update(any());
+    }
+
+    @Test
+    void shouldThrowNullPointerWhenUpdatingActivationStatusWithNullUsername() {
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.updateActivationStatus(null, true));
+
+        assertEquals("Trainer username cannot be null", exception.getMessage());
         verifyNoInteractions(dao);
     }
 
     @Test
-    void shouldThrowEntityNotFoundWhenDeactivatingNonExistingTrainer() {
-        when(dao.findById(DEFAULT_TRAINER_ID)).thenReturn(Optional.empty());
+    void shouldThrowEntityNotFoundWhenUpdatingActivationStatusForNonExistingTrainer() {
+        when(dao.findByUsername(DEFAULT_USERNAME)).thenReturn(Optional.empty());
 
-        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> service.deactivateTrainer(DEFAULT_TRAINER_ID));
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> service.updateActivationStatus(DEFAULT_USERNAME, true));
 
-        assertEquals("Trainer not found with id: " + DEFAULT_TRAINER_ID, exception.getMessage());
-        verify(dao).findById(DEFAULT_TRAINER_ID);
+        assertEquals("Trainer not found with username: " + DEFAULT_USERNAME, exception.getMessage());
+        verify(dao).findByUsername(DEFAULT_USERNAME);
     }
 
 }
