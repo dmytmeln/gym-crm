@@ -246,20 +246,6 @@ class HibernateTrainerDaoTest extends AbstractDaoTest<HibernateTrainerDao> {
     }
 
     @Test
-    void shouldFindAllNotAssignedToTrainee() {
-        List<Trainer> expected = List.of(
-                Trainer.builder().id(2L).build(),
-                Trainer.builder().id(3L).build());
-        String existingTraineeUsername = "liam.miller";
-
-        List<Trainer> actual = dao.findAllNotAssignedToTrainee(existingTraineeUsername);
-
-        assertThat(actual)
-                .hasSize(2)
-                .containsAll(expected);
-    }
-
-    @Test
     void shouldUpdateTrainer() {
         Trainer existingTrainer = testDbClient.findTrainer(EXISTING_ID);
         User updatedUser = existingTrainer.getUser().toBuilder()

@@ -1,6 +1,10 @@
 package com.gym.crm.dao.impl;
 
+import com.gym.crm.dao.helper.TraineeTrainingCriteriaBuilder;
+import com.gym.crm.dto.filter.TraineeTrainingSearchFilter;
 import com.gym.crm.entity.Trainee;
+import com.gym.crm.entity.Trainer;
+import com.gym.crm.entity.Training;
 import com.gym.crm.entity.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
@@ -13,11 +17,11 @@ import java.util.Optional;
 import static com.gym.crm.test.helper.EntityRecursiveComparisonConfigs.getTraineeConfigForExisting;
 import static com.gym.crm.test.helper.EntityRecursiveComparisonConfigs.getTraineeConfigForSaved;
 import static com.gym.crm.test.helper.EntityRecursiveComparisonConfigs.getTrainerConfigForDirectFields;
-import static com.gym.crm.test.helper.EntityRecursiveComparisonConfigs.getTrainingConfigForDirectFields;
+import static com.gym.crm.test.helper.EntityRecursiveComparisonConfigs.getTrainingConfigForExisting;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@SpringJUnitConfig(HibernateTraineeDao.class)
+@SpringJUnitConfig({HibernateTraineeDao.class, TraineeTrainingCriteriaBuilder.class})
 class HibernateTraineeDaoTest extends AbstractDaoTest<HibernateTraineeDao> {
 
     private static final long EXISTING_ID = 1L;
@@ -47,8 +51,6 @@ class HibernateTraineeDaoTest extends AbstractDaoTest<HibernateTraineeDao> {
 
         assertThat(actual.getId()).isNotNull();
         assertThat(actual.getUser().getId()).isNotNull();
-        assertThat(actual.getTrainings()).isEmpty();
-        assertThat(actual.getTrainers()).isEmpty();
         assertThat(actual)
                 .usingRecursiveComparison(getTraineeConfigForSaved())
                 .isEqualTo(validTrainee);
@@ -130,6 +132,7 @@ class HibernateTraineeDaoTest extends AbstractDaoTest<HibernateTraineeDao> {
     @Test
     void shouldFindByIdWhenExists() {
         Trainee expected = testDbClient.findTrainee(EXISTING_ID);
+        List<Training> expectedTrainings = List.of(buildExistingTraining());
 
         Optional<Trainee> actual = dao.findById(EXISTING_ID);
 
@@ -139,8 +142,8 @@ class HibernateTraineeDaoTest extends AbstractDaoTest<HibernateTraineeDao> {
                 .isEqualTo(expected);
         assertThat(testDbClient.findTraineeTrainings(EXISTING_ID))
                 .hasSize(1)
-                .usingRecursiveComparison(getTrainingConfigForDirectFields())
-                .isEqualTo(actual.get().getTrainings());
+                .usingRecursiveComparison(getTrainingConfigForExisting())
+                .isEqualTo(expectedTrainings);
         assertThat(testDbClient.findTraineeTrainers(EXISTING_ID))
                 .hasSize(1)
                 .usingRecursiveComparison(getTrainerConfigForDirectFields())
@@ -164,6 +167,7 @@ class HibernateTraineeDaoTest extends AbstractDaoTest<HibernateTraineeDao> {
     @Test
     void shouldFindByUsernameWhenExists() {
         Trainee expected = testDbClient.findTrainee(EXISTING_ID);
+        List<Training> expectedTrainings = List.of(buildExistingTraining());
 
         Optional<Trainee> actual = dao.findByUsername(EXISTING_USERNAME);
 
@@ -173,8 +177,8 @@ class HibernateTraineeDaoTest extends AbstractDaoTest<HibernateTraineeDao> {
                 .isEqualTo(expected);
         assertThat(testDbClient.findTraineeTrainings(EXISTING_ID))
                 .hasSize(1)
-                .usingRecursiveComparison(getTrainingConfigForDirectFields())
-                .isEqualTo(actual.get().getTrainings());
+                .usingRecursiveComparison(getTrainingConfigForExisting())
+                .isEqualTo(expectedTrainings);
         assertThat(testDbClient.findTraineeTrainers(EXISTING_ID))
                 .hasSize(1)
                 .usingRecursiveComparison(getTrainerConfigForDirectFields())
@@ -210,6 +214,7 @@ class HibernateTraineeDaoTest extends AbstractDaoTest<HibernateTraineeDao> {
 
     @Test
     void shouldUpdateTrainee() {
+        List<Training> expectedTrainings = List.of(buildExistingTraining());
         Trainee existingTrainee = testDbClient.findTrainee(EXISTING_ID);
         User updatedUser = existingTrainee.getUser().toBuilder()
                 .firstName("UpdatedFirstName")
@@ -221,14 +226,10 @@ class HibernateTraineeDaoTest extends AbstractDaoTest<HibernateTraineeDao> {
                 .dateOfBirth(LocalDate.of(1995, 1, 1))
                 .user(updatedUser)
                 .trainers(new HashSet<>(testDbClient.findTraineeTrainers(EXISTING_ID)))
-                .trainings(testDbClient.findTraineeTrainings(EXISTING_ID))
                 .build();
 
         Trainee actual = dao.update(updatedTrainee);
 
-        assertThat(actual.getTrainings())
-                .as("Returned trainee should contain associated trainings")
-                .hasSize(1);
         assertThat(actual.getTrainers())
                 .as("Returned trainee should contain associated trainers")
                 .hasSize(1);
@@ -241,9 +242,8 @@ class HibernateTraineeDaoTest extends AbstractDaoTest<HibernateTraineeDao> {
                 .isEqualTo(updatedTrainee);
         assertThat(testDbClient.findTraineeTrainings(EXISTING_ID))
                 .hasSize(1)
-                .usingRecursiveComparison(getTrainingConfigForDirectFields())
-                .isEqualTo(updatedTrainee.getTrainings())
-                .isEqualTo(actual.getTrainings());
+                .usingRecursiveComparison(getTrainingConfigForExisting())
+                .isEqualTo(expectedTrainings);
         assertThat(testDbClient.findTraineeTrainers(EXISTING_ID))
                 .hasSize(1)
                 .usingRecursiveComparison(getTrainerConfigForDirectFields())
@@ -323,44 +323,72 @@ class HibernateTraineeDaoTest extends AbstractDaoTest<HibernateTraineeDao> {
     }
 
     @Test
-    void shouldDeleteByIdWhenExists() {
-        Long existingTrainerId = 1L;
+    void shouldFindTrainingsByCriteriaWithAllFilters() {
+        TraineeTrainingSearchFilter filter = TraineeTrainingSearchFilter.builder()
+                .username("liam.miller")
+                .fromDate(LocalDate.of(2025, 1, 1))
+                .toDate(LocalDate.of(2025, 1, 31))
+                .trainerName("Marcus Stone")
+                .trainingTypeName("CARDIO")
+                .build();
+        Training expected = testDbClient.findTraining(1L);
 
-        boolean result = dao.deleteById(EXISTING_ID);
+        List<Training> actual = dao.findTrainingsByCriteria(filter);
 
-        assertThat(result).isTrue();
-        assertThat(testDbClient.traineeExists(EXISTING_ID))
-                .as("Trainee should be deleted from database")
-                .isFalse();
-        assertThat(testDbClient.userExists(EXISTING_USERNAME))
-                .as("User should be deleted from database")
-                .isFalse();
-        assertThat(testDbClient.countTraineeTrainings(EXISTING_ID))
-                .as("Trainee's trainings should be deleted from database")
-                .isZero();
-        assertThat(testDbClient.countTraineeTrainers(EXISTING_ID))
-                .as("Trainee's trainers link should be deleted from database")
-                .isZero();
-        assertThat(testDbClient.trainerExists(existingTrainerId))
-                .as("Trainee's trainer should remain in database")
-                .isTrue();
+        assertThat(actual).hasSize(1);
+        assertThat(actual.get(0))
+                .usingRecursiveComparison(getTrainingConfigForExisting())
+                .isEqualTo(expected);
     }
 
     @Test
-    void shouldReturnFalseWhenDeletingByNonExistentId() {
-        boolean result = dao.deleteById(NON_EXISTING_ID);
+    void shouldFindTrainingsByCriteriaWithPartialFilters() {
+        TraineeTrainingSearchFilter filter = TraineeTrainingSearchFilter.builder()
+                .username("sophia.wilson")
+                .trainingTypeName("STRENGTH")
+                .build();
+        Training expected = testDbClient.findTraining(2L);
 
-        assertThat(result).isFalse();
-        assertThat(testDbClient.countTrainees())
-                .as("Trainees count should remain unchanged")
-                .isEqualTo(TRAINEES_COUNT);
+        List<Training> actual = dao.findTrainingsByCriteria(filter);
+
+        assertThat(actual).hasSize(1);
+        assertThat(actual.get(0))
+                .usingRecursiveComparison(getTrainingConfigForExisting())
+                .isEqualTo(expected);
     }
 
     @Test
-    void shouldThrowNullPointerExceptionWhenDeletingByNullId() {
-        assertThatThrownBy(() -> dao.deleteById(null))
-                .isInstanceOf(NullPointerException.class)
-                .hasMessage("Trainee ID cannot be null");
+    void shouldReturnEmptyListWhenNoTrainingsMatchCriteria() {
+        TraineeTrainingSearchFilter filter = TraineeTrainingSearchFilter.builder()
+                .username("liam.miller")
+                .trainerName("Sarah Adams")
+                .build();
+
+        List<Training> actual = dao.findTrainingsByCriteria(filter);
+
+        assertThat(actual).isEmpty();
+    }
+
+    @Test
+    void shouldFindAvailableTrainers() {
+        List<Trainer> expected = List.of(
+                Trainer.builder().id(2L).build(),
+                Trainer.builder().id(3L).build());
+
+        List<Trainer> actual = dao.findAvailableTrainers(EXISTING_USERNAME);
+
+        assertThat(actual)
+                .hasSize(2)
+                .containsAll(expected);
+    }
+
+    private Training buildExistingTraining() {
+        return Training.builder()
+                .id(1L)
+                .trainingName("Morning HIIT")
+                .trainingDate(LocalDate.of(2025, 1, 15))
+                .trainingDuration(60)
+                .build();
     }
 
 }

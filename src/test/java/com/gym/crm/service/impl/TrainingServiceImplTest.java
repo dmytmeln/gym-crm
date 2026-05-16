@@ -4,7 +4,6 @@ import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.dao.TrainerDao;
 import com.gym.crm.dao.TrainingDao;
 import com.gym.crm.dao.TrainingTypeDao;
-import com.gym.crm.dto.filter.TraineeTrainingSearchFilter;
 import com.gym.crm.dto.filter.TrainerTrainingSearchFilter;
 import com.gym.crm.entity.Trainee;
 import com.gym.crm.entity.Trainer;
@@ -199,27 +198,6 @@ class TrainingServiceImplTest {
 
         assertNotNull(actual);
         assertEquals(expected, actual);
-    }
-
-    @Test
-    void shouldReturnTrainingsByTraineeCriteria() {
-        TraineeTrainingSearchFilter filter = mock(TraineeTrainingSearchFilter.class);
-        List<Training> expected = List.of(buildTrainingWithId(DEFAULT_TRAINING_ID));
-
-        when(trainingDao.findAllByTraineeCriteria(filter)).thenReturn(expected);
-
-        List<Training> actual = service.getTrainingsByTraineeCriteria(filter);
-
-        assertEquals(expected, actual);
-        verify(trainingDao).findAllByTraineeCriteria(filter);
-    }
-
-    @Test
-    void shouldThrowNullPointerWhenTraineeFilterIsNull() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.getTrainingsByTraineeCriteria(null));
-
-        assertEquals("Filter cannot be null", exception.getMessage());
-        verifyNoInteractions(trainingDao);
     }
 
     @Test

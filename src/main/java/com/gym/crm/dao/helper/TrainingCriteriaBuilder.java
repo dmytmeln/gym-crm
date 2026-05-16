@@ -9,7 +9,6 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import org.hibernate.Session;
@@ -24,9 +23,7 @@ public abstract class TrainingCriteriaBuilder<C extends TrainingSearchFilter> {
         CriteriaQuery<Training> cq = cb.createQuery(Training.class);
 
         Root<Training> root = cq.from(Training.class);
-        root.fetch(Training_.TRAINEE, JoinType.INNER);
-        root.fetch(Training_.TRAINER, JoinType.INNER);
-        root.fetch(Training_.TRAINING_TYPE, JoinType.INNER);
+        fetchRequiredAssociations(root);
 
         List<Predicate> predicates = new ArrayList<>();
         addFromDateFilter(cb, root, criteria, predicates);
@@ -39,6 +36,8 @@ public abstract class TrainingCriteriaBuilder<C extends TrainingSearchFilter> {
 
         return session.createQuery(cq).getResultList();
     }
+
+    protected abstract void fetchRequiredAssociations(Root<Training> root);
 
     protected abstract Join<?, User> getTargetUserJoin(Root<Training> root);
 

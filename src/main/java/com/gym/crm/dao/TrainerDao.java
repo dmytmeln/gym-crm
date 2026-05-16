@@ -17,8 +17,6 @@ public interface TrainerDao {
 
     List<Trainer> findAllByIds(List<Long> ids);
 
-    List<Trainer> findAllNotAssignedToTrainee(String traineeUsername);
-
     Trainer update(Trainer trainer);
 
 }

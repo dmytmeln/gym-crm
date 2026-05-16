@@ -1,33 +1,40 @@
 package com.gym.crm.mapper;
 
-import com.gym.crm.dto.TraineeCreateDto;
-import com.gym.crm.dto.TraineeCreateResponseDto;
-import com.gym.crm.dto.TraineeResponseDto;
-import com.gym.crm.dto.TraineeUpdateDto;
+import com.gia.openapi.model.AssignedTrainerResponse;
+import com.gia.openapi.model.GetTraineeTrainingResponse;
+import com.gia.openapi.model.TraineeCreateRequest;
+import com.gia.openapi.model.TraineeCreateResponse;
+import com.gia.openapi.model.TraineeGetResponse;
+import com.gia.openapi.model.TraineeUpdateRequest;
+import com.gia.openapi.model.TraineeUpdateResponse;
 import com.gym.crm.entity.Trainee;
+import com.gym.crm.entity.Trainer;
+import com.gym.crm.entity.Training;
+import com.gym.crm.entity.TrainingType;
+import com.gym.crm.entity.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import static com.gym.crm.factory.TraineeTestFactory.DEFAULT_ADDRESS;
 import static com.gym.crm.factory.TraineeTestFactory.DEFAULT_DATE_OF_BIRTH;
 import static com.gym.crm.factory.TraineeTestFactory.DEFAULT_FIRST_NAME;
 import static com.gym.crm.factory.TraineeTestFactory.DEFAULT_LAST_NAME;
 import static com.gym.crm.factory.TraineeTestFactory.DEFAULT_PASSWORD;
-import static com.gym.crm.factory.TraineeTestFactory.DEFAULT_TRAINEE_ID;
 import static com.gym.crm.factory.TraineeTestFactory.DEFAULT_USERNAME;
-import static com.gym.crm.factory.TraineeTestFactory.DEFAULT_USER_ID;
-import static com.gym.crm.factory.TraineeTestFactory.SECONDARY_TRAINEE_ID;
-import static com.gym.crm.factory.TraineeTestFactory.buildTrainee;
-import static com.gym.crm.factory.TraineeTestFactory.buildTraineeCreateDto;
-import static com.gym.crm.factory.TraineeTestFactory.buildTraineeUpdateDto;
-import static com.gym.crm.factory.TraineeTestFactory.buildTraineeWithId;
 import static com.gym.crm.factory.TraineeTestFactory.buildTraineeWithIdAndUserId;
+import static com.gym.crm.factory.TrainerTestFactory.DEFAULT_SPECIALIZATION;
+import static com.gym.crm.factory.TrainerTestFactory.buildTrainerWithId;
+import static com.gym.crm.factory.TrainingTestFactory.DEFAULT_DATE;
+import static com.gym.crm.factory.TrainingTestFactory.DEFAULT_DURATION;
+import static com.gym.crm.factory.TrainingTestFactory.DEFAULT_TRAINING_ID;
+import static com.gym.crm.factory.TrainingTestFactory.DEFAULT_TRAINING_NAME;
+import static com.gym.crm.factory.TrainingTestFactory.DEFAULT_TRAINING_TYPE_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -42,59 +49,73 @@ class TraineeMapperTest {
     }
 
     @Test
-    void shouldMapAllFieldsCorrectlyWhenTraineeIsValid() {
+    void shouldMapToCreateResponseWithUsernameAndPasswordWhenTraineeIsValid() {
         Trainee trainee = buildTraineeWithIdAndUserId();
 
-        TraineeResponseDto result = mapper.toDto(trainee);
+        TraineeCreateResponse result = mapper.toCreateResponse(trainee);
 
         assertNotNull(result);
-        assertEquals(DEFAULT_TRAINEE_ID, result.id());
-        assertEquals(DEFAULT_USER_ID, result.userId());
-        assertEquals(DEFAULT_USERNAME, result.username());
-        assertEquals(DEFAULT_FIRST_NAME, result.firstName());
-        assertEquals(DEFAULT_LAST_NAME, result.lastName());
-        assertTrue(result.active());
-        assertEquals(DEFAULT_ADDRESS, result.address());
-        assertEquals(DEFAULT_DATE_OF_BIRTH, result.dateOfBirth());
+        assertEquals(DEFAULT_USERNAME, result.getUsername());
+        assertEquals(DEFAULT_PASSWORD, result.getPassword());
     }
 
     @Test
-    void shouldReturnNullWhenTraineeIsNull() {
-        TraineeResponseDto result = mapper.toDto(null);
+    void shouldReturnNullWhenMappingNullTraineeToCreateResponse() {
+        TraineeCreateResponse result = mapper.toCreateResponse(null);
 
         assertNull(result);
     }
 
     @Test
-    void shouldMapAllFieldsCorrectlyWhenMappingToCreateResponseDto() {
+    void shouldMapToGetResponseWithAllFieldsWhenTraineeIsValid() {
         Trainee trainee = buildTraineeWithIdAndUserId();
 
-        TraineeCreateResponseDto result = mapper.toCreateResponseDto(trainee);
+        TraineeGetResponse result = mapper.toGetResponse(trainee);
 
         assertNotNull(result);
-        assertEquals(DEFAULT_TRAINEE_ID, result.id());
-        assertEquals(DEFAULT_USER_ID, result.userId());
-        assertEquals(DEFAULT_USERNAME, result.username());
-        assertEquals(DEFAULT_FIRST_NAME, result.firstName());
-        assertEquals(DEFAULT_LAST_NAME, result.lastName());
-        assertEquals(DEFAULT_PASSWORD, result.password());
-        assertTrue(result.active());
-        assertEquals(DEFAULT_ADDRESS, result.address());
-        assertEquals(DEFAULT_DATE_OF_BIRTH, result.dateOfBirth());
+        assertEquals(DEFAULT_FIRST_NAME, result.getFirstName());
+        assertEquals(DEFAULT_LAST_NAME, result.getLastName());
+        assertEquals(DEFAULT_ADDRESS, result.getAddress());
+        assertEquals(DEFAULT_DATE_OF_BIRTH, result.getDateOfBirth());
+        assertTrue(result.getIsActive());
     }
 
     @Test
-    void shouldReturnNullWhenMappingNullTraineeToCreateResponseDto() {
-        TraineeCreateResponseDto result = mapper.toCreateResponseDto(null);
+    void shouldReturnNullWhenMappingNullTraineeToGetResponse() {
+        TraineeGetResponse result = mapper.toGetResponse(null);
 
         assertNull(result);
     }
 
     @Test
-    void shouldMapAllFieldsAndIgnoreUserIdUsernamePasswordWhenMappingFromCreateDto() {
-        TraineeCreateDto dto = buildTraineeCreateDto();
+    void shouldMapToUpdateResponseWithAllFieldsWhenTraineeIsValid() {
+        Trainee trainee = buildTraineeWithIdAndUserId();
 
-        Trainee result = mapper.toEntity(dto);
+        TraineeUpdateResponse result = mapper.toUpdateResponse(trainee);
+
+        assertNotNull(result);
+        assertEquals(DEFAULT_USERNAME, result.getUsername());
+        assertEquals(DEFAULT_FIRST_NAME, result.getFirstName());
+        assertEquals(DEFAULT_LAST_NAME, result.getLastName());
+        assertEquals(DEFAULT_ADDRESS, result.getAddress());
+        assertEquals(DEFAULT_DATE_OF_BIRTH, result.getDateOfBirth());
+        assertTrue(result.getIsActive());
+    }
+
+    @Test
+    void shouldReturnNullWhenMappingNullTraineeToUpdateResponse() {
+        TraineeUpdateResponse result = mapper.toUpdateResponse(null);
+
+        assertNull(result);
+    }
+
+    @Test
+    void shouldMapAllFieldsAndIgnoreIdUsernamePasswordWhenMappingFromCreateRequest() {
+        TraineeCreateRequest request = new TraineeCreateRequest(DEFAULT_FIRST_NAME, DEFAULT_LAST_NAME)
+                .dateOfBirth(DEFAULT_DATE_OF_BIRTH)
+                .address(DEFAULT_ADDRESS);
+
+        Trainee result = mapper.toEntity(request);
 
         assertNotNull(result);
         assertNull(result.getId());
@@ -109,91 +130,126 @@ class TraineeMapperTest {
     }
 
     @Test
-    void shouldReturnNullWhenCreateDtoIsNull() {
-        Trainee result = mapper.toEntity(null);
+    void shouldReturnNullWhenCreateRequestIsNull() {
+        Trainee result = mapper.toEntity((TraineeCreateRequest) null);
 
         assertNull(result);
     }
 
     @Test
-    void shouldMapAllFieldsCorrectlyWhenMappingFromUpdateDtoWithUserId() {
-        TraineeUpdateDto dto = buildTraineeUpdateDto();
+    void shouldMapAllFieldsAndIgnoreIdUsernamePasswordWhenMappingFromUpdateRequest() {
+        TraineeUpdateRequest request = new TraineeUpdateRequest(DEFAULT_FIRST_NAME, DEFAULT_LAST_NAME, false)
+                .dateOfBirth(DEFAULT_DATE_OF_BIRTH)
+                .address(DEFAULT_ADDRESS);
 
-        Trainee result = mapper.toEntity(dto, DEFAULT_TRAINEE_ID);
+        Trainee result = mapper.toEntity(request, DEFAULT_USERNAME);
 
         assertNotNull(result);
-        assertNull(result.getUser().getUsername());
-        assertNull(result.getUser().getPassword());
+        assertNull(result.getId());
         assertNull(result.getUser().getId());
-        assertFalse(result.getUser().getIsActive());
-        assertEquals(DEFAULT_TRAINEE_ID, result.getId());
-        assertEquals(dto.firstName(), result.getUser().getFirstName());
-        assertEquals(dto.lastName(), result.getUser().getLastName());
-        assertEquals(dto.address(), result.getAddress());
-        assertEquals(dto.dateOfBirth(), result.getDateOfBirth());
+        assertNull(result.getUser().getPassword());
+        assertEquals(DEFAULT_FIRST_NAME, result.getUser().getFirstName());
+        assertEquals(DEFAULT_LAST_NAME, result.getUser().getLastName());
+        assertEquals(false, result.getUser().getIsActive());
+        assertEquals(DEFAULT_ADDRESS, result.getAddress());
+        assertEquals(DEFAULT_DATE_OF_BIRTH, result.getDateOfBirth());
+        assertEquals(DEFAULT_USERNAME, result.getUser().getUsername());
     }
 
     @Test
-    void shouldCreateEntityWithOnlyUserIdWhenUpdateDtoIsNullButUserIdProvided() {
-        Trainee result = mapper.toEntity(null, DEFAULT_TRAINEE_ID);
-
-        assertNotNull(result);
-        assertEquals(DEFAULT_TRAINEE_ID, result.getId());
-        assertNull(result.getUser());
-        assertNull(result.getAddress());
-        assertNull(result.getDateOfBirth());
-    }
-
-    @Test
-    void shouldReturnNullWhenBothUpdateDtoAndUserIdAreNull() {
+    void shouldReturnNullWhenUpdateRequestIsNull() {
         Trainee result = mapper.toEntity(null, null);
 
         assertNull(result);
     }
 
     @Test
-    void shouldMapFieldsAndLeaveUserIdNullWhenUpdateDtoIsValidButUserIdIsNull() {
-        TraineeUpdateDto dto = buildTraineeUpdateDto();
+    void shouldMapTrainerToAssignedTrainerResponse() {
+        Trainer trainer = buildTrainerWithId(1L);
 
-        Trainee result = mapper.toEntity(dto, null);
+        AssignedTrainerResponse result = mapper.toAssignedTrainerResponse(trainer);
 
         assertNotNull(result);
-        assertNull(result.getId());
-        assertNull(result.getUser().getUsername());
-        assertFalse(result.getUser().getIsActive());
+        assertEquals("marcus.stone", result.getUsername());
+        assertEquals("Marcus", result.getFirstName());
+        assertEquals("Stone", result.getLastName());
+        assertEquals(DEFAULT_SPECIALIZATION, result.getSpecialization());
     }
 
     @Test
-    void shouldMapAllItemsWhenTraineeListIsValid() {
-        Trainee trainee1 = buildTraineeWithId(DEFAULT_TRAINEE_ID);
-        Trainee trainee2 = buildTrainee(SECONDARY_TRAINEE_ID, "sophia.wilson");
-        List<Trainee> trainees = List.of(trainee1, trainee2);
+    void shouldMapTrainerListToAssignedTrainerResponseList() {
+        Trainer trainer1 = buildTrainerWithId(1L);
+        Trainer trainer2 = buildTrainerWithId(2L);
+        Set<Trainer> trainers = Set.of(trainer1, trainer2);
 
-        List<TraineeResponseDto> result = mapper.toDtoList(trainees);
+        List<AssignedTrainerResponse> result = mapper.toAssignedTrainerResponseList(trainers);
 
         assertNotNull(result);
         assertEquals(2, result.size());
-        assertEquals(DEFAULT_TRAINEE_ID, result.get(0).id());
-        assertEquals(DEFAULT_USERNAME, result.get(0).username());
-        assertEquals(SECONDARY_TRAINEE_ID, result.get(1).id());
-        assertEquals("sophia.wilson", result.get(1).username());
+        assertEquals("marcus.stone", result.get(0).getUsername());
+        assertEquals("marcus.stone", result.get(1).getUsername());
     }
 
     @Test
-    void shouldReturnEmptyListWhenTraineeListIsEmpty() {
-        List<Trainee> emptyList = Collections.emptyList();
+    void shouldReturnEmptyListWhenTrainerListIsEmpty() {
+        Set<Trainer> emptySet = Collections.emptySet();
 
-        List<TraineeResponseDto> result = mapper.toDtoList(emptyList);
+        List<AssignedTrainerResponse> result = mapper.toAssignedTrainerResponseList(emptySet);
 
         assertNotNull(result);
         assertTrue(result.isEmpty());
     }
 
     @Test
-    void shouldReturnNullWhenTraineeListIsNull() {
-        List<TraineeResponseDto> result = mapper.toDtoList(null);
+    void shouldMapTrainingToGetTraineeTrainingResponse() {
+        Training training = Training.builder()
+                .id(DEFAULT_TRAINING_ID)
+                .trainee(Trainee.builder().id(1L).build())
+                .trainer(Trainer.builder().id(2L).user(User.builder().username("trainer1").build()).build())
+                .trainingName(DEFAULT_TRAINING_NAME)
+                .trainingType(TrainingType.builder().trainingTypeName(DEFAULT_TRAINING_TYPE_NAME).build())
+                .trainingDuration(DEFAULT_DURATION)
+                .trainingDate(DEFAULT_DATE)
+                .build();
 
-        assertNull(result);
+        GetTraineeTrainingResponse result = mapper.toGetTraineeTrainingResponse(training);
+
+        assertNotNull(result);
+        assertEquals(DEFAULT_TRAINING_NAME, result.getTrainingName());
+        assertEquals(DEFAULT_TRAINING_TYPE_NAME, result.getTrainingType());
+        assertEquals(DEFAULT_DURATION, result.getTrainingDuration());
+        assertEquals(DEFAULT_DATE, result.getTrainingDate());
+        assertEquals("trainer1", result.getTrainerName());
+    }
+
+    @Test
+    void shouldMapTrainingListToGetTraineeTrainingResponseList() {
+        Training training = Training.builder()
+                .id(DEFAULT_TRAINING_ID)
+                .trainee(Trainee.builder().id(1L).build())
+                .trainer(Trainer.builder().id(2L).user(User.builder().username("trainer1").build()).build())
+                .trainingName(DEFAULT_TRAINING_NAME)
+                .trainingType(TrainingType.builder().trainingTypeName(DEFAULT_TRAINING_TYPE_NAME).build())
+                .trainingDuration(DEFAULT_DURATION)
+                .trainingDate(DEFAULT_DATE)
+                .build();
+        List<Training> trainings = List.of(training);
+
+        List<GetTraineeTrainingResponse> result = mapper.toGetTraineeTrainingResponseList(trainings);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(DEFAULT_TRAINING_NAME, result.get(0).getTrainingName());
+    }
+
+    @Test
+    void shouldReturnEmptyListWhenTrainingListIsEmpty() {
+        List<Training> emptyList = Collections.emptyList();
+
+        List<GetTraineeTrainingResponse> result = mapper.toGetTraineeTrainingResponseList(emptyList);
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
     }
 
 }

@@ -43,7 +43,6 @@ class LoggingTest {
     void setUp() {
         TraineeServiceImpl implementation = new TraineeServiceImpl();
         implementation.setTraineeDao(dao);
-        implementation.setTrainerDao(trainerDao);
         implementation.setCredentialGenerator(generator);
         service = implementation;
 

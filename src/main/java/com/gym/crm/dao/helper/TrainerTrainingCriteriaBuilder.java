@@ -19,6 +19,12 @@ import java.util.List;
 public class TrainerTrainingCriteriaBuilder extends TrainingCriteriaBuilder<TrainerTrainingSearchFilter> {
 
     @Override
+    protected void fetchRequiredAssociations(Root<Training> root) {
+        root.fetch(Training_.TRAINEE, JoinType.INNER).fetch(Trainee_.USER, JoinType.INNER);
+        root.fetch(Training_.TRAINING_TYPE, JoinType.INNER);
+    }
+
+    @Override
     protected Join<?, User> getTargetUserJoin(Root<Training> root) {
         return root.join(Training_.TRAINER, JoinType.INNER).join(Trainer_.USER, JoinType.INNER);
     }

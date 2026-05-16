@@ -1,6 +1,5 @@
 package com.gym.crm.service.impl;
 
-import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.dao.TrainerDao;
 import com.gym.crm.dao.TrainingTypeDao;
 import com.gym.crm.dto.LoginChangeDto;
@@ -28,7 +27,6 @@ public class TrainerServiceImpl implements TrainerService {
     private static final String ID_NULL_MSG = "Trainer ID cannot be null";
 
     private TrainerDao trainerDao;
-    private TraineeDao traineeDao;
     private TrainingTypeDao trainingTypeDao;
     private ProfileCredentialGenerator credentialGenerator;
     private PasswordEncoder passwordEncoder;
@@ -36,11 +34,6 @@ public class TrainerServiceImpl implements TrainerService {
     @Autowired
     public void setTrainerDao(TrainerDao trainerDao) {
         this.trainerDao = trainerDao;
-    }
-
-    @Autowired
-    public void setTraineeDao(TraineeDao traineeDao) {
-        this.traineeDao = traineeDao;
     }
 
     @Autowired
@@ -105,18 +98,6 @@ public class TrainerServiceImpl implements TrainerService {
     @Override
     public List<Trainer> getAllTrainers() {
         return trainerDao.findAll();
-    }
-
-    @Override
-    public List<Trainer> getAllTrainersNotAssignedToTrainee(String traineeUsername) {
-        Objects.requireNonNull(traineeUsername, "Trainee username cannot be null");
-        log.info("Getting all trainers not assigned to trainee with username: {}", traineeUsername);
-
-        if (!traineeExistsByUsername(traineeUsername)) {
-            throw EntityNotFoundException.forUsername("Trainee", traineeUsername);
-        }
-
-        return trainerDao.findAllNotAssignedToTrainee(traineeUsername);
     }
 
     @Override
@@ -239,10 +220,6 @@ public class TrainerServiceImpl implements TrainerService {
 
         trainerDao.update(updatedTrainer);
         log.info("Trainer with ID: {} deactivated successfully", trainerId);
-    }
-
-    private boolean traineeExistsByUsername(String username) {
-        return traineeDao.findByUsername(username).isPresent();
     }
 
 }

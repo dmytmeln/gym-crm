@@ -40,7 +40,8 @@ public class User {
     private String password;
 
     @Column(name = "is_active", nullable = false, columnDefinition = "TINYINT")
-    private Boolean isActive;
+    @Builder.Default
+    private Boolean isActive = true;
 
     @Override
     public boolean equals(Object o) {

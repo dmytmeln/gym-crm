@@ -15,8 +15,6 @@ public interface TrainerService {
 
     List<Trainer> getAllTrainers();
 
-    List<Trainer> getAllTrainersNotAssignedToTrainee(String traineeUsername);
-
     boolean doesUsernameAndPasswordMatch(String username, String password);
 
     Trainer updateTrainer(Trainer trainer);
