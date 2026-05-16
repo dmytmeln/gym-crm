@@ -52,7 +52,6 @@ class GymFacadeIntegrationTest extends BaseDbIntegrationTest {
     private static final String TRAINEE_PASSWORD = "password123";
     private static final Long TRAINER_ID = 1L;
     private static final String TRAINER_USERNAME = "marcus.stone";
-    private static final String TRAINER_PASSWORD = "password123";
     private static final Long TRAINING_ID = 1L;
     private static final String TRAINING_NAME = "Morning HIIT";
     private static final int TRAINING_DURATION = 60;
