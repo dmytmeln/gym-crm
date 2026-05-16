@@ -15,8 +15,8 @@ public interface TrainingDao {
 
     List<Training> findAll();
 
-    List<Training> findAllByTraineeCriteria(TraineeTrainingSearchFilter filter);
-
     List<Training> findAllByTrainerCriteria(TrainerTrainingSearchFilter filter);
+
+    List<Training> findTraineeTrainingsByCriteria(TraineeTrainingSearchFilter filter);
 
 }

@@ -10,8 +10,8 @@ import static com.gym.crm.test.helper.EntityRecursiveComparisonConfigs.getTraini
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@SpringJUnitConfig(HibernateTrainingTypeDao.class)
-class HibernateTrainingTypeDaoTest extends AbstractDaoTest<HibernateTrainingTypeDao> {
+@SpringJUnitConfig(TrainingTypeDaoImpl.class)
+class TrainingTypeDaoImplTest extends AbstractDaoTest<TrainingTypeDaoImpl> {
 
     private static final long EXISTING_ID = 1L;
     private static final String EXISTING_NAME = "CARDIO";

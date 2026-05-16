@@ -21,8 +21,14 @@ import java.util.List;
 public class TraineeTrainingCriteriaBuilder extends TrainingCriteriaBuilder<TraineeTrainingSearchFilter> {
 
     @Override
+    protected void fetchRequiredAssociations(Root<Training> root) {
+        root.fetch(Training_.TRAINER, JoinType.INNER).fetch(Trainer_.USER, JoinType.INNER);
+        root.fetch(Training_.TRAINING_TYPE, JoinType.INNER);
+    }
+
+    @Override
     protected void addSpecificFilters(CriteriaBuilder cb, Root<Training> root, TraineeTrainingSearchFilter criteria, List<Predicate> predicates) {
-        addTrainingTypeIdFilter(cb, root, criteria, predicates);
+        addTrainingTypeNameFilter(cb, root, criteria, predicates);
     }
 
     @Override
@@ -40,13 +46,13 @@ public class TraineeTrainingCriteriaBuilder extends TrainingCriteriaBuilder<Trai
         return root.join(Training_.TRAINER, JoinType.INNER).join(Trainer_.USER, JoinType.INNER);
     }
 
-    private void addTrainingTypeIdFilter(CriteriaBuilder cb, Root<Training> root, TraineeTrainingSearchFilter criteria, List<Predicate> predicates) {
-        if (criteria.getTrainingTypeId() == null) {
+    private void addTrainingTypeNameFilter(CriteriaBuilder cb, Root<Training> root, TraineeTrainingSearchFilter criteria, List<Predicate> predicates) {
+        if (criteria.getTrainingTypeName() == null || criteria.getTrainingTypeName().isBlank()) {
             return;
         }
 
         Join<Training, TrainingType> trainingTypeJoin = root.join(Training_.TRAINING_TYPE, JoinType.INNER);
-        predicates.add(cb.equal(trainingTypeJoin.get(TrainingType_.ID), criteria.getTrainingTypeId()));
+        predicates.add(cb.equal(trainingTypeJoin.get(TrainingType_.TRAINING_TYPE_NAME), criteria.getTrainingTypeName()));
     }
 
 }

@@ -30,25 +30,6 @@ class DtoValidationTest {
     }
 
     @ParameterizedTest
-    @MethodSource("traineeCreateDtoValidProvider")
-    void shouldValidateTraineeCreateDtoIsValid(TraineeCreateDto dto) {
-        Set<ConstraintViolation<TraineeCreateDto>> violations = validator.validate(dto);
-
-        assertThat(violations).isEmpty();
-    }
-
-    @ParameterizedTest
-    @MethodSource("traineeCreateDtoInvalidProvider")
-    void shouldValidateTraineeCreateDtoHasExpectedError(TraineeCreateDto dto, String expectedMessage) {
-        Set<ConstraintViolation<TraineeCreateDto>> violations = validator.validate(dto);
-
-        assertThat(violations)
-                .isNotEmpty()
-                .extracting(ConstraintViolation::getMessage)
-                .contains(expectedMessage);
-    }
-
-    @ParameterizedTest
     @MethodSource("trainerCreateDtoValidProvider")
     void shouldValidateTrainerCreateDtoIsValid(TrainerCreateDto dto) {
         Set<ConstraintViolation<TrainerCreateDto>> violations = validator.validate(dto);
@@ -122,24 +103,6 @@ class DtoValidationTest {
                 .isNotEmpty()
                 .extracting(ConstraintViolation::getMessage)
                 .contains(expectedMessage);
-    }
-
-    private static Stream<Arguments> traineeCreateDtoValidProvider() {
-        return Stream.of(
-                Arguments.of(TraineeCreateDto.builder().firstName("Liam").lastName("Miller").build())
-        );
-    }
-
-    private static Stream<Arguments> traineeCreateDtoInvalidProvider() {
-        return Stream.of(
-                Arguments.of(TraineeCreateDto.builder().firstName("").lastName("Miller").build(), "Trainee first name is required"),
-                Arguments.of(TraineeCreateDto.builder().firstName("Liam").lastName("").build(), "Trainee last name is required"),
-                Arguments.of(TraineeCreateDto.builder().firstName("A".repeat(101)).lastName("Miller").build(), "Trainee first name must not exceed 100 characters"),
-                Arguments.of(TraineeCreateDto.builder().firstName("Liam").lastName("A".repeat(101)).build(), "Trainee last name must not exceed 100 characters"),
-                Arguments.of(TraineeCreateDto.builder().firstName("Liam").lastName("Miller").address("A".repeat(101)).build(), "Address must not exceed 100 characters"),
-                Arguments.of(TraineeCreateDto.builder().firstName(null).lastName("Miller").build(), "Trainee first name is required"),
-                Arguments.of(TraineeCreateDto.builder().firstName("Liam").lastName(null).build(), "Trainee last name is required")
-        );
     }
 
     private static Stream<Arguments> trainerCreateDtoValidProvider() {

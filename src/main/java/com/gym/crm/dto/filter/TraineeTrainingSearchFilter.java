@@ -11,5 +11,5 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 public class TraineeTrainingSearchFilter extends TrainingSearchFilter {
     private String trainerName;
-    private Long trainingTypeId;
+    private String trainingTypeName;
 }

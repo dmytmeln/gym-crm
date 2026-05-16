@@ -17,8 +17,8 @@ import static com.gym.crm.test.helper.EntityRecursiveComparisonConfigs.getTraini
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@SpringJUnitConfig(HibernateTrainerDao.class)
-class HibernateTrainerDaoTest extends AbstractDaoTest<HibernateTrainerDao> {
+@SpringJUnitConfig(TrainerDaoImpl.class)
+class TrainerDaoImplTest extends AbstractDaoTest<TrainerDaoImpl> {
 
     private static final long EXISTING_ID = 1L;
     private static final long EXISTING_USER_ID = 4L;
@@ -243,20 +243,6 @@ class HibernateTrainerDaoTest extends AbstractDaoTest<HibernateTrainerDao> {
         List<Trainer> actual = dao.findAllByIds(ids);
 
         assertThat(actual).isEmpty();
-    }
-
-    @Test
-    void shouldFindAllNotAssignedToTrainee() {
-        List<Trainer> expected = List.of(
-                Trainer.builder().id(2L).build(),
-                Trainer.builder().id(3L).build());
-        String existingTraineeUsername = "liam.miller";
-
-        List<Trainer> actual = dao.findAllNotAssignedToTrainee(existingTraineeUsername);
-
-        assertThat(actual)
-                .hasSize(2)
-                .containsAll(expected);
     }
 
     @Test

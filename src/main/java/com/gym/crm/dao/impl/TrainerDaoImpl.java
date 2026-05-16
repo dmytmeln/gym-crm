@@ -12,7 +12,7 @@ import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
-public class HibernateTrainerDao implements TrainerDao {
+public class TrainerDaoImpl implements TrainerDao {
 
     private final TransactionManager transactionManager;
 
@@ -72,18 +72,6 @@ public class HibernateTrainerDao implements TrainerDao {
         return transactionManager.executeReturningWithinTx(session -> session
                 .createQuery("SELECT t FROM Trainer t LEFT JOIN FETCH t.trainees WHERE t.id IN (:ids)", Trainer.class)
                 .setParameter("ids", ids)
-                .getResultList());
-    }
-
-    @Override
-    public List<Trainer> findAllNotAssignedToTrainee(String traineeUsername) {
-        return transactionManager.executeReturningWithinTx(session -> session
-                .createQuery("""
-                                SELECT t FROM Trainer t LEFT JOIN FETCH t.user LEFT JOIN FETCH t.specialization
-                                WHERE t.id NOT IN (SELECT tr.id FROM Trainee te JOIN te.trainers tr WHERE te.user.username = :username)
-                                """,
-                        Trainer.class)
-                .setParameter("username", traineeUsername)
                 .getResultList());
     }
 

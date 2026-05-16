@@ -26,6 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(MockitoExtension.class)
 class AuthRestControllerTest {
 
+    private static final String BASE_PATH = "/api/v1";
     private static final String USERNAME = "liam.miller";
     private static final String PASSWORD = "password123";
     private static final String NEW_PASSWORD = "newPassword123";
@@ -48,6 +49,7 @@ class AuthRestControllerTest {
 
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setValidator(validatorFactoryBean)
+                .addPlaceholderValue("app.api.base-path", BASE_PATH)
                 .build();
     }
 
@@ -55,7 +57,7 @@ class AuthRestControllerTest {
     void shouldLoginWhenCredentialsAreValid() throws Exception {
         LoginRequest validRequest = buildLoginRequest(USERNAME, PASSWORD);
 
-        mockMvc.perform(post("/api/v1/auth/login")
+        mockMvc.perform(post(BASE_PATH + "/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isOk());
@@ -67,7 +69,7 @@ class AuthRestControllerTest {
     void shouldFailLoginWhenUsernameIsNull() throws Exception {
         LoginRequest invalidRequestWithNullUsername = buildLoginRequest(null, PASSWORD);
 
-        mockMvc.perform(post("/api/v1/auth/login")
+        mockMvc.perform(post(BASE_PATH + "/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequestWithNullUsername)))
                 .andExpect(status().isBadRequest());
@@ -79,7 +81,7 @@ class AuthRestControllerTest {
     void shouldFailLoginWhenPasswordIsNull() throws Exception {
         LoginRequest invalidRequestWithNullPassword = buildLoginRequest(USERNAME, null);
 
-        mockMvc.perform(post("/api/v1/auth/login")
+        mockMvc.perform(post(BASE_PATH + "/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequestWithNullPassword)))
                 .andExpect(status().isBadRequest());
@@ -91,7 +93,7 @@ class AuthRestControllerTest {
     void shouldChangePasswordWhenRequestIsValid() throws Exception {
         LoginChangeRequest validRequest = buildLoginChangeRequest(USERNAME, PASSWORD, NEW_PASSWORD);
 
-        mockMvc.perform(put("/api/v1/auth/password")
+        mockMvc.perform(put(BASE_PATH + "/auth/password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isOk());
@@ -103,7 +105,7 @@ class AuthRestControllerTest {
     void shouldFailChangePasswordWhenUsernameIsNull() throws Exception {
         LoginChangeRequest invalidRequestWithNullUsername = buildLoginChangeRequest(null, PASSWORD, NEW_PASSWORD);
 
-        mockMvc.perform(put("/api/v1/auth/password")
+        mockMvc.perform(put(BASE_PATH + "/auth/password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequestWithNullUsername)))
                 .andExpect(status().isBadRequest());
@@ -115,7 +117,7 @@ class AuthRestControllerTest {
     void shouldFailChangePasswordWhenOldPasswordIsNull() throws Exception {
         LoginChangeRequest invalidRequestWithNullOldPassword = buildLoginChangeRequest(USERNAME, null, NEW_PASSWORD);
 
-        mockMvc.perform(put("/api/v1/auth/password")
+        mockMvc.perform(put(BASE_PATH + "/auth/password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequestWithNullOldPassword)))
                 .andExpect(status().isBadRequest());
@@ -127,7 +129,7 @@ class AuthRestControllerTest {
     void shouldFailChangePasswordWhenNewPasswordIsNull() throws Exception {
         LoginChangeRequest invalidRequestWithNullNewPassword = buildLoginChangeRequest(USERNAME, PASSWORD, null);
 
-        mockMvc.perform(put("/api/v1/auth/password")
+        mockMvc.perform(put(BASE_PATH + "/auth/password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequestWithNullNewPassword)))
                 .andExpect(status().isBadRequest());

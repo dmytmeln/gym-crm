@@ -1,9 +1,7 @@
 package com.gym.crm.service.impl;
 
-import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.dao.TrainerDao;
 import com.gym.crm.dao.TrainingTypeDao;
-import com.gym.crm.entity.Trainee;
 import com.gym.crm.entity.Trainer;
 import com.gym.crm.entity.TrainingType;
 import com.gym.crm.entity.User;
@@ -21,7 +19,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.List;
 import java.util.Optional;
 
-import static com.gym.crm.factory.TraineeTestFactory.buildTraineeWithId;
 import static com.gym.crm.factory.TrainerTestFactory.DEFAULT_FIRST_NAME;
 import static com.gym.crm.factory.TrainerTestFactory.DEFAULT_LAST_NAME;
 import static com.gym.crm.factory.TrainerTestFactory.DEFAULT_PASSWORD;
@@ -51,9 +48,6 @@ class TrainerServiceImplTest {
     private TrainerDao dao;
 
     @Mock
-    private TraineeDao traineeDao;
-
-    @Mock
     private TrainingTypeDao trainingTypeDao;
 
     @Mock
@@ -68,7 +62,6 @@ class TrainerServiceImplTest {
     void setUp() {
         TrainerServiceImpl implementation = new TrainerServiceImpl();
         implementation.setTrainerDao(dao);
-        implementation.setTraineeDao(traineeDao);
         implementation.setTrainingTypeDao(trainingTypeDao);
         implementation.setCredentialGenerator(generator);
         implementation.setPasswordEncoder(passwordEncoder);
@@ -209,45 +202,6 @@ class TrainerServiceImplTest {
 
         assertNotNull(actual);
         assertEquals(expected, actual);
-    }
-
-    @Test
-    void shouldReturnTrainersNotAssignedToTrainee() {
-        String traineeUsername = "traineeUser";
-        Trainee trainee = buildTraineeWithId();
-        Trainer trainer = buildTrainerWithId();
-        List<Trainer> expected = List.of(trainer);
-
-        when(traineeDao.findByUsername(traineeUsername)).thenReturn(Optional.of(trainee));
-        when(dao.findAllNotAssignedToTrainee(traineeUsername)).thenReturn(expected);
-
-        List<Trainer> actual = service.getAllTrainersNotAssignedToTrainee(traineeUsername);
-
-        assertEquals(expected, actual);
-        verify(traineeDao).findByUsername(traineeUsername);
-        verify(dao).findAllNotAssignedToTrainee(traineeUsername);
-    }
-
-    @Test
-    void shouldThrowExceptionWhenGettingTrainersForUnknownTrainee() {
-        String nonExistingTraineeUsername = "unknown";
-
-        when(traineeDao.findByUsername(nonExistingTraineeUsername)).thenReturn(Optional.empty());
-
-        EntityNotFoundException exception = assertThrows(
-                EntityNotFoundException.class,
-                () -> service.getAllTrainersNotAssignedToTrainee(nonExistingTraineeUsername));
-
-        assertEquals("Trainee not found with username: unknown", exception.getMessage());
-        verify(traineeDao).findByUsername(nonExistingTraineeUsername);
-        verifyNoInteractions(dao);
-    }
-
-    @Test
-    void shouldThrowNullPointerWhenGettingTrainersForNullTrainee() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.getAllTrainersNotAssignedToTrainee(null));
-
-        assertEquals("Trainee username cannot be null", exception.getMessage());
     }
 
     @Test

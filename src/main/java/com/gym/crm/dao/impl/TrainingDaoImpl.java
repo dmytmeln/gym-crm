@@ -16,11 +16,11 @@ import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
-public class HibernateTrainingDao implements TrainingDao {
+public class TrainingDaoImpl implements TrainingDao {
 
     private final TransactionManager transactionManager;
-    private final TraineeTrainingCriteriaBuilder traineeTrainingCriteriaBuilder;
     private final TrainerTrainingCriteriaBuilder trainerTrainingCriteriaBuilder;
+    private final TraineeTrainingCriteriaBuilder traineeTrainingCriteriaBuilder;
 
     @Override
     public Training save(Training entity) {
@@ -54,13 +54,13 @@ public class HibernateTrainingDao implements TrainingDao {
     }
 
     @Override
-    public List<Training> findAllByTraineeCriteria(TraineeTrainingSearchFilter filter) {
-        return transactionManager.executeReturningWithinTx(session -> traineeTrainingCriteriaBuilder.findTrainings(session, filter));
+    public List<Training> findAllByTrainerCriteria(TrainerTrainingSearchFilter filter) {
+        return transactionManager.executeReturningWithinTx(session -> trainerTrainingCriteriaBuilder.findTrainings(session, filter));
     }
 
     @Override
-    public List<Training> findAllByTrainerCriteria(TrainerTrainingSearchFilter filter) {
-        return transactionManager.executeReturningWithinTx(session -> trainerTrainingCriteriaBuilder.findTrainings(session, filter));
+    public List<Training> findTraineeTrainingsByCriteria(TraineeTrainingSearchFilter filter) {
+        return transactionManager.executeReturningWithinTx(session -> traineeTrainingCriteriaBuilder.findTrainings(session, filter));
     }
 
 }

@@ -13,20 +13,20 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("${app.api.base-path}/auth")
 @RequiredArgsConstructor
 public class AuthRestController {
 
     private final GymFacade facade;
 
-    @PutMapping("/auth/password")
+    @PutMapping("/password")
     public ResponseEntity<Void> changePassword(@Valid @RequestBody LoginChangeRequest loginChangeRequest) {
         facade.changePassword(loginChangeRequest.getUsername(), loginChangeRequest);
 
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/auth/login")
+    @PostMapping("/login")
     public ResponseEntity<Void> login(@Valid @RequestBody LoginRequest loginRequest) {
         facade.login(loginRequest);
 

@@ -1,10 +1,12 @@
 package com.gym.crm.service.impl;
 
 import com.gym.crm.dao.TraineeDao;
-import com.gym.crm.dao.TrainerDao;
+import com.gym.crm.dao.TrainingDao;
 import com.gym.crm.dto.LoginChangeDto;
+import com.gym.crm.dto.filter.TraineeTrainingSearchFilter;
 import com.gym.crm.entity.Trainee;
 import com.gym.crm.entity.Trainer;
+import com.gym.crm.entity.Training;
 import com.gym.crm.entity.User;
 import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.security.AuthenticationException;
@@ -24,11 +26,10 @@ import java.util.Optional;
 @Service
 public class TraineeServiceImpl implements TraineeService {
 
-    private static final String ID_NULL_MSG = "Trainee ID cannot be null";
     private static final String USERNAME_NULL_MSG = "Trainee username cannot be null";
 
     private TraineeDao traineeDao;
-    private TrainerDao trainerDao;
+    private TrainingDao trainingDao;
     private ProfileCredentialGenerator credentialGenerator;
     private PasswordEncoder passwordEncoder;
 
@@ -38,8 +39,8 @@ public class TraineeServiceImpl implements TraineeService {
     }
 
     @Autowired
-    public void setTrainerDao(TrainerDao trainerDao) {
-        this.trainerDao = trainerDao;
+    public void setTrainingDao(TrainingDao trainingDao) {
+        this.trainingDao = trainingDao;
     }
 
     @Autowired
@@ -76,14 +77,6 @@ public class TraineeServiceImpl implements TraineeService {
     }
 
     @Override
-    public Trainee getTrainee(Long traineeId) {
-        Objects.requireNonNull(traineeId, ID_NULL_MSG);
-
-        return traineeDao.findById(traineeId)
-                .orElseThrow(() -> EntityNotFoundException.forId("Trainee", traineeId));
-    }
-
-    @Override
     public Trainee getTraineeByUsername(String username) {
         Objects.requireNonNull(username, USERNAME_NULL_MSG);
 
@@ -92,8 +85,22 @@ public class TraineeServiceImpl implements TraineeService {
     }
 
     @Override
-    public List<Trainee> getAllTrainees() {
-        return traineeDao.findAll();
+    public List<Trainer> getAvailableTrainers(String username) {
+        Objects.requireNonNull(username, USERNAME_NULL_MSG);
+        log.info("Getting available trainers for trainee username: {}", username);
+
+        traineeDao.findByUsername(username)
+                .orElseThrow(() -> EntityNotFoundException.forUsername("Trainee", username));
+
+        return traineeDao.findTraineeAvailableTrainers(username);
+    }
+
+    @Override
+    public List<Training> getTrainingsByCriteria(TraineeTrainingSearchFilter filter) {
+        Objects.requireNonNull(filter, "Filter cannot be null");
+        log.info("Getting trainings by criteria for trainee: {}", filter.getUsername());
+
+        return trainingDao.findTraineeTrainingsByCriteria(filter);
     }
 
     @Override
@@ -123,11 +130,12 @@ public class TraineeServiceImpl implements TraineeService {
     public Trainee updateTrainee(Trainee trainee) {
         Objects.requireNonNull(trainee, "Trainee cannot be null");
         Objects.requireNonNull(trainee.getUser(), "User cannot be null");
-        Objects.requireNonNull(trainee.getId(), ID_NULL_MSG);
-        log.info("Updating trainee with ID: {}", trainee.getId());
+        String username = trainee.getUser().getUsername();
+        Objects.requireNonNull(username, USERNAME_NULL_MSG);
+        log.info("Updating trainee with username: {}", username);
 
-        Trainee existingTrainee = traineeDao.findById(trainee.getId())
-                .orElseThrow(() -> EntityNotFoundException.forId("Trainee", trainee.getId()));
+        Trainee existingTrainee = traineeDao.findByUsername(username)
+                .orElseThrow(() -> EntityNotFoundException.forUsername("Trainee", username));
 
         User updatedUser = existingTrainee.getUser().toBuilder()
                 .firstName(trainee.getUser().getFirstName())
@@ -141,27 +149,31 @@ public class TraineeServiceImpl implements TraineeService {
                 .build();
 
         Trainee updatedTrainee = traineeDao.update(mergedTrainee);
-        log.info("Trainee with ID: {} and username: {} updated successfully", updatedTrainee.getId(), updatedTrainee.getUser().getUsername());
+        log.info("Trainee with username: {} updated successfully", username);
 
         return updatedTrainee;
     }
 
     @Override
     @Transaction
-    public Trainee updateTraineeTrainers(Long traineeId, List<Long> trainerIds) {
-        Objects.requireNonNull(traineeId, ID_NULL_MSG);
-        Objects.requireNonNull(trainerIds, "Trainer IDs cannot be null");
-        log.info("Updating trainers for trainee with ID: {}", traineeId);
+    public Trainee updateTraineeTrainers(String username, List<String> trainerUsernames) {
+        Objects.requireNonNull(username, USERNAME_NULL_MSG);
+        Objects.requireNonNull(trainerUsernames, "Trainer usernames cannot be null");
+        log.info("Updating trainers for trainee with username: {}", username);
 
-        Trainee trainee = traineeDao.findById(traineeId)
-                .orElseThrow(() -> EntityNotFoundException.forId("Trainee", traineeId));
-        List<Trainer> trainers = trainerDao.findAllByIds(trainerIds);
+        Trainee trainee = traineeDao.findByUsername(username)
+                .orElseThrow(() -> EntityNotFoundException.forUsername("Trainee", username));
+        List<Trainer> trainers = traineeDao.findTraineeTrainersByUsernames(trainerUsernames);
+
+        if (trainers.size() != trainerUsernames.size()) {
+            log.warn("Some trainers were not found for usernames: {}", trainerUsernames);
+        }
 
         trainee.getTrainers().clear();
         trainers.forEach(trainee::addTrainer);
 
         Trainee updatedTrainee = traineeDao.update(trainee);
-        log.info("Trainers successfully updated for trainee with ID: {}", updatedTrainee.getId());
+        log.info("Trainers successfully updated for trainee with username: {}", username);
 
         return updatedTrainee;
     }
@@ -188,62 +200,27 @@ public class TraineeServiceImpl implements TraineeService {
     }
 
     @Override
-    public void activateTrainee(Long traineeId) {
-        Objects.requireNonNull(traineeId, ID_NULL_MSG);
-        log.info("Activating trainee with ID: {}", traineeId);
-        Trainee trainee = traineeDao.findById(traineeId)
-                .orElseThrow(() -> EntityNotFoundException.forId("Trainee", traineeId));
+    public void updateActivationStatus(String username, boolean isActive) {
+        Objects.requireNonNull(username, USERNAME_NULL_MSG);
+        log.info("Updating activation status for trainee with username: {} to {}", username, isActive);
 
-        if (trainee.getUser().getIsActive()) {
-            throw new IllegalStateException("Trainee is already active");
+        Trainee trainee = traineeDao.findByUsername(username)
+                .orElseThrow(() -> EntityNotFoundException.forUsername("Trainee", username));
+
+        if (trainee.getUser().getIsActive() == isActive) {
+            log.warn("Trainee with username: {} is already {}", username, isActive ? "active" : "inactive");
+            return;
         }
 
         User updatedUser = trainee.getUser().toBuilder()
-                .isActive(true)
+                .isActive(isActive)
                 .build();
         Trainee updatedTrainee = trainee.toBuilder()
                 .user(updatedUser)
                 .build();
 
         traineeDao.update(updatedTrainee);
-        log.info("Trainee with ID: {} activated successfully", traineeId);
-    }
-
-    @Override
-    public void deactivateTrainee(Long traineeId) {
-        Objects.requireNonNull(traineeId, ID_NULL_MSG);
-        log.info("Deactivating trainee with ID: {}", traineeId);
-        Trainee trainee = traineeDao.findById(traineeId)
-                .orElseThrow(() -> EntityNotFoundException.forId("Trainee", traineeId));
-
-        if (!trainee.getUser().getIsActive()) {
-            throw new IllegalStateException("Trainee is already deactivated");
-        }
-
-        User updatedUser = trainee.getUser().toBuilder()
-                .isActive(false)
-                .build();
-        Trainee updatedTrainee = trainee.toBuilder()
-                .user(updatedUser)
-                .build();
-
-        traineeDao.update(updatedTrainee);
-        log.info("Trainee with ID: {} deactivated successfully", traineeId);
-    }
-
-    @Override
-    public boolean deleteTrainee(Long traineeId) {
-        Objects.requireNonNull(traineeId, ID_NULL_MSG);
-        log.info("Deleting trainee with ID: {}", traineeId);
-
-        boolean deleted = traineeDao.deleteById(traineeId);
-        if (!deleted) {
-            log.warn("Trainee with ID: {} not found for deletion", traineeId);
-            return false;
-        }
-
-        log.info("Trainee with ID: {} deleted successfully", traineeId);
-        return true;
+        log.info("Activation status for trainee with username: {} updated successfully", username);
     }
 
     @Override

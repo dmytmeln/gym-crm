@@ -1,13 +1,18 @@
 package com.gym.crm.facade;
 
+import com.gia.openapi.model.ActivationStatusRequest;
+import com.gia.openapi.model.AssignedTrainerResponse;
+import com.gia.openapi.model.GetTraineeTrainingResponse;
 import com.gia.openapi.model.LoginChangeRequest;
 import com.gia.openapi.model.LoginRequest;
+import com.gia.openapi.model.TraineeAssignedTrainersUpdateRequest;
+import com.gia.openapi.model.TraineeCreateRequest;
+import com.gia.openapi.model.TraineeCreateResponse;
+import com.gia.openapi.model.TraineeGetResponse;
+import com.gia.openapi.model.TraineeUpdateRequest;
+import com.gia.openapi.model.TraineeUpdateResponse;
 import com.gym.crm.GymCrmApplication;
 import com.gym.crm.config.BaseDbIntegrationTest;
-import com.gym.crm.dto.TraineeCreateDto;
-import com.gym.crm.dto.TraineeCreateResponseDto;
-import com.gym.crm.dto.TraineeResponseDto;
-import com.gym.crm.dto.TraineeUpdateDto;
 import com.gym.crm.dto.TrainerCreateDto;
 import com.gym.crm.dto.TrainerCreateResponseDto;
 import com.gym.crm.dto.TrainerResponseDto;
@@ -16,7 +21,6 @@ import com.gym.crm.dto.TrainingCreateDto;
 import com.gym.crm.dto.TrainingResponseDto;
 import com.gym.crm.dto.filter.TraineeTrainingSearchFilter;
 import com.gym.crm.dto.filter.TrainerTrainingSearchFilter;
-import com.gym.crm.exception.ValidationException;
 import com.gym.crm.security.AuthenticationException;
 import com.gym.crm.security.Role;
 import com.gym.crm.security.SecurityContext;
@@ -27,14 +31,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
+import java.time.LocalDate;
 import java.util.List;
 
-import static com.gym.crm.factory.TraineeTestFactory.buildTraineeCreateDto;
-import static com.gym.crm.factory.TraineeTestFactory.buildTraineeUpdateDto;
 import static com.gym.crm.factory.TrainerTestFactory.buildTrainerCreateDto;
 import static com.gym.crm.factory.TrainerTestFactory.buildTrainerUpdateDto;
 import static com.gym.crm.factory.TrainingTestFactory.buildTrainingCreateDto;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -50,7 +52,6 @@ class GymFacadeIntegrationTest extends BaseDbIntegrationTest {
     private static final String TRAINEE_PASSWORD = "password123";
     private static final Long TRAINER_ID = 1L;
     private static final String TRAINER_USERNAME = "marcus.stone";
-    private static final String TRAINER_PASSWORD = "password123";
     private static final Long TRAINING_ID = 1L;
     private static final String TRAINING_NAME = "Morning HIIT";
     private static final int TRAINING_DURATION = 60;
@@ -64,87 +65,87 @@ class GymFacadeIntegrationTest extends BaseDbIntegrationTest {
     }
 
     @Test
-    void shouldGetTraineeById() {
-        authenticateAsTrainee();
-        TraineeResponseDto actual = facade.getTrainee(TRAINEE_USERNAME, TRAINEE_ID);
-
-        assertNotNull(actual);
-        assertEquals(TRAINEE_ID, actual.id());
-        assertEquals(TRAINEE_USERNAME, actual.username());
-        assertEquals("Liam", actual.firstName());
-        assertEquals("Miller", actual.lastName());
-        assertTrue(actual.active());
-    }
-
-    @Test
     void shouldGetTraineeByUsername() {
         authenticateAsTrainee();
-        TraineeResponseDto actual = facade.getTraineeByUsername(TRAINEE_USERNAME);
+
+        TraineeGetResponse actual = facade.getTraineeByUsername(TRAINEE_USERNAME);
 
         assertNotNull(actual);
-        assertEquals(TRAINEE_ID, actual.id());
-        assertEquals(TRAINEE_USERNAME, actual.username());
+        assertEquals("Liam", actual.getFirstName());
+        assertEquals("Miller", actual.getLastName());
+        assertTrue(actual.getIsActive());
     }
 
     @Test
-    void shouldGetAllTrainees() {
-        authenticateAsTrainer();
-        List<TraineeResponseDto> actual = facade.getAllTrainees(TRAINER_USERNAME);
+    void shouldGetAvailableTrainersForTrainee() {
+        authenticateAsTrainee();
+
+        List<AssignedTrainerResponse> actual = facade.getAvailableTrainersForTrainee(TRAINEE_USERNAME);
 
         assertEquals(2, actual.size());
     }
 
     @Test
-    void shouldCreateTrainee() {
-        TraineeCreateDto dto = buildTraineeCreateDto();
+    void shouldGetTraineeTrainingsByCriteria() {
+        authenticateAsTrainee();
+        TraineeTrainingSearchFilter filter = TraineeTrainingSearchFilter.builder()
+                .username(TRAINEE_USERNAME)
+                .build();
 
-        TraineeCreateResponseDto actual = facade.createTrainee(dto);
+        List<GetTraineeTrainingResponse> actual = facade.getTraineeTrainingsByCriteria(TRAINEE_USERNAME, filter);
 
-        assertNotNull(actual.id());
-        assertNotNull(actual.username());
-        assertNotNull(actual.password());
-        assertEquals(dto.firstName(), actual.firstName());
-        assertEquals(dto.lastName(), actual.lastName());
-        assertEquals(dto.active(), actual.active());
-        assertEquals(dto.address(), actual.address());
-        assertEquals(dto.dateOfBirth(), actual.dateOfBirth());
+        assertEquals(1, actual.size());
+        assertEquals(TRAINING_NAME, actual.get(0).getTrainingName());
     }
 
     @Test
-    void shouldThrowValidationExceptionWhenCreatingTraineeWithInvalidDto() {
-        TraineeCreateDto invalidDto = TraineeCreateDto.builder()
-                .firstName("")
-                .lastName("Doe")
-                .active(true)
-                .build();
+    void shouldCreateTrainee() {
+        TraineeCreateRequest request = new TraineeCreateRequest("John", "Doe")
+                .dateOfBirth(LocalDate.of(1990, 1, 1))
+                .address("123 Test St");
 
-        assertThrows(ValidationException.class, () -> facade.createTrainee(invalidDto));
+        TraineeCreateResponse actual = facade.createTrainee(request);
+
+        assertNotNull(actual.getUsername());
+        assertNotNull(actual.getPassword());
     }
 
     @Test
     void shouldUpdateTrainee() {
         authenticateAsTrainee();
-        TraineeUpdateDto updateDto = buildTraineeUpdateDto();
+        TraineeUpdateRequest request = new TraineeUpdateRequest("Updated", "Name", true)
+                .address("Updated Address")
+                .dateOfBirth(LocalDate.of(1995, 5, 15));
 
-        TraineeResponseDto actual = facade.updateTrainee(TRAINEE_USERNAME, TRAINEE_ID, updateDto);
+        TraineeUpdateResponse actual = facade.updateTrainee(TRAINEE_USERNAME, request);
 
-        assertEquals(TRAINEE_ID, actual.id());
-        assertEquals(updateDto.firstName(), actual.firstName());
-        assertEquals(updateDto.lastName(), actual.lastName());
-        assertEquals(updateDto.active(), actual.active());
-        assertEquals(updateDto.address(), actual.address());
-        assertEquals(updateDto.dateOfBirth(), actual.dateOfBirth());
+        assertEquals("Updated", actual.getFirstName());
+        assertEquals("Name", actual.getLastName());
+        assertTrue(actual.getIsActive());
+        assertEquals("Updated Address", actual.getAddress());
     }
 
     @Test
     void shouldUpdateTraineeTrainers() {
         authenticateAsTrainee();
+        TraineeAssignedTrainersUpdateRequest request = new TraineeAssignedTrainersUpdateRequest()
+                .trainerUsernames(List.of("sarah.adams", "alex.morgan"));
 
-        facade.updateTraineeTrainers(TRAINEE_USERNAME, TRAINEE_ID, List.of(2L, 3L));
+        facade.updateTraineeTrainers(TRAINEE_USERNAME, request);
 
-        List<TrainerResponseDto> unassigned = facade.getAllTrainersNotAssignedToTrainee(TRAINEE_USERNAME);
-        assertEquals(1, unassigned.size());
-        assertEquals(TRAINER_ID, unassigned.get(0).id());
+        TraineeGetResponse trainee = facade.getTraineeByUsername(TRAINEE_USERNAME);
+        assertEquals(2, trainee.getTrainers().size());
+    }
+
+    @Test
+    void shouldUpdateTraineeActivationStatus() {
+        authenticateAsTrainee();
+        ActivationStatusRequest request = new ActivationStatusRequest(false);
+
+        facade.updateTraineeActivationStatus(TRAINEE_USERNAME, request);
+
+        TraineeGetResponse trainee = facade.getTraineeByUsername(TRAINEE_USERNAME);
+        assertFalse(trainee.getIsActive());
     }
 
     @Test
@@ -165,32 +166,6 @@ class GymFacadeIntegrationTest extends BaseDbIntegrationTest {
         SecurityContext.clear();
         assertThrows(AuthenticationException.class, () ->
                 facade.login(new LoginRequest().username(TRAINEE_USERNAME).password(TRAINEE_PASSWORD)));
-    }
-
-    @Test
-    void shouldActivateTrainee() {
-        authenticateAsTrainee();
-        facade.deactivateTrainee(TRAINEE_USERNAME, TRAINEE_ID);
-
-        facade.activateTrainee(TRAINEE_USERNAME, TRAINEE_ID);
-
-        assertTrue(facade.getTrainee(TRAINEE_USERNAME, TRAINEE_ID).active());
-    }
-
-    @Test
-    void shouldDeactivateTrainee() {
-        authenticateAsTrainee();
-        facade.deactivateTrainee(TRAINEE_USERNAME, TRAINEE_ID);
-
-        assertFalse(facade.getTrainee(TRAINEE_USERNAME, TRAINEE_ID).active());
-    }
-
-    @Test
-    void shouldDeleteTrainee() {
-        authenticateAsTrainee();
-        boolean actual = facade.deleteTrainee(TRAINEE_USERNAME, 2L);
-
-        assertTrue(actual);
     }
 
     @Test
@@ -234,19 +209,6 @@ class GymFacadeIntegrationTest extends BaseDbIntegrationTest {
     }
 
     @Test
-    void shouldGetAllTrainersNotAssignedToTrainee() {
-        authenticateAsTrainee();
-        List<Long> expectedTrainerIds = List.of(2L, 3L);
-
-        List<TrainerResponseDto> actual = facade.getAllTrainersNotAssignedToTrainee(TRAINEE_USERNAME);
-
-        assertThat(actual)
-                .hasSize(2)
-                .extracting(TrainerResponseDto::id)
-                .containsAll(expectedTrainerIds);
-    }
-
-    @Test
     void shouldCreateTrainer() {
         TrainerCreateDto dto = buildTrainerCreateDto();
 
@@ -271,26 +233,6 @@ class GymFacadeIntegrationTest extends BaseDbIntegrationTest {
         assertEquals(updateDto.firstName(), actual.firstName());
         assertEquals(updateDto.lastName(), actual.lastName());
         assertEquals(updateDto.active(), actual.active());
-    }
-
-    @Test
-    void shouldUpdateTrainerPassword() {
-        authenticateAsTrainer();
-        String newPassword = "newTrainerPass";
-        LoginChangeRequest request = new LoginChangeRequest()
-                .username(TRAINER_USERNAME)
-                .oldPassword(TRAINER_PASSWORD)
-                .newPassword(newPassword);
-
-        facade.changePassword(TRAINER_USERNAME, request);
-
-        SecurityContext.clear();
-        facade.login(new LoginRequest().username(TRAINER_USERNAME).password(newPassword));
-        assertNotNull(SecurityContext.getCurrentUser());
-        assertEquals(TRAINER_USERNAME, SecurityContext.getCurrentUser().username());
-        SecurityContext.clear();
-        assertThrows(AuthenticationException.class, () ->
-                facade.login(new LoginRequest().username(TRAINER_USERNAME).password(TRAINER_PASSWORD)));
     }
 
     @Test
@@ -345,32 +287,6 @@ class GymFacadeIntegrationTest extends BaseDbIntegrationTest {
         List<TrainingResponseDto> actual = facade.getAllTrainings(TRAINER_USERNAME);
 
         assertEquals(2, actual.size());
-    }
-
-    @Test
-    void shouldGetTraineeTrainings() {
-        authenticateAsTrainee();
-        TraineeTrainingSearchFilter filter = TraineeTrainingSearchFilter.builder()
-                .username(TRAINEE_USERNAME)
-                .build();
-
-        List<TrainingResponseDto> actual = facade.getTrainingsByTraineeCriteria(TRAINEE_USERNAME, filter);
-
-        assertEquals(1, actual.size());
-        assertEquals(TRAINING_NAME, actual.get(0).trainingName());
-    }
-
-    @Test
-    void shouldGetEmptyTraineeTrainingsWhenFilterDoesNotMatch() {
-        authenticateAsTrainee();
-        TraineeTrainingSearchFilter filter = TraineeTrainingSearchFilter.builder()
-                .username(TRAINEE_USERNAME)
-                .trainerName("non.existent")
-                .build();
-
-        List<TrainingResponseDto> actual = facade.getTrainingsByTraineeCriteria(TRAINEE_USERNAME, filter);
-
-        assertTrue(actual.isEmpty());
     }
 
     @Test

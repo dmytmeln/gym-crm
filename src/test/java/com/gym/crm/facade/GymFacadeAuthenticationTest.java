@@ -1,11 +1,11 @@
 package com.gym.crm.facade;
 
 import com.gia.openapi.model.LoginRequest;
+import com.gia.openapi.model.TraineeCreateRequest;
+import com.gia.openapi.model.TraineeCreateResponse;
+import com.gia.openapi.model.TraineeGetResponse;
 import com.gym.crm.GymCrmApplication;
 import com.gym.crm.config.BaseDbIntegrationTest;
-import com.gym.crm.dto.TraineeCreateDto;
-import com.gym.crm.dto.TraineeCreateResponseDto;
-import com.gym.crm.dto.TraineeResponseDto;
 import com.gym.crm.dto.TrainerCreateDto;
 import com.gym.crm.dto.TrainerCreateResponseDto;
 import com.gym.crm.security.AuthenticationException;
@@ -50,19 +50,15 @@ class GymFacadeAuthenticationTest extends BaseDbIntegrationTest {
 
     @Test
     void shouldAllowCreateTraineeWithoutLogin() {
-        TraineeCreateDto dto = TraineeCreateDto.builder()
-                .firstName("New")
-                .lastName("Trainee")
-                .active(true)
+        TraineeCreateRequest request = new TraineeCreateRequest("New", "Trainee")
                 .address("Address")
-                .dateOfBirth(LocalDate.now())
-                .build();
+                .dateOfBirth(LocalDate.now());
 
-        TraineeCreateResponseDto response = gymFacade.createTrainee(dto);
+        TraineeCreateResponse response = gymFacade.createTrainee(request);
 
         assertThat(response).isNotNull();
-        assertThat(response.firstName()).isEqualTo(dto.firstName());
-        assertThat(response.lastName()).isEqualTo(dto.lastName());
+        assertThat(response.getUsername()).isNotBlank();
+        assertThat(response.getPassword()).isNotBlank();
     }
 
     @Test
@@ -82,23 +78,22 @@ class GymFacadeAuthenticationTest extends BaseDbIntegrationTest {
     }
 
     @Test
-    void shouldDenyGetTraineeWithoutLogin() {
-        assertThatThrownBy(() -> gymFacade.getTrainee(TRAINEE_USERNAME, 1L))
+    void shouldDenyGetTraineeByUsernameWithoutLogin() {
+        assertThatThrownBy(() -> gymFacade.getTraineeByUsername(TRAINEE_USERNAME))
                 .isInstanceOf(AuthenticationException.class)
                 .hasMessage("User is not authenticated");
     }
 
     @Test
-    void shouldAllowGetTraineeAfterLogin() {
+    void shouldAllowGetTraineeByUsernameAfterLogin() {
         LoginRequest loginDto = new LoginRequest().username(TRAINEE_USERNAME).password(TRAINEE_PASSWORD);
         gymFacade.login(loginDto);
 
-        TraineeResponseDto response = gymFacade.getTrainee(TRAINEE_USERNAME, 1L);
+        TraineeGetResponse response = gymFacade.getTraineeByUsername(TRAINEE_USERNAME);
 
         assertThat(response).isNotNull();
-        assertThat(response.firstName()).isEqualTo("Liam");
-        assertThat(response.lastName()).isEqualTo("Miller");
-        assertThat(response.username()).isEqualTo("liam.miller");
+        assertThat(response.getFirstName()).isEqualTo("Liam");
+        assertThat(response.getLastName()).isEqualTo("Miller");
     }
 
     @Test

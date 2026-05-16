@@ -1,9 +1,5 @@
 package com.gym.crm.factory;
 
-import com.gym.crm.dto.TraineeCreateDto;
-import com.gym.crm.dto.TraineeCreateResponseDto;
-import com.gym.crm.dto.TraineeResponseDto;
-import com.gym.crm.dto.TraineeUpdateDto;
 import com.gym.crm.entity.Trainee;
 import com.gym.crm.entity.User;
 
@@ -12,8 +8,6 @@ import java.time.LocalDate;
 public class TraineeTestFactory {
 
     public static final Long DEFAULT_TRAINEE_ID = 1L;
-    public static final Long SECONDARY_TRAINEE_ID = 2L;
-    public static final Long NON_EXISTENT_TRAINEE_ID = 999L;
     public static final Long DEFAULT_USER_ID = 1L;
     public static final String DEFAULT_USERNAME = "liam.miller";
     public static final String DEFAULT_FIRST_NAME = "Liam";
@@ -39,23 +33,8 @@ public class TraineeTestFactory {
                 .isActive(DEFAULT_ACTIVE);
     }
 
-    public static Trainee buildTrainee(Long id, String username) {
-        return getDefaultTraineeBuilder()
-                .id(id)
-                .user(buildUser(username))
-                .build();
-    }
-
     public static User buildUser() {
         return getDefaultUserBuilder().build();
-    }
-
-    public static User buildUser(String username, String firstName, String lastName) {
-        return getDefaultUserBuilder()
-                .username(username)
-                .firstName(firstName)
-                .lastName(lastName)
-                .build();
     }
 
     public static User buildUser(String username) {
@@ -68,17 +47,6 @@ public class TraineeTestFactory {
         return getDefaultUserBuilder()
                 .username(null)
                 .password(null)
-                .build();
-    }
-
-    public static Trainee buildTrainee() {
-        return getDefaultTraineeBuilder().build();
-    }
-
-    public static Trainee buildTrainee(Long id, String username, String firstName, String lastName) {
-        return getDefaultTraineeBuilder()
-                .id(id)
-                .user(buildUser(username, firstName, lastName))
                 .build();
     }
 
@@ -118,65 +86,6 @@ public class TraineeTestFactory {
         return getDefaultTraineeBuilder()
                 .user(null)
                 .build();
-    }
-
-    public static TraineeCreateDto.TraineeCreateDtoBuilder getDefaultTraineeCreateDtoBuilder() {
-        return TraineeCreateDto.builder()
-                .firstName(DEFAULT_FIRST_NAME)
-                .lastName(DEFAULT_LAST_NAME)
-                .active(DEFAULT_ACTIVE)
-                .address(DEFAULT_ADDRESS)
-                .dateOfBirth(DEFAULT_DATE_OF_BIRTH);
-    }
-
-    public static TraineeCreateDto buildTraineeCreateDto() {
-        return getDefaultTraineeCreateDtoBuilder().build();
-    }
-
-    public static TraineeUpdateDto.TraineeUpdateDtoBuilder getDefaultTraineeUpdateDtoBuilder() {
-        return TraineeUpdateDto.builder()
-                .firstName("Sophia")
-                .lastName("Wilson")
-                .active(false)
-                .address("456 Oak Ave")
-                .dateOfBirth(LocalDate.of(1995, 5, 15));
-    }
-
-    public static TraineeUpdateDto buildTraineeUpdateDto() {
-        return getDefaultTraineeUpdateDtoBuilder().build();
-    }
-
-    public static TraineeResponseDto.TraineeResponseDtoBuilder getDefaultTraineeResponseDtoBuilder() {
-        return TraineeResponseDto.builder()
-                .id(DEFAULT_TRAINEE_ID)
-                .userId(DEFAULT_USER_ID)
-                .username(DEFAULT_USERNAME)
-                .firstName(DEFAULT_FIRST_NAME)
-                .lastName(DEFAULT_LAST_NAME)
-                .active(DEFAULT_ACTIVE)
-                .address(DEFAULT_ADDRESS)
-                .dateOfBirth(DEFAULT_DATE_OF_BIRTH);
-    }
-
-    public static TraineeResponseDto buildTraineeResponseDto() {
-        return getDefaultTraineeResponseDtoBuilder().build();
-    }
-
-    public static TraineeCreateResponseDto.TraineeCreateResponseDtoBuilder getDefaultTraineeCreateResponseDtoBuilder() {
-        return TraineeCreateResponseDto.builder()
-                .id(DEFAULT_TRAINEE_ID)
-                .userId(DEFAULT_USER_ID)
-                .username(DEFAULT_USERNAME)
-                .firstName(DEFAULT_FIRST_NAME)
-                .lastName(DEFAULT_LAST_NAME)
-                .password(DEFAULT_PASSWORD)
-                .active(DEFAULT_ACTIVE)
-                .address(DEFAULT_ADDRESS)
-                .dateOfBirth(DEFAULT_DATE_OF_BIRTH);
-    }
-
-    public static TraineeCreateResponseDto buildTraineeCreateResponseDto() {
-        return getDefaultTraineeCreateResponseDtoBuilder().build();
     }
 
 }

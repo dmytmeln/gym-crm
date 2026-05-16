@@ -2,6 +2,7 @@ package com.gym.crm.dao.impl;
 
 import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.entity.Trainee;
+import com.gym.crm.entity.Trainer;
 import com.gym.crm.transaction.TransactionManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -12,7 +13,7 @@ import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
-public class HibernateTraineeDao implements TraineeDao {
+public class TraineeDaoImpl implements TraineeDao {
 
     private final TransactionManager transactionManager;
 
@@ -42,7 +43,10 @@ public class HibernateTraineeDao implements TraineeDao {
 
         return transactionManager.executeReturningWithinTx(session -> session
                 .createQuery(
-                        "SELECT t FROM Trainee t JOIN FETCH t.user LEFT JOIN FETCH t.trainings LEFT JOIN FETCH t.trainers WHERE t.id = :id",
+                        """
+                                SELECT t FROM Trainee t JOIN FETCH t.user LEFT JOIN FETCH t.trainers tr
+                                LEFT JOIN FETCH tr.user LEFT JOIN FETCH tr.specialization
+                                WHERE t.id = :id""",
                         Trainee.class)
                 .setParameter("id", id)
                 .uniqueResultOptional());
@@ -54,7 +58,10 @@ public class HibernateTraineeDao implements TraineeDao {
 
         return transactionManager.executeReturningWithinTx(session -> session
                 .createQuery(
-                        "SELECT t FROM Trainee t JOIN FETCH t.user u LEFT JOIN FETCH t.trainings LEFT JOIN FETCH t.trainers WHERE u.username = :username",
+                        """
+                                SELECT t FROM Trainee t JOIN FETCH t.user u LEFT JOIN FETCH t.trainers tr
+                                LEFT JOIN FETCH tr.user LEFT JOIN FETCH tr.specialization
+                                WHERE u.username = :username""",
                         Trainee.class)
                 .setParameter("username", username)
                 .uniqueResultOptional());
@@ -63,8 +70,33 @@ public class HibernateTraineeDao implements TraineeDao {
     @Override
     public List<Trainee> findAll() {
         return transactionManager.executeReturningWithinTx(session -> session
-                .createQuery("SELECT t FROM Trainee t JOIN FETCH t.user LEFT JOIN FETCH t.trainings LEFT JOIN FETCH t.trainers", Trainee.class)
+                .createQuery("""
+                        SELECT t FROM Trainee t JOIN FETCH t.user LEFT JOIN FETCH t.trainers tr
+                        LEFT JOIN FETCH tr.user LEFT JOIN FETCH tr.specialization""", Trainee.class)
                 .list());
+    }
+
+    @Override
+    public List<Trainer> findTraineeAvailableTrainers(String traineeUsername) {
+        return transactionManager.executeReturningWithinTx(session -> session
+                .createQuery("""
+                                SELECT t FROM Trainer t LEFT JOIN FETCH t.user LEFT JOIN FETCH t.specialization
+                                WHERE t.id NOT IN (SELECT tr.id FROM Trainee te JOIN te.trainers tr WHERE te.user.username = :username)
+                                """,
+                        Trainer.class)
+                .setParameter("username", traineeUsername)
+                .getResultList());
+    }
+
+    @Override
+    public List<Trainer> findTraineeTrainersByUsernames(List<String> trainerUsernames) {
+        if (trainerUsernames == null || trainerUsernames.isEmpty()) {
+            return List.of();
+        }
+        return transactionManager.executeReturningWithinTx(session -> session
+                .createQuery("SELECT t FROM Trainer t JOIN FETCH t.user WHERE t.user.username IN (:usernames)", Trainer.class)
+                .setParameter("usernames", trainerUsernames)
+                .getResultList());
     }
 
     @Override
@@ -79,7 +111,10 @@ public class HibernateTraineeDao implements TraineeDao {
             Trainee merged = session.merge(entity);
 
             return session.createQuery(
-                            "SELECT t FROM Trainee t JOIN FETCH t.user LEFT JOIN FETCH t.trainings LEFT JOIN FETCH t.trainers WHERE t.id = :id",
+                            """
+                                    SELECT t FROM Trainee t JOIN FETCH t.user LEFT JOIN FETCH t.trainers tr
+                                    LEFT JOIN FETCH tr.user LEFT JOIN FETCH tr.specialization
+                                    WHERE t.id = :id""",
                             Trainee.class)
                     .setParameter("id", merged.getId())
                     .uniqueResult();
@@ -94,28 +129,6 @@ public class HibernateTraineeDao implements TraineeDao {
             Optional<Trainee> traineeOptional = session.createQuery(
                             "SELECT t FROM Trainee t JOIN FETCH t.user u WHERE u.username = :username", Trainee.class)
                     .setParameter("username", username)
-                    .uniqueResultOptional();
-
-            if (traineeOptional.isEmpty()) {
-                return false;
-            }
-
-            Trainee trainee = traineeOptional.get();
-            session.remove(trainee);
-            session.remove(trainee.getUser());
-
-            return true;
-        });
-    }
-
-    @Override
-    public boolean deleteById(Long id) {
-        Objects.requireNonNull(id, "Trainee ID cannot be null");
-
-        return transactionManager.executeReturningWithinTx(session -> {
-            Optional<Trainee> traineeOptional = session.createQuery(
-                            "SELECT t FROM Trainee t JOIN FETCH t.user u WHERE t.id = :id", Trainee.class)
-                    .setParameter("id", id)
                     .uniqueResultOptional();
 
             if (traineeOptional.isEmpty()) {
