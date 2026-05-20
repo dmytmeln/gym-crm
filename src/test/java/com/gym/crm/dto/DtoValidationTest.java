@@ -12,7 +12,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import java.time.LocalDate;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -27,25 +26,6 @@ class DtoValidationTest {
         try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
             validator = factory.getValidator();
         }
-    }
-
-    @ParameterizedTest
-    @MethodSource("trainingCreateDtoValidProvider")
-    void shouldValidateTrainingCreateDtoIsValid(TrainingCreateDto dto) {
-        Set<ConstraintViolation<TrainingCreateDto>> violations = validator.validate(dto);
-
-        assertThat(violations).isEmpty();
-    }
-
-    @ParameterizedTest
-    @MethodSource("trainingCreateDtoInvalidProvider")
-    void shouldValidateTrainingCreateDtoHasExpectedError(TrainingCreateDto dto, String expectedMessage) {
-        Set<ConstraintViolation<TrainingCreateDto>> violations = validator.validate(dto);
-
-        assertThat(violations)
-                .isNotEmpty()
-                .extracting(ConstraintViolation::getMessage)
-                .contains(expectedMessage);
     }
 
     @ParameterizedTest
@@ -84,23 +64,6 @@ class DtoValidationTest {
                 .isNotEmpty()
                 .extracting(ConstraintViolation::getMessage)
                 .contains(expectedMessage);
-    }
-
-    private static Stream<Arguments> trainingCreateDtoValidProvider() {
-        return Stream.of(
-                Arguments.of(TrainingCreateDto.builder()
-                        .traineeId(1L).trainerId(1L).trainingTypeId(1L)
-                        .trainingName("Yoga").trainingDuration(60).trainingDate(LocalDate.now())
-                        .build())
-        );
-    }
-
-    private static Stream<Arguments> trainingCreateDtoInvalidProvider() {
-        return Stream.of(
-                Arguments.of(TrainingCreateDto.builder().trainingName("").build(), "Training name is required"),
-                Arguments.of(TrainingCreateDto.builder().trainingDuration(0).build(), "Training duration must be a positive number"),
-                Arguments.of(TrainingCreateDto.builder().trainingDate(null).build(), "Training date is required")
-        );
     }
 
     private static Stream<Arguments> passwordUpdateDtoValidProvider() {

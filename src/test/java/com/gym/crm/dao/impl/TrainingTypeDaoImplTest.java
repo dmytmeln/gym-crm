@@ -4,6 +4,7 @@ import com.gym.crm.entity.TrainingType;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
+import java.util.List;
 import java.util.Optional;
 
 import static com.gym.crm.test.helper.EntityRecursiveComparisonConfigs.getTrainingTypeConfigForDirectFields;
@@ -15,34 +16,7 @@ class TrainingTypeDaoImplTest extends AbstractDaoTest<TrainingTypeDaoImpl> {
 
     private static final long EXISTING_ID = 1L;
     private static final String EXISTING_NAME = "CARDIO";
-    private static final long NON_EXISTING_ID = 99999L;
     private static final String NON_EXISTING_NAME = "NON_EXISTENT";
-
-    @Test
-    void shouldFindByIdWhenExists() {
-        TrainingType expected = testDbClient.findTrainingType(EXISTING_ID);
-
-        Optional<TrainingType> actual = dao.findById(EXISTING_ID);
-
-        assertThat(actual).isPresent();
-        assertThat(actual.get())
-                .usingRecursiveComparison(getTrainingTypeConfigForDirectFields())
-                .isEqualTo(expected);
-    }
-
-    @Test
-    void shouldReturnEmptyWhenNotFoundById() {
-        Optional<TrainingType> actual = dao.findById(NON_EXISTING_ID);
-
-        assertThat(actual).isEmpty();
-    }
-
-    @Test
-    void shouldThrowNullPointerExceptionWhenFindingByNullId() {
-        assertThatThrownBy(() -> dao.findById(null))
-                .isInstanceOf(NullPointerException.class)
-                .hasMessage("Training type ID cannot be null");
-    }
 
     @Test
     void shouldFindByNameWhenExists() {
@@ -68,6 +42,18 @@ class TrainingTypeDaoImplTest extends AbstractDaoTest<TrainingTypeDaoImpl> {
         assertThatThrownBy(() -> dao.findByName(null))
                 .isInstanceOf(NullPointerException.class)
                 .hasMessage("Training type name cannot be null");
+    }
+
+    @Test
+    void shouldFindAllTrainingTypes() {
+        List<TrainingType> expected = testDbClient.findAllTrainingTypes();
+
+        List<TrainingType> actual = dao.findAll();
+
+        assertThat(actual)
+                .hasSize(expected.size())
+                .usingRecursiveComparison(getTrainingTypeConfigForDirectFields())
+                .isEqualTo(expected);
     }
 
 }

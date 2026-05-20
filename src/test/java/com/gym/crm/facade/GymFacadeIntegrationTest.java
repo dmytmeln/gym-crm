@@ -17,10 +17,10 @@ import com.gia.openapi.model.TrainerCreateResponse;
 import com.gia.openapi.model.TrainerGetResponse;
 import com.gia.openapi.model.TrainerUpdateRequest;
 import com.gia.openapi.model.TrainerUpdateResponse;
+import com.gia.openapi.model.TrainingCreateRequest;
+import com.gia.openapi.model.TrainingTypeResponse;
 import com.gym.crm.GymCrmApplication;
 import com.gym.crm.config.BaseDbIntegrationTest;
-import com.gym.crm.dto.TrainingCreateDto;
-import com.gym.crm.dto.TrainingResponseDto;
 import com.gym.crm.dto.filter.TraineeTrainingSearchFilter;
 import com.gym.crm.dto.filter.TrainerTrainingSearchFilter;
 import com.gym.crm.security.AuthenticationException;
@@ -36,7 +36,7 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import java.time.LocalDate;
 import java.util.List;
 
-import static com.gym.crm.factory.TrainingTestFactory.buildTrainingCreateDto;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -47,14 +47,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Sql(scripts = {"classpath:datasets/cleanup-all.sql", "classpath:datasets/seed-data.sql"})
 class GymFacadeIntegrationTest extends BaseDbIntegrationTest {
 
-    private static final Long TRAINEE_ID = 1L;
     private static final String TRAINEE_USERNAME = "liam.miller";
     private static final String TRAINEE_PASSWORD = "password123";
-    private static final Long TRAINER_ID = 1L;
     private static final String TRAINER_USERNAME = "marcus.stone";
-    private static final Long TRAINING_ID = 1L;
     private static final String TRAINING_NAME = "Morning HIIT";
-    private static final int TRAINING_DURATION = 60;
 
     @Autowired
     private GymFacade facade;
@@ -231,39 +227,33 @@ class GymFacadeIntegrationTest extends BaseDbIntegrationTest {
     @Test
     void shouldCreateTraining() {
         authenticateAsTrainer();
-        TrainingCreateDto dto = buildTrainingCreateDto(TRAINEE_ID, TRAINER_ID);
+        TrainingCreateRequest request = new TrainingCreateRequest();
+        request.setTraineeUsername(TRAINEE_USERNAME);
+        request.setTrainerUsername(TRAINER_USERNAME);
+        request.setTrainingName("Evening Yoga");
+        request.setTrainingDate(LocalDate.of(2025, 8, 15));
+        request.setTrainingDuration(45);
 
-        TrainingResponseDto actual = facade.createTraining(TRAINER_USERNAME, dto);
+        facade.createTraining(TRAINER_USERNAME, request);
 
-        assertNotNull(actual.id());
-        assertEquals(dto.traineeId(), actual.traineeId());
-        assertEquals(dto.trainerId(), actual.trainerId());
-        assertEquals(dto.trainingName(), actual.trainingName());
-        assertEquals(dto.trainingDuration(), actual.trainingDuration());
-        assertEquals(dto.trainingDate(), actual.trainingDate());
+        TrainerTrainingSearchFilter searchFilter = TrainerTrainingSearchFilter.builder()
+                .username(TRAINER_USERNAME)
+                .build();
+        List<GetTrainerTrainingResponse> trainings = facade.getTrainerTrainings(TRAINER_USERNAME, searchFilter);
+        assertThat(trainings)
+                .hasSize(2)
+                .extracting(GetTrainerTrainingResponse::getTrainingName)
+                .contains("Evening Yoga");
     }
 
     @Test
-    void shouldGetTrainingById() {
+    void shouldGetAllTrainingTypes() {
         authenticateAsTrainer();
 
-        TrainingResponseDto actual = facade.getTraining(TRAINER_USERNAME, TRAINING_ID);
+        List<TrainingTypeResponse> actual = facade.getAllTrainingTypes(TRAINER_USERNAME);
 
         assertNotNull(actual);
-        assertEquals(TRAINING_ID, actual.id());
-        assertEquals(TRAINEE_ID, actual.traineeId());
-        assertEquals(TRAINER_ID, actual.trainerId());
-        assertEquals(TRAINING_NAME, actual.trainingName());
-        assertEquals(TRAINING_DURATION, actual.trainingDuration());
-    }
-
-    @Test
-    void shouldGetAllTrainings() {
-        authenticateAsTrainer();
-
-        List<TrainingResponseDto> actual = facade.getAllTrainings(TRAINER_USERNAME);
-
-        assertEquals(2, actual.size());
+        assertFalse(actual.isEmpty());
     }
 
     @Test

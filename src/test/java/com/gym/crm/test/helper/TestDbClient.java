@@ -33,6 +33,12 @@ public class TestDbClient {
                 .single();
     }
 
+    public List<TrainingType> findAllTrainingTypes() {
+        return jdbcClient.sql("SELECT * FROM training_type")
+                .query(TrainingType.class)
+                .list();
+    }
+
     public Trainee findTrainee(Long id) {
         return jdbcClient.sql("SELECT * FROM trainee WHERE id = ?")
                 .params(id)
@@ -86,13 +92,6 @@ public class TestDbClient {
         return jdbcClient.sql("SELECT * FROM trainer WHERE id = ?")
                 .params(id)
                 .query(Trainer.class)
-                .single();
-    }
-
-    public Training findTrainingSimple(Long id) {
-        return jdbcClient.sql("SELECT * FROM training WHERE id = ?")
-                .params(id)
-                .query(Training.class)
                 .single();
     }
 

@@ -18,15 +18,16 @@ import com.gia.openapi.model.TrainerCreateResponse;
 import com.gia.openapi.model.TrainerGetResponse;
 import com.gia.openapi.model.TrainerUpdateRequest;
 import com.gia.openapi.model.TrainerUpdateResponse;
+import com.gia.openapi.model.TrainingCreateRequest;
+import com.gia.openapi.model.TrainingTypeResponse;
 import com.gym.crm.dto.LoginChangeDto;
 import com.gym.crm.dto.LoginRequestDto;
-import com.gym.crm.dto.TrainingCreateDto;
-import com.gym.crm.dto.TrainingResponseDto;
 import com.gym.crm.dto.filter.TraineeTrainingSearchFilter;
 import com.gym.crm.dto.filter.TrainerTrainingSearchFilter;
 import com.gym.crm.entity.Trainee;
 import com.gym.crm.entity.Trainer;
 import com.gym.crm.entity.Training;
+import com.gym.crm.entity.TrainingType;
 import com.gym.crm.mapper.AuthMapper;
 import com.gym.crm.mapper.TraineeMapper;
 import com.gym.crm.mapper.TrainerMapper;
@@ -221,32 +222,21 @@ public class GymFacade {
     }
 
     @Authenticated(Role.TRAINER)
-    public TrainingResponseDto createTraining(String username, TrainingCreateDto trainingCreateDto) {
+    public void createTraining(String username, TrainingCreateRequest request) {
         Objects.requireNonNull(username, USERNAME_NULL_MSG);
-        Objects.requireNonNull(trainingCreateDto, "TrainingCreateDto cannot be null");
-        validator.validate(trainingCreateDto);
+        Objects.requireNonNull(request, "TrainingCreateRequest cannot be null");
+        validator.validate(request);
 
-        Training training = trainingMapper.toEntity(trainingCreateDto);
-        Training createdTraining = trainingService.createTraining(training);
-
-        return trainingMapper.toDto(createdTraining);
+        Training training = trainingMapper.toEntity(request);
+        trainingService.createTraining(training);
     }
 
     @Authenticated({Role.TRAINER, Role.TRAINEE})
-    public TrainingResponseDto getTraining(String username, Long trainingId) {
-        Objects.requireNonNull(username, USERNAME_NULL_MSG);
-        Objects.requireNonNull(trainingId, "Training ID cannot be null");
-
-        Training training = trainingService.getTraining(trainingId);
-        return trainingMapper.toDto(training);
-    }
-
-    @Authenticated({Role.TRAINER, Role.TRAINEE})
-    public List<TrainingResponseDto> getAllTrainings(String username) {
+    public List<TrainingTypeResponse> getAllTrainingTypes(String username) {
         Objects.requireNonNull(username, USERNAME_NULL_MSG);
 
-        List<Training> trainings = trainingService.getAllTrainings();
-        return trainingMapper.toDtoList(trainings);
+        List<TrainingType> trainingTypes = trainingService.getAllTrainingTypes();
+        return trainingMapper.toTrainingTypeResponseList(trainingTypes);
     }
 
 }

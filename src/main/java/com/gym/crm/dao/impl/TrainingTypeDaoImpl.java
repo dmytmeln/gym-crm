@@ -6,6 +6,7 @@ import com.gym.crm.transaction.TransactionManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -16,16 +17,6 @@ public class TrainingTypeDaoImpl implements TrainingTypeDao {
     private final TransactionManager transactionManager;
 
     @Override
-    public Optional<TrainingType> findById(Long id) {
-        Objects.requireNonNull(id, "Training type ID cannot be null");
-
-        return transactionManager.executeReturningWithinTx(session -> session
-                .createQuery("SELECT tt FROM TrainingType tt WHERE tt.id = :id", TrainingType.class)
-                .setParameter("id", id)
-                .uniqueResultOptional());
-    }
-
-    @Override
     public Optional<TrainingType> findByName(String name) {
         Objects.requireNonNull(name, "Training type name cannot be null");
 
@@ -33,6 +24,13 @@ public class TrainingTypeDaoImpl implements TrainingTypeDao {
                 .createQuery("SELECT tt FROM TrainingType tt WHERE tt.trainingTypeName = :name", TrainingType.class)
                 .setParameter("name", name)
                 .uniqueResultOptional());
+    }
+
+    @Override
+    public List<TrainingType> findAll() {
+        return transactionManager.executeReturningWithinTx(session -> session
+                .createQuery("SELECT tt FROM TrainingType tt", TrainingType.class)
+                .getResultList());
     }
 
 }
