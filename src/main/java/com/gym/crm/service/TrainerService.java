@@ -1,7 +1,9 @@
 package com.gym.crm.service;
 
 import com.gym.crm.dto.LoginChangeDto;
+import com.gym.crm.dto.filter.TrainerTrainingSearchFilter;
 import com.gym.crm.entity.Trainer;
+import com.gym.crm.entity.Training;
 
 import java.util.List;
 
@@ -9,11 +11,9 @@ public interface TrainerService {
 
     Trainer createTrainer(Trainer trainer);
 
-    Trainer getTrainer(Long trainerId);
-
     Trainer getTrainerByUsername(String username);
 
-    List<Trainer> getAllTrainers();
+    List<Training> getTrainerTrainings(TrainerTrainingSearchFilter filter);
 
     boolean doesUsernameAndPasswordMatch(String username, String password);
 
@@ -21,8 +21,6 @@ public interface TrainerService {
 
     void updateTrainerPassword(LoginChangeDto loginChangeDto);
 
-    void activateTrainer(Long trainerId);
-
-    void deactivateTrainer(Long trainerId);
+    void updateActivationStatus(String username, boolean isActive);
 
 }

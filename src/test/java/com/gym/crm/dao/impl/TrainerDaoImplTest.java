@@ -1,12 +1,14 @@
 package com.gym.crm.dao.impl;
 
+import com.gym.crm.entity.Trainee;
 import com.gym.crm.entity.Trainer;
+import com.gym.crm.entity.Training;
 import com.gym.crm.entity.TrainingType;
 import com.gym.crm.entity.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
-import java.util.HashSet;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -131,6 +133,8 @@ class TrainerDaoImplTest extends AbstractDaoTest<TrainerDaoImpl> {
     @Test
     void shouldFindByIdWhenExists() {
         Trainer expected = testDbClient.findTrainer(EXISTING_ID);
+        List<Training> expectedTrainings = List.of(buildExistingTraining());
+        List<Trainee> expectedTrainees = List.of(buildExistingTrainee());
 
         Optional<Trainer> actual = dao.findById(EXISTING_ID);
 
@@ -141,11 +145,11 @@ class TrainerDaoImplTest extends AbstractDaoTest<TrainerDaoImpl> {
         assertThat(testDbClient.findTrainerTrainings(EXISTING_ID))
                 .hasSize(1)
                 .usingRecursiveComparison(getTrainingConfigForDirectFields())
-                .isEqualTo(actual.get().getTrainings());
+                .isEqualTo(expectedTrainings);
         assertThat(testDbClient.findTrainerTrainees(EXISTING_ID))
                 .hasSize(1)
                 .usingRecursiveComparison(getTraineeConfigForDirectFields())
-                .isEqualTo(actual.get().getTrainees());
+                .isEqualTo(expectedTrainees);
     }
 
     @Test
@@ -165,6 +169,8 @@ class TrainerDaoImplTest extends AbstractDaoTest<TrainerDaoImpl> {
     @Test
     void shouldFindByUsernameWhenExists() {
         Trainer expected = testDbClient.findTrainer(EXISTING_ID);
+        List<Training> expectedTrainings = List.of(buildExistingTraining());
+        List<Trainee> expectedTrainees = List.of(buildExistingTrainee());
 
         Optional<Trainer> actual = dao.findByUsername(EXISTING_USERNAME);
 
@@ -175,11 +181,11 @@ class TrainerDaoImplTest extends AbstractDaoTest<TrainerDaoImpl> {
         assertThat(testDbClient.findTrainerTrainings(EXISTING_ID))
                 .hasSize(1)
                 .usingRecursiveComparison(getTrainingConfigForDirectFields())
-                .isEqualTo(actual.get().getTrainings());
+                .isEqualTo(expectedTrainings);
         assertThat(testDbClient.findTrainerTrainees(EXISTING_ID))
                 .hasSize(1)
                 .usingRecursiveComparison(getTraineeConfigForDirectFields())
-                .isEqualTo(actual.get().getTrainees());
+                .isEqualTo(expectedTrainees);
     }
 
     @Test
@@ -211,42 +217,9 @@ class TrainerDaoImplTest extends AbstractDaoTest<TrainerDaoImpl> {
     }
 
     @Test
-    void shouldFindAllTrainersByIds() {
-        List<Long> ids = List.of(EXISTING_ID, 2L);
-        List<Trainer> expected = List.of(
-                Trainer.builder().id(EXISTING_ID).build(),
-                Trainer.builder().id(2L).build());
-
-        List<Trainer> actual = dao.findAllByIds(ids);
-
-        assertThat(actual)
-                .hasSize(expected.size())
-                .containsAll(expected);
-    }
-
-    @Test
-    void shouldFindSingleTrainerByIdsWhenFindAllWithSingleId() {
-        List<Long> ids = List.of(EXISTING_ID);
-        List<Trainer> expected = List.of(Trainer.builder().id(EXISTING_ID).build());
-
-        List<Trainer> actual = dao.findAllByIds(ids);
-
-        assertThat(actual)
-                .hasSize(expected.size())
-                .containsAll(expected);
-    }
-
-    @Test
-    void shouldFindAllByIdsWhenNoTrainersExist() {
-        List<Long> ids = List.of(99999L, 88888L);
-
-        List<Trainer> actual = dao.findAllByIds(ids);
-
-        assertThat(actual).isEmpty();
-    }
-
-    @Test
     void shouldUpdateTrainer() {
+        List<Training> expectedTrainings = List.of(buildExistingTraining());
+        List<Trainee> expectedTrainees = List.of(buildExistingTrainee());
         Trainer existingTrainer = testDbClient.findTrainer(EXISTING_ID);
         User updatedUser = existingTrainer.getUser().toBuilder()
                 .firstName("UpdatedFirstName")
@@ -257,18 +230,10 @@ class TrainerDaoImplTest extends AbstractDaoTest<TrainerDaoImpl> {
         Trainer updatedTrainer = existingTrainer.toBuilder()
                 .user(updatedUser)
                 .specialization(newSpecialization)
-                .trainings(testDbClient.findTrainerTrainings(EXISTING_ID))
-                .trainees(new HashSet<>(testDbClient.findTrainerTrainees(EXISTING_ID)))
                 .build();
 
         Trainer actual = dao.update(updatedTrainer);
 
-        assertThat(actual.getTrainings())
-                .as("Returned trainer should contain associated trainings")
-                .hasSize(1);
-        assertThat(actual.getTrainees())
-                .as("Returned trainer should contain associated trainees")
-                .hasSize(1);
         assertThat(actual)
                 .usingRecursiveComparison(getTrainerConfigForExisting())
                 .isEqualTo(updatedTrainer);
@@ -279,13 +244,11 @@ class TrainerDaoImplTest extends AbstractDaoTest<TrainerDaoImpl> {
         assertThat(testDbClient.findTrainerTrainings(EXISTING_ID))
                 .hasSize(1)
                 .usingRecursiveComparison(getTrainingConfigForDirectFields())
-                .isEqualTo(updatedTrainer.getTrainings())
-                .isEqualTo(actual.getTrainings());
+                .isEqualTo(expectedTrainings);
         assertThat(testDbClient.findTrainerTrainees(EXISTING_ID))
                 .hasSize(1)
                 .usingRecursiveComparison(getTraineeConfigForDirectFields())
-                .isEqualTo(updatedTrainer.getTrainees())
-                .isEqualTo(actual.getTrainees());
+                .isEqualTo(expectedTrainees);
     }
 
     @Test
@@ -314,6 +277,23 @@ class TrainerDaoImplTest extends AbstractDaoTest<TrainerDaoImpl> {
         assertThat(testDbClient.countUsers())
                 .as("Users count should remain unchanged")
                 .isEqualTo(USERS_COUNT);
+    }
+
+    private Training buildExistingTraining() {
+        return Training.builder()
+                .id(1L)
+                .trainingName("Morning HIIT")
+                .trainingDate(LocalDate.of(2025, 1, 15))
+                .trainingDuration(60)
+                .build();
+    }
+
+    private Trainee buildExistingTrainee() {
+        return Trainee.builder()
+                .id(1L)
+                .dateOfBirth(LocalDate.of(1990, 5, 15))
+                .address("NYC")
+                .build();
     }
 
 }

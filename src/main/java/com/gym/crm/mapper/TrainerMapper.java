@@ -1,55 +1,84 @@
 package com.gym.crm.mapper;
 
-import com.gym.crm.dto.TrainerCreateDto;
-import com.gym.crm.dto.TrainerCreateResponseDto;
-import com.gym.crm.dto.TrainerResponseDto;
-import com.gym.crm.dto.TrainerUpdateDto;
+import com.gia.openapi.model.AssignedTraineeResponse;
+import com.gia.openapi.model.GetTrainerTrainingResponse;
+import com.gia.openapi.model.TrainerCreateRequest;
+import com.gia.openapi.model.TrainerCreateResponse;
+import com.gia.openapi.model.TrainerGetResponse;
+import com.gia.openapi.model.TrainerUpdateRequest;
+import com.gia.openapi.model.TrainerUpdateResponse;
+import com.gym.crm.entity.Trainee;
 import com.gym.crm.entity.Trainer;
+import com.gym.crm.entity.Training;
+import com.gym.crm.entity.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.mapstruct.MappingConstants.ComponentModel.SPRING;
 
 @Mapper(componentModel = SPRING)
 public interface TrainerMapper {
 
-    @Mapping(target = "userId", source = "user.id")
     @Mapping(target = "username", source = "user.username")
-    @Mapping(target = "firstName", source = "user.firstName")
-    @Mapping(target = "lastName", source = "user.lastName")
-    @Mapping(target = "active", source = "user.isActive")
-    @Mapping(target = "specializationName", source = "specialization.trainingTypeName")
-    TrainerResponseDto toDto(Trainer trainer);
-
-    @Mapping(target = "userId", source = "user.id")
-    @Mapping(target = "username", source = "user.username")
-    @Mapping(target = "firstName", source = "user.firstName")
-    @Mapping(target = "lastName", source = "user.lastName")
     @Mapping(target = "password", source = "user.password")
-    @Mapping(target = "active", source = "user.isActive")
-    @Mapping(target = "specializationName", source = "specialization.trainingTypeName")
-    TrainerCreateResponseDto toCreateResponseDto(Trainer trainer);
+    TrainerCreateResponse toCreateResponse(Trainer trainer);
+
+    @Mapping(target = "firstName", source = "user.firstName")
+    @Mapping(target = "lastName", source = "user.lastName")
+    @Mapping(target = "specialization", source = "specialization.trainingTypeName")
+    @Mapping(target = "isActive", source = "user.isActive")
+    @Mapping(target = "trainees", source = "trainees")
+    TrainerGetResponse toGetResponse(Trainer trainer);
+
+    @Mapping(target = "username", source = "user.username")
+    @Mapping(target = "firstName", source = "user.firstName")
+    @Mapping(target = "lastName", source = "user.lastName")
+    @Mapping(target = "specialization", source = "specialization.trainingTypeName")
+    @Mapping(target = "isActive", source = "user.isActive")
+    @Mapping(target = "trainees", source = "trainees")
+    TrainerUpdateResponse toUpdateResponse(Trainer trainer);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "trainings", ignore = true)
     @Mapping(target = "trainees", ignore = true)
     @Mapping(target = "user.firstName", source = "firstName")
     @Mapping(target = "user.lastName", source = "lastName")
-    @Mapping(target = "user.isActive", source = "active")
-    @Mapping(target = "specialization.id", source = "specializationId")
-    Trainer toEntity(TrainerCreateDto dto);
+    @Mapping(target = "user.username", ignore = true)
+    @Mapping(target = "user.password", ignore = true)
+    @Mapping(target = "user.isActive", constant = "true")
+    @Mapping(target = "specialization.trainingTypeName", source = "specialization")
+    Trainer toEntity(TrainerCreateRequest request);
 
-    List<TrainerResponseDto> toDtoList(List<Trainer> trainers);
-
-    @Mapping(target = "id", source = "trainerId")
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "trainings", ignore = true)
     @Mapping(target = "trainees", ignore = true)
-    @Mapping(target = "user.firstName", source = "dto.firstName")
-    @Mapping(target = "user.lastName", source = "dto.lastName")
-    @Mapping(target = "user.isActive", source = "dto.active")
-    @Mapping(target = "specialization.id", source = "dto.specializationId")
-    Trainer toEntity(TrainerUpdateDto dto, Long trainerId);
+    @Mapping(target = "user", expression = "java(buildUserForUpdate(request, username))")
+    @Mapping(target = "specialization", ignore = true)
+    Trainer toEntity(TrainerUpdateRequest request, String username);
+
+    default User buildUserForUpdate(TrainerUpdateRequest request, String username) {
+        return User.builder()
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
+                .username(username)
+                .isActive(request.getIsActive())
+                .build();
+    }
+
+    @Mapping(target = "username", source = "user.username")
+    @Mapping(target = "firstName", source = "user.firstName")
+    @Mapping(target = "lastName", source = "user.lastName")
+    AssignedTraineeResponse toAssignedTraineeResponse(Trainee trainee);
+
+    List<AssignedTraineeResponse> toAssignedTraineeResponseList(Set<Trainee> trainees);
+
+    @Mapping(target = "trainingType", source = "trainingType.trainingTypeName")
+    @Mapping(target = "traineeName", source = "trainee.user.username")
+    GetTrainerTrainingResponse toGetTrainerTrainingResponse(Training training);
+
+    List<GetTrainerTrainingResponse> toGetTrainerTrainingResponseList(List<Training> trainings);
 
 }

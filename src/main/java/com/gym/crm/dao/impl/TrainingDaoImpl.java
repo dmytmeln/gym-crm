@@ -54,7 +54,7 @@ public class TrainingDaoImpl implements TrainingDao {
     }
 
     @Override
-    public List<Training> findAllByTrainerCriteria(TrainerTrainingSearchFilter filter) {
+    public List<Training> findTrainerTrainingsByCriteria(TrainerTrainingSearchFilter filter) {
         return transactionManager.executeReturningWithinTx(session -> trainerTrainingCriteriaBuilder.findTrainings(session, filter));
     }
 

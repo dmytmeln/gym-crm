@@ -42,7 +42,10 @@ public class TrainerDaoImpl implements TrainerDao {
 
         return transactionManager.executeReturningWithinTx(session -> session
                 .createQuery(
-                        "SELECT t FROM Trainer t JOIN FETCH t.user LEFT JOIN FETCH t.specialization LEFT JOIN FETCH t.trainings LEFT JOIN FETCH t.trainees WHERE t.id = :id",
+                        """
+                                SELECT t FROM Trainer t
+                                LEFT JOIN FETCH t.user LEFT JOIN FETCH t.specialization
+                                WHERE t.id = :id""",
                         Trainer.class)
                 .setParameter("id", id)
                 .uniqueResultOptional());
@@ -54,7 +57,10 @@ public class TrainerDaoImpl implements TrainerDao {
 
         return transactionManager.executeReturningWithinTx(session -> session
                 .createQuery(
-                        "SELECT t FROM Trainer t JOIN FETCH t.user u LEFT JOIN FETCH t.specialization LEFT JOIN FETCH t.trainings LEFT JOIN FETCH t.trainees WHERE u.username = :username",
+                        """
+                                SELECT t FROM Trainer t
+                                LEFT JOIN FETCH t.user u LEFT JOIN FETCH t.specialization LEFT JOIN FETCH t.trainees tr LEFT JOIN FETCH tr.user
+                                WHERE u.username = :username""",
                         Trainer.class)
                 .setParameter("username", username)
                 .uniqueResultOptional());
@@ -63,16 +69,8 @@ public class TrainerDaoImpl implements TrainerDao {
     @Override
     public List<Trainer> findAll() {
         return transactionManager.executeReturningWithinTx(session -> session
-                .createQuery("SELECT t FROM Trainer t JOIN FETCH t.user LEFT JOIN FETCH t.specialization LEFT JOIN FETCH t.trainings LEFT JOIN FETCH t.trainees", Trainer.class)
+                .createQuery("SELECT t FROM Trainer t LEFT JOIN FETCH t.user LEFT JOIN FETCH t.specialization", Trainer.class)
                 .list());
-    }
-
-    @Override
-    public List<Trainer> findAllByIds(List<Long> ids) {
-        return transactionManager.executeReturningWithinTx(session -> session
-                .createQuery("SELECT t FROM Trainer t LEFT JOIN FETCH t.trainees WHERE t.id IN (:ids)", Trainer.class)
-                .setParameter("ids", ids)
-                .getResultList());
     }
 
     @Override
@@ -87,7 +85,10 @@ public class TrainerDaoImpl implements TrainerDao {
             Trainer merged = session.merge(entity);
 
             return session.createQuery(
-                            "SELECT t FROM Trainer t JOIN FETCH t.user LEFT JOIN FETCH t.specialization LEFT JOIN FETCH t.trainings LEFT JOIN FETCH t.trainees WHERE t.id = :id",
+                            """
+                                    SELECT t FROM Trainer t
+                                    LEFT JOIN FETCH t.user LEFT JOIN FETCH t.specialization LEFT JOIN FETCH t.trainees tr LEFT JOIN FETCH tr.user
+                                    WHERE t.id = :id""",
                             Trainer.class)
                     .setParameter("id", merged.getId())
                     .uniqueResult();

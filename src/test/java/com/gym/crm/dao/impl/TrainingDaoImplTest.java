@@ -162,7 +162,7 @@ class TrainingDaoImplTest extends AbstractDaoTest<TrainingDaoImpl> {
                 .build();
         Training expected = testDbClient.findTraining(1L);
 
-        List<Training> actual = dao.findAllByTrainerCriteria(filter);
+        List<Training> actual = dao.findTrainerTrainingsByCriteria(filter);
 
         assertThat(actual).hasSize(1);
         assertThat(actual.get(0))
@@ -177,7 +177,7 @@ class TrainingDaoImplTest extends AbstractDaoTest<TrainingDaoImpl> {
                 .build();
         Training expected = testDbClient.findTraining(2L);
 
-        List<Training> actual = dao.findAllByTrainerCriteria(filter);
+        List<Training> actual = dao.findTrainerTrainingsByCriteria(filter);
 
         assertThat(actual).hasSize(1);
         assertThat(actual.get(0))
@@ -192,7 +192,7 @@ class TrainingDaoImplTest extends AbstractDaoTest<TrainingDaoImpl> {
                 .traineeName("Sophia Wilson")
                 .build();
 
-        List<Training> actual = dao.findAllByTrainerCriteria(filter);
+        List<Training> actual = dao.findTrainerTrainingsByCriteria(filter);
 
         assertThat(actual).isEmpty();
     }

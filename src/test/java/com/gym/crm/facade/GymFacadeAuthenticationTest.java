@@ -4,10 +4,10 @@ import com.gia.openapi.model.LoginRequest;
 import com.gia.openapi.model.TraineeCreateRequest;
 import com.gia.openapi.model.TraineeCreateResponse;
 import com.gia.openapi.model.TraineeGetResponse;
+import com.gia.openapi.model.TrainerCreateRequest;
+import com.gia.openapi.model.TrainerCreateResponse;
 import com.gym.crm.GymCrmApplication;
 import com.gym.crm.config.BaseDbIntegrationTest;
-import com.gym.crm.dto.TrainerCreateDto;
-import com.gym.crm.dto.TrainerCreateResponseDto;
 import com.gym.crm.security.AuthenticationException;
 import com.gym.crm.security.Role;
 import com.gym.crm.security.SecurityContext;
@@ -63,18 +63,16 @@ class GymFacadeAuthenticationTest extends BaseDbIntegrationTest {
 
     @Test
     void shouldAllowCreateTrainerWithoutLogin() {
-        TrainerCreateDto dto = TrainerCreateDto.builder()
+        TrainerCreateRequest request = new TrainerCreateRequest()
                 .firstName("New")
                 .lastName("Trainer")
-                .active(true)
-                .specializationId(1L)
-                .build();
+                .specialization("CARDIO");
 
-        TrainerCreateResponseDto response = gymFacade.createTrainer(dto);
+        TrainerCreateResponse response = gymFacade.createTrainer(request);
 
         assertThat(response).isNotNull();
-        assertThat(response.firstName()).isEqualTo(dto.firstName());
-        assertThat(response.lastName()).isEqualTo(dto.lastName());
+        assertThat(response.getUsername()).isNotBlank();
+        assertThat(response.getPassword()).isNotBlank();
     }
 
     @Test

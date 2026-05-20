@@ -30,25 +30,6 @@ class DtoValidationTest {
     }
 
     @ParameterizedTest
-    @MethodSource("trainerCreateDtoValidProvider")
-    void shouldValidateTrainerCreateDtoIsValid(TrainerCreateDto dto) {
-        Set<ConstraintViolation<TrainerCreateDto>> violations = validator.validate(dto);
-
-        assertThat(violations).isEmpty();
-    }
-
-    @ParameterizedTest
-    @MethodSource("trainerCreateDtoInvalidProvider")
-    void shouldValidateTrainerCreateDtoHasExpectedError(TrainerCreateDto dto, String expectedMessage) {
-        Set<ConstraintViolation<TrainerCreateDto>> violations = validator.validate(dto);
-
-        assertThat(violations)
-                .isNotEmpty()
-                .extracting(ConstraintViolation::getMessage)
-                .contains(expectedMessage);
-    }
-
-    @ParameterizedTest
     @MethodSource("trainingCreateDtoValidProvider")
     void shouldValidateTrainingCreateDtoIsValid(TrainingCreateDto dto) {
         Set<ConstraintViolation<TrainingCreateDto>> violations = validator.validate(dto);
@@ -103,24 +84,6 @@ class DtoValidationTest {
                 .isNotEmpty()
                 .extracting(ConstraintViolation::getMessage)
                 .contains(expectedMessage);
-    }
-
-    private static Stream<Arguments> trainerCreateDtoValidProvider() {
-        return Stream.of(
-                Arguments.of(TrainerCreateDto.builder().firstName("Liam").lastName("Miller").specializationId(1L).build())
-        );
-    }
-
-    private static Stream<Arguments> trainerCreateDtoInvalidProvider() {
-        return Stream.of(
-                Arguments.of(TrainerCreateDto.builder().firstName("").lastName("Miller").specializationId(1L).build(), "Trainer first name is required"),
-                Arguments.of(TrainerCreateDto.builder().firstName("Liam").lastName("").specializationId(1L).build(), "Trainer last name is required"),
-                Arguments.of(TrainerCreateDto.builder().firstName("Liam").lastName("Miller").build(), "Specialization is required for trainer"),
-                Arguments.of(TrainerCreateDto.builder().firstName("A".repeat(101)).lastName("Miller").specializationId(1L).build(), "Trainer first name must not exceed 100 characters"),
-                Arguments.of(TrainerCreateDto.builder().firstName("Liam").lastName("A".repeat(101)).specializationId(1L).build(), "Trainer last name must not exceed 100 characters"),
-                Arguments.of(TrainerCreateDto.builder().firstName(null).lastName("Miller").specializationId(1L).build(), "Trainer first name is required"),
-                Arguments.of(TrainerCreateDto.builder().firstName("Liam").lastName(null).specializationId(1L).build(), "Trainer last name is required")
-        );
     }
 
     private static Stream<Arguments> trainingCreateDtoValidProvider() {
