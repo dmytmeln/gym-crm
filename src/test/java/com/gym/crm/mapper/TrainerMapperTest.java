@@ -211,7 +211,7 @@ class TrainerMapperTest {
                 .user(buildUser())
                 .build();
         Trainee trainee2 = Trainee.builder()
-                .user(User.builder().username("john.doe").firstName("John").lastName("Doe").build())
+                .user(User.builder().username("liam.miller").firstName("Liam").lastName("Miller").build())
                 .build();
         Set<Trainee> trainees = Set.of(trainee1, trainee2);
 

@@ -4,6 +4,7 @@ import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.dao.TrainerDao;
 import com.gym.crm.dao.TrainingDao;
 import com.gym.crm.dao.TrainingTypeDao;
+import com.gym.crm.entity.EntityType;
 import com.gym.crm.entity.Trainee;
 import com.gym.crm.entity.Trainer;
 import com.gym.crm.entity.Training;
@@ -57,11 +58,11 @@ public class TrainingServiceImpl implements TrainingService {
         log.info("Creating training: {}", training.getTrainingName());
 
         Trainee trainee = traineeDao.findById(training.getTrainee().getId())
-                .orElseThrow(() -> EntityNotFoundException.forId("Trainee", training.getTrainee().getId()));
+                .orElseThrow(() -> EntityNotFoundException.forId(EntityType.TRAINEE, training.getTrainee().getId()));
         Trainer trainer = trainerDao.findById(training.getTrainer().getId())
-                .orElseThrow(() -> EntityNotFoundException.forId("Trainer", training.getTrainer().getId()));
+                .orElseThrow(() -> EntityNotFoundException.forId(EntityType.TRAINER, training.getTrainer().getId()));
         TrainingType trainingType = trainingTypeDao.findById(training.getTrainingType().getId())
-                .orElseThrow(() -> EntityNotFoundException.forId("TrainingType", training.getTrainingType().getId()));
+                .orElseThrow(() -> EntityNotFoundException.forId(EntityType.TRAINING_TYPE, training.getTrainingType().getId()));
 
         Training trainingWithAssociations = training.toBuilder()
                 .trainee(trainee)
@@ -81,7 +82,7 @@ public class TrainingServiceImpl implements TrainingService {
         Objects.requireNonNull(trainingId, "Training ID cannot be null");
 
         return trainingDao.findById(trainingId)
-                .orElseThrow(() -> EntityNotFoundException.forId("Training", trainingId));
+                .orElseThrow(() -> EntityNotFoundException.forId(EntityType.TRAINING, trainingId));
     }
 
     @Override

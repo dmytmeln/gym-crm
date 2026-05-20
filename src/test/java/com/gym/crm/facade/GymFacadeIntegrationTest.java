@@ -100,7 +100,7 @@ class GymFacadeIntegrationTest extends BaseDbIntegrationTest {
 
     @Test
     void shouldCreateTrainee() {
-        TraineeCreateRequest request = new TraineeCreateRequest("John", "Doe")
+        TraineeCreateRequest request = new TraineeCreateRequest("Liam", "Miller")
                 .dateOfBirth(LocalDate.of(1990, 1, 1))
                 .address("123 Test St");
 
@@ -191,8 +191,8 @@ class GymFacadeIntegrationTest extends BaseDbIntegrationTest {
     @Test
     void shouldCreateTrainer() {
         TrainerCreateRequest request = new TrainerCreateRequest()
-                .firstName("John")
-                .lastName("Doe")
+                .firstName("Liam")
+                .lastName("Miller")
                 .specialization("CARDIO");
 
         TrainerCreateResponse actual = facade.createTrainer(request);

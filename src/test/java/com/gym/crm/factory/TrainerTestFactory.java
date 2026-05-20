@@ -118,12 +118,14 @@ public class TrainerTestFactory {
     }
 
     private static Trainee buildTraineeForTrainer() {
+        User user = User.builder()
+                .username(TraineeTestFactory.DEFAULT_USERNAME)
+                .firstName(TraineeTestFactory.DEFAULT_FIRST_NAME)
+                .lastName(TraineeTestFactory.DEFAULT_LAST_NAME)
+                .build();
+
         return Trainee.builder()
-                .user(User.builder()
-                        .username(TraineeTestFactory.DEFAULT_USERNAME)
-                        .firstName(TraineeTestFactory.DEFAULT_FIRST_NAME)
-                        .lastName(TraineeTestFactory.DEFAULT_LAST_NAME)
-                        .build())
+                .user(user)
                 .build();
     }
 

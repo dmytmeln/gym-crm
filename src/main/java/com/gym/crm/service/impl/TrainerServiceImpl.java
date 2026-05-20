@@ -5,6 +5,7 @@ import com.gym.crm.dao.TrainingDao;
 import com.gym.crm.dao.TrainingTypeDao;
 import com.gym.crm.dto.LoginChangeDto;
 import com.gym.crm.dto.filter.TrainerTrainingSearchFilter;
+import com.gym.crm.entity.EntityType;
 import com.gym.crm.entity.Trainer;
 import com.gym.crm.entity.Training;
 import com.gym.crm.entity.TrainingType;
@@ -68,7 +69,7 @@ public class TrainerServiceImpl implements TrainerService {
 
         String trainingTypeName = trainer.getSpecialization().getTrainingTypeName();
         TrainingType trainerSpecialization = trainingTypeDao.findByName(trainingTypeName)
-                .orElseThrow(() -> EntityNotFoundException.forName("TrainingType", trainingTypeName));
+                .orElseThrow(() -> EntityNotFoundException.forName(EntityType.TRAINING_TYPE, trainingTypeName));
 
         String username = credentialGenerator.generateUsername(trainer.getUser().getFirstName(), trainer.getUser().getLastName());
         String password = credentialGenerator.generatePassword();
@@ -94,7 +95,7 @@ public class TrainerServiceImpl implements TrainerService {
         Objects.requireNonNull(username, USERNAME_NULL_MSG);
 
         return trainerDao.findByUsername(username)
-                .orElseThrow(() -> EntityNotFoundException.forUsername("Trainer", username));
+                .orElseThrow(() -> EntityNotFoundException.forUsername(EntityType.TRAINER, username));
     }
 
     @Override
@@ -137,7 +138,7 @@ public class TrainerServiceImpl implements TrainerService {
         log.info("Updating trainer with username: {}", trainer.getUser().getUsername());
 
         Trainer existingTrainer = trainerDao.findByUsername(trainer.getUser().getUsername())
-                .orElseThrow(() -> EntityNotFoundException.forUsername("Trainer", trainer.getUser().getUsername()));
+                .orElseThrow(() -> EntityNotFoundException.forUsername(EntityType.TRAINER, trainer.getUser().getUsername()));
 
         User updatedUser = existingTrainer.getUser().toBuilder()
                 .firstName(trainer.getUser().getFirstName())
@@ -182,7 +183,7 @@ public class TrainerServiceImpl implements TrainerService {
         log.info("Updating activation status for trainer with username: {} to {}", username, isActive);
 
         Trainer trainer = trainerDao.findByUsername(username)
-                .orElseThrow(() -> EntityNotFoundException.forUsername("Trainer", username));
+                .orElseThrow(() -> EntityNotFoundException.forUsername(EntityType.TRAINER, username));
 
         if (trainer.getUser().getIsActive() == isActive) {
             log.warn("Trainer with username: {} is already {}", username, isActive ? "active" : "inactive");

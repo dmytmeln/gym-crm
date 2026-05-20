@@ -22,6 +22,7 @@ import com.gym.crm.dto.TrainingCreateDto;
 import com.gym.crm.dto.TrainingResponseDto;
 import com.gym.crm.dto.filter.TraineeTrainingSearchFilter;
 import com.gym.crm.dto.filter.TrainerTrainingSearchFilter;
+import com.gym.crm.entity.EntityType;
 import com.gym.crm.entity.Trainee;
 import com.gym.crm.entity.Trainer;
 import com.gym.crm.entity.Training;
@@ -169,7 +170,7 @@ class GymFacadeTest {
     @Test
     void shouldPropagateEntityNotFoundExceptionWhenGettingTraineeByUsername() {
         String username = "username";
-        when(traineeService.getTraineeByUsername(username)).thenThrow(EntityNotFoundException.forUsername("Trainee", username));
+        when(traineeService.getTraineeByUsername(username)).thenThrow(EntityNotFoundException.forUsername(EntityType.TRAINEE, username));
 
         assertThrows(EntityNotFoundException.class, () -> facade.getTraineeByUsername(username));
 
@@ -496,7 +497,7 @@ class GymFacadeTest {
     @Test
     void shouldPropagateEntityNotFoundExceptionWhenGettingTrainerProfile() {
         String username = "username";
-        when(trainerService.getTrainerByUsername(username)).thenThrow(EntityNotFoundException.forUsername("Trainer", username));
+        when(trainerService.getTrainerByUsername(username)).thenThrow(EntityNotFoundException.forUsername(EntityType.TRAINER, username));
 
         assertThrows(EntityNotFoundException.class, () -> facade.getTrainerByUsername(username));
 
@@ -594,13 +595,13 @@ class GymFacadeTest {
                 .username(USERNAME)
                 .fromDate(LocalDate.of(2025, 7, 1))
                 .toDate(LocalDate.of(2025, 7, 31))
-                .traineeName("John Doe")
+                .traineeName("Liam Miller")
                 .build();
         Training training = buildTrainingWithId(DEFAULT_TRAINING_ID);
         GetTrainerTrainingResponse response = new GetTrainerTrainingResponse()
                 .trainingName("Morning Cardio")
                 .trainingType("Cardio")
-                .traineeName("john.doe")
+                .traineeName("liam.miller")
                 .trainingDate(LocalDate.of(2025, 7, 20))
                 .trainingDuration(55);
         List<Training> trainings = List.of(training);
@@ -688,7 +689,7 @@ class GymFacadeTest {
 
     @Test
     void shouldPropagateEntityNotFoundExceptionWhenGettingTraining() {
-        when(trainingService.getTraining(DEFAULT_TRAINING_ID)).thenThrow(EntityNotFoundException.forId("Training", DEFAULT_TRAINING_ID));
+        when(trainingService.getTraining(DEFAULT_TRAINING_ID)).thenThrow(EntityNotFoundException.forId(EntityType.TRAINING, DEFAULT_TRAINING_ID));
 
         assertThrows(EntityNotFoundException.class, () -> facade.getTraining(USERNAME, DEFAULT_TRAINING_ID));
 
