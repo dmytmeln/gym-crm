@@ -1210,7 +1210,7 @@ components:
         - errorMessage
       properties:
         errorCode:
-          type: number
+          type: integer
           example: 2760
         errorMessage:
           type: string
