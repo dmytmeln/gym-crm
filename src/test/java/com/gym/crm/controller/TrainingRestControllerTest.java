@@ -10,6 +10,7 @@ import com.gym.crm.entity.EntityType;
 import com.gym.crm.exception.ApiError;
 import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.exception.GlobalRestExceptionHandler;
+import com.gym.crm.exception.ValidationException;
 import com.gym.crm.facade.GymFacade;
 import org.hibernate.HibernateException;
 import org.junit.jupiter.api.BeforeEach;
@@ -303,6 +304,28 @@ class TrainingRestControllerTest {
                 objectMapper.getTypeFactory().constructCollectionType(List.class, TrainingTypeResponse.class));
         assertThat(actual).isEmpty();
         verify(facade).getAllTrainingTypes(TRAINER_USERNAME);
+    }
+
+    @Test
+    void shouldReturn400WhenValidationExceptionOccursOnAddTraining() throws Exception {
+        TrainingCreateRequest validRequest = buildTrainingCreateRequest(
+                TRAINEE_USERNAME, TRAINER_USERNAME, TRAINING_NAME, TRAINING_DATE, TRAINING_DURATION);
+        ValidationException exception = new ValidationException("Custom validation failed");
+
+        doThrow(exception)
+                .when(facade).createTraining(TRAINER_USERNAME, validRequest);
+
+        String content = mockMvc.perform(post(BASE_PATH + "/trainings")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validRequest)))
+                .andExpect(status().isBadRequest())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
+        assertThat(error.getErrorCode()).isEqualTo(ApiError.VALIDATION.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo("%s: %s".formatted(ApiError.VALIDATION.getMessage(), exception.getMessage()));
     }
 
     private TrainingCreateRequest buildTrainingCreateRequest(

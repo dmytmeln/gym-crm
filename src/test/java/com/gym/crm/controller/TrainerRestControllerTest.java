@@ -15,6 +15,7 @@ import com.gym.crm.entity.EntityType;
 import com.gym.crm.exception.ApiError;
 import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.exception.GlobalRestExceptionHandler;
+import com.gym.crm.exception.ValidationException;
 import com.gym.crm.facade.GymFacade;
 import com.gym.crm.security.AuthenticationException;
 import org.hibernate.HibernateException;
@@ -397,6 +398,27 @@ class TrainerRestControllerTest {
         assertThat(error.getErrorCode()).isEqualTo(ApiError.VALIDATION.getCode());
         assertThat(error.getErrorMessage()).isEqualTo("Validation error: isActive: must not be null");
         verifyNoInteractions(facade);
+    }
+
+    @Test
+    void shouldReturn400WhenValidationExceptionOccursDuringRegistration() throws Exception {
+        TrainerCreateRequest validRequest = buildTrainerCreateRequest(FIRST_NAME, LAST_NAME, SPECIALIZATION);
+        ValidationException exception = new ValidationException("Custom validation failed");
+
+        doThrow(exception)
+                .when(facade).createTrainer(any(TrainerCreateRequest.class));
+
+        String content = mockMvc.perform(post(BASE_PATH + "/trainers/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validRequest)))
+                .andExpect(status().isBadRequest())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
+        assertThat(error.getErrorCode()).isEqualTo(ApiError.VALIDATION.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo("%s: %s".formatted(ApiError.VALIDATION.getMessage(), exception.getMessage()));
     }
 
     private TrainerCreateRequest buildTrainerCreateRequest(String firstName, String lastName, String specialization) {
