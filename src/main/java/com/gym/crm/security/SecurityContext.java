@@ -2,10 +2,12 @@ package com.gym.crm.security;
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
+
 @Slf4j
 public class SecurityContext {
 
-    private static final ThreadLocal<UserCredentials> currentUser = new ThreadLocal<>();
+    private static UserCredentials currentUser;
 
     private SecurityContext() {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");
@@ -13,19 +15,24 @@ public class SecurityContext {
 
     public static void setCurrentUser(UserCredentials userCredentials) {
         log.debug("Setting current user in security context: {}", userCredentials.username());
-        currentUser.set(userCredentials);
+        currentUser = userCredentials;
     }
 
     public static UserCredentials getCurrentUser() {
-        UserCredentials user = currentUser.get();
-        log.debug("Getting current user from security context: {}", user != null ? user.username() : "null");
-        return user;
+        log.debug("Getting current user from security context: {}", getUsername(currentUser));
+        return currentUser;
     }
 
     public static void clear() {
-        UserCredentials removed = currentUser.get();
-        currentUser.remove();
-        log.debug("Cleared security context, removed user: {}", removed != null ? removed.username() : "null");
+        UserCredentials removed = currentUser;
+        currentUser = null;
+        log.debug("Cleared security context, removed user: {}", getUsername(removed));
+    }
+
+    private static String getUsername(UserCredentials userCredentials) {
+        return Optional.ofNullable(userCredentials)
+                .map(UserCredentials::username)
+                .orElse("null");
     }
 
 }
