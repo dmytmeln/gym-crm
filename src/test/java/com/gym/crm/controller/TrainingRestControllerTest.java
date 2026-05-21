@@ -3,9 +3,15 @@ package com.gym.crm.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.gia.openapi.model.ErrorResponse;
 import com.gia.openapi.model.TrainingCreateRequest;
 import com.gia.openapi.model.TrainingTypeResponse;
+import com.gym.crm.entity.EntityType;
+import com.gym.crm.exception.ApiError;
+import com.gym.crm.exception.EntityNotFoundException;
+import com.gym.crm.exception.GlobalRestExceptionHandler;
 import com.gym.crm.facade.GymFacade;
+import org.hibernate.HibernateException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,6 +27,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -57,6 +64,7 @@ class TrainingRestControllerTest {
         validatorFactoryBean.afterPropertiesSet();
 
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .setControllerAdvice(new GlobalRestExceptionHandler())
                 .setValidator(validatorFactoryBean)
                 .addPlaceholderValue("app.api.base-path", BASE_PATH)
                 .build();
@@ -77,80 +85,181 @@ class TrainingRestControllerTest {
 
     @Test
     void shouldFailAddTrainingWhenTrainingNameIsNull() throws Exception {
-        TrainingCreateRequest invalidRequest = buildTrainingCreateRequest(
+        TrainingCreateRequest invalidRequestWithNullTrainingName = buildTrainingCreateRequest(
                 TRAINEE_USERNAME, TRAINER_USERNAME, null, TRAINING_DATE, TRAINING_DURATION);
 
-        mockMvc.perform(post(BASE_PATH + "/trainings")
+        String content = mockMvc.perform(post(BASE_PATH + "/trainings")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidRequest)))
-                .andExpect(status().isBadRequest());
+                        .content(objectMapper.writeValueAsString(invalidRequestWithNullTrainingName)))
+                .andExpect(status().isBadRequest())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
+        ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
+        assertThat(error.getErrorCode()).isEqualTo(ApiError.VALIDATION.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo("Validation error: trainingName: must not be null");
         verifyNoInteractions(facade);
     }
 
     @Test
     void shouldFailAddTrainingWhenTrainingDateIsNull() throws Exception {
-        TrainingCreateRequest invalidRequest = buildTrainingCreateRequest(
+        TrainingCreateRequest invalidRequestWithNullTrainingDate = buildTrainingCreateRequest(
                 TRAINEE_USERNAME, TRAINER_USERNAME, TRAINING_NAME, null, TRAINING_DURATION);
 
-        mockMvc.perform(post(BASE_PATH + "/trainings")
+        String content = mockMvc.perform(post(BASE_PATH + "/trainings")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidRequest)))
-                .andExpect(status().isBadRequest());
+                        .content(objectMapper.writeValueAsString(invalidRequestWithNullTrainingDate)))
+                .andExpect(status().isBadRequest())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
+        ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
+        assertThat(error.getErrorCode()).isEqualTo(ApiError.VALIDATION.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo("Validation error: trainingDate: must not be null");
         verifyNoInteractions(facade);
     }
 
     @Test
     void shouldFailAddTrainingWhenTrainingDurationIsNull() throws Exception {
-        TrainingCreateRequest invalidRequest = buildTrainingCreateRequest(
+        TrainingCreateRequest invalidRequestWithNullTrainingDuration = buildTrainingCreateRequest(
                 TRAINEE_USERNAME, TRAINER_USERNAME, TRAINING_NAME, TRAINING_DATE, null);
 
-        mockMvc.perform(post(BASE_PATH + "/trainings")
+        String content = mockMvc.perform(post(BASE_PATH + "/trainings")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidRequest)))
-                .andExpect(status().isBadRequest());
+                        .content(objectMapper.writeValueAsString(invalidRequestWithNullTrainingDuration)))
+                .andExpect(status().isBadRequest())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
+        ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
+        assertThat(error.getErrorCode()).isEqualTo(ApiError.VALIDATION.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo("Validation error: trainingDuration: must not be null");
         verifyNoInteractions(facade);
     }
 
     @Test
     void shouldFailAddTrainingWhenTraineeUsernameIsNull() throws Exception {
-        TrainingCreateRequest invalidRequest = buildTrainingCreateRequest(
+        TrainingCreateRequest invalidRequestWithNullTraineeUsername = buildTrainingCreateRequest(
                 null, TRAINER_USERNAME, TRAINING_NAME, TRAINING_DATE, TRAINING_DURATION);
 
-        mockMvc.perform(post(BASE_PATH + "/trainings")
+        String content = mockMvc.perform(post(BASE_PATH + "/trainings")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidRequest)))
-                .andExpect(status().isBadRequest());
+                        .content(objectMapper.writeValueAsString(invalidRequestWithNullTraineeUsername)))
+                .andExpect(status().isBadRequest())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
+        ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
+        assertThat(error.getErrorCode()).isEqualTo(ApiError.VALIDATION.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo("Validation error: traineeUsername: must not be null");
         verifyNoInteractions(facade);
     }
 
     @Test
     void shouldFailAddTrainingWhenTrainerUsernameIsNull() throws Exception {
-        TrainingCreateRequest invalidRequest = buildTrainingCreateRequest(
+        TrainingCreateRequest invalidRequestWithNullTrainerUsername = buildTrainingCreateRequest(
                 TRAINEE_USERNAME, null, TRAINING_NAME, TRAINING_DATE, TRAINING_DURATION);
 
-        mockMvc.perform(post(BASE_PATH + "/trainings")
+        String content = mockMvc.perform(post(BASE_PATH + "/trainings")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidRequest)))
-                .andExpect(status().isBadRequest());
+                        .content(objectMapper.writeValueAsString(invalidRequestWithNullTrainerUsername)))
+                .andExpect(status().isBadRequest())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
+        ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
+        assertThat(error.getErrorCode()).isEqualTo(ApiError.VALIDATION.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo("Validation error: trainerUsername: must not be null");
         verifyNoInteractions(facade);
     }
 
     @Test
     void shouldFailAddTrainingWhenTrainingDurationIsZero() throws Exception {
-        TrainingCreateRequest invalidRequest = buildTrainingCreateRequest(
+        TrainingCreateRequest invalidRequestWithZeroTrainingDuration = buildTrainingCreateRequest(
                 TRAINEE_USERNAME, TRAINER_USERNAME, TRAINING_NAME, TRAINING_DATE, 0);
 
-        mockMvc.perform(post(BASE_PATH + "/trainings")
+        String content = mockMvc.perform(post(BASE_PATH + "/trainings")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidRequest)))
-                .andExpect(status().isBadRequest());
+                        .content(objectMapper.writeValueAsString(invalidRequestWithZeroTrainingDuration)))
+                .andExpect(status().isBadRequest())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
+        ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
+        assertThat(error.getErrorCode()).isEqualTo(ApiError.VALIDATION.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo("Validation error: trainingDuration: must be greater than or equal to 1");
         verifyNoInteractions(facade);
+    }
+
+    @Test
+    void shouldReturn404WhenTraineeOrTrainerNotFoundOnAddTraining() throws Exception {
+        TrainingCreateRequest validRequest = buildTrainingCreateRequest(
+                TRAINEE_USERNAME, TRAINER_USERNAME, TRAINING_NAME, TRAINING_DATE, TRAINING_DURATION);
+        EntityNotFoundException exception = EntityNotFoundException.forUsername(EntityType.TRAINEE, TRAINEE_USERNAME);
+
+        doThrow(exception)
+                .when(facade).createTraining(TRAINER_USERNAME, validRequest);
+
+        String content = mockMvc.perform(post(BASE_PATH + "/trainings")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validRequest)))
+                .andExpect(status().isNotFound())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
+        assertThat(error.getErrorCode()).isEqualTo(ApiError.NOT_FOUND.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo(
+                "%s: %s".formatted(ApiError.NOT_FOUND.getMessage(), exception.getMessage()));
+    }
+
+    @Test
+    void shouldReturn500WhenUnexpectedErrorOccursOnAddTraining() throws Exception {
+        TrainingCreateRequest validRequest = buildTrainingCreateRequest(
+                TRAINEE_USERNAME, TRAINER_USERNAME, TRAINING_NAME, TRAINING_DATE, TRAINING_DURATION);
+
+        doThrow(new RuntimeException("Unexpected failure"))
+                .when(facade).createTraining(TRAINER_USERNAME, validRequest);
+
+        String content = mockMvc.perform(post(BASE_PATH + "/trainings")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validRequest)))
+                .andExpect(status().isInternalServerError())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
+        assertThat(error.getErrorCode()).isEqualTo(ApiError.SERVICE.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo(ApiError.SERVICE.getMessage());
+    }
+
+    @Test
+    void shouldReturn500WhenHibernateExceptionOccursOnAddTraining() throws Exception {
+        TrainingCreateRequest validRequest = buildTrainingCreateRequest(
+                TRAINEE_USERNAME, TRAINER_USERNAME, TRAINING_NAME, TRAINING_DATE, TRAINING_DURATION);
+
+        doThrow(new HibernateException("Database connectivity failure"))
+                .when(facade).createTraining(TRAINER_USERNAME, validRequest);
+
+        String content = mockMvc.perform(post(BASE_PATH + "/trainings")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validRequest)))
+                .andExpect(status().isInternalServerError())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
+        assertThat(error.getErrorCode()).isEqualTo(ApiError.DATABASE.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo(ApiError.DATABASE.getMessage());
     }
 
     @Test

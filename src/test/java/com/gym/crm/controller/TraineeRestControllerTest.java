@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.gia.openapi.model.ActivationStatusRequest;
 import com.gia.openapi.model.AssignedTrainerResponse;
+import com.gia.openapi.model.ErrorResponse;
 import com.gia.openapi.model.GetTraineeTrainingResponse;
 import com.gia.openapi.model.TraineeAssignedTrainersUpdateRequest;
 import com.gia.openapi.model.TraineeAssignedTrainersUpdateResponse;
@@ -13,7 +14,13 @@ import com.gia.openapi.model.TraineeCreateResponse;
 import com.gia.openapi.model.TraineeGetResponse;
 import com.gia.openapi.model.TraineeUpdateRequest;
 import com.gia.openapi.model.TraineeUpdateResponse;
+import com.gym.crm.entity.EntityType;
+import com.gym.crm.exception.ApiError;
+import com.gym.crm.exception.EntityNotFoundException;
+import com.gym.crm.exception.GlobalRestExceptionHandler;
 import com.gym.crm.facade.GymFacade;
+import com.gym.crm.security.AuthenticationException;
+import org.hibernate.HibernateException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,6 +38,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -69,6 +77,7 @@ class TraineeRestControllerTest {
         validatorFactoryBean.afterPropertiesSet();
 
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .setControllerAdvice(new GlobalRestExceptionHandler())
                 .setValidator(validatorFactoryBean)
                 .addPlaceholderValue("app.api.base-path", BASE_PATH)
                 .build();
@@ -99,25 +108,37 @@ class TraineeRestControllerTest {
 
     @Test
     void shouldFailRegisterTraineeWhenFirstNameIsNull() throws Exception {
-        TraineeCreateRequest invalidRequest = buildTraineeCreateRequest(null, LAST_NAME);
+        TraineeCreateRequest invalidRequestWithNullFirstName = buildTraineeCreateRequest(null, LAST_NAME);
 
-        mockMvc.perform(post(BASE_PATH + "/trainees/register")
+        String content = mockMvc.perform(post(BASE_PATH + "/trainees/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidRequest)))
-                .andExpect(status().isBadRequest());
+                        .content(objectMapper.writeValueAsString(invalidRequestWithNullFirstName)))
+                .andExpect(status().isBadRequest())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
+        ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
+        assertThat(error.getErrorCode()).isEqualTo(ApiError.VALIDATION.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo("Validation error: firstName: must not be null");
         verifyNoInteractions(facade);
     }
 
     @Test
     void shouldFailRegisterTraineeWhenLastNameIsNull() throws Exception {
-        TraineeCreateRequest invalidRequest = buildTraineeCreateRequest(FIRST_NAME, null);
+        TraineeCreateRequest invalidRequestWithNullLastName = buildTraineeCreateRequest(FIRST_NAME, null);
 
-        mockMvc.perform(post(BASE_PATH + "/trainees/register")
+        String content = mockMvc.perform(post(BASE_PATH + "/trainees/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidRequest)))
-                .andExpect(status().isBadRequest());
+                        .content(objectMapper.writeValueAsString(invalidRequestWithNullLastName)))
+                .andExpect(status().isBadRequest())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
+        ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
+        assertThat(error.getErrorCode()).isEqualTo(ApiError.VALIDATION.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo("Validation error: lastName: must not be null");
         verifyNoInteractions(facade);
     }
 
@@ -141,6 +162,72 @@ class TraineeRestControllerTest {
         assertThat(actual.getLastName()).isEqualTo(LAST_NAME);
         assertThat(actual.getIsActive()).isTrue();
         verify(facade).getTraineeByUsername(USERNAME);
+    }
+
+    @Test
+    void shouldReturn404WhenTraineeNotFound() throws Exception {
+        EntityNotFoundException exception = EntityNotFoundException.forUsername(EntityType.TRAINEE, USERNAME);
+
+        doThrow(exception)
+                .when(facade).getTraineeByUsername(USERNAME);
+
+        String content = mockMvc.perform(get(BASE_PATH + "/trainees/{username}", USERNAME))
+                .andExpect(status().isNotFound())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
+        assertThat(error.getErrorCode()).isEqualTo(ApiError.NOT_FOUND.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo("%s: %s".formatted(ApiError.NOT_FOUND.getMessage(), exception.getMessage()));
+    }
+
+    @Test
+    void shouldReturn401WhenAuthenticationFailsOnGetTraineeProfile() throws Exception {
+        doThrow(new AuthenticationException("User is not authenticated"))
+                .when(facade).getTraineeByUsername(USERNAME);
+
+        String content = mockMvc.perform(get(BASE_PATH + "/trainees/{username}", USERNAME))
+                .andExpect(status().isUnauthorized())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
+        assertThat(error.getErrorCode()).isEqualTo(ApiError.AUTHENTICATION.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo(ApiError.AUTHENTICATION.getMessage());
+    }
+
+    @Test
+    void shouldReturn500WhenUnexpectedErrorOccursOnGetTraineeProfile() throws Exception {
+        doThrow(new RuntimeException("Unexpected failure"))
+                .when(facade).getTraineeByUsername(USERNAME);
+
+        String content = mockMvc.perform(get(BASE_PATH + "/trainees/{username}", USERNAME))
+                .andExpect(status().isInternalServerError())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
+        assertThat(error.getErrorCode()).isEqualTo(ApiError.SERVICE.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo(ApiError.SERVICE.getMessage());
+    }
+
+    @Test
+    void shouldReturn500WhenHibernateExceptionOccursOnGetTraineeProfile() throws Exception {
+        doThrow(new HibernateException("Database connectivity failure"))
+                .when(facade).getTraineeByUsername(USERNAME);
+
+        String content = mockMvc.perform(get(BASE_PATH + "/trainees/{username}", USERNAME))
+                .andExpect(status().isInternalServerError())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
+        assertThat(error.getErrorCode()).isEqualTo(ApiError.DATABASE.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo(ApiError.DATABASE.getMessage());
     }
 
     @Test
@@ -236,39 +323,55 @@ class TraineeRestControllerTest {
 
     @Test
     void shouldFailUpdateTraineeProfileWhenFirstNameIsNull() throws Exception {
-        TraineeUpdateRequest invalidRequest = buildTraineeUpdateRequest(null, LAST_NAME);
+        TraineeUpdateRequest invalidRequestWithNullFirstName = buildTraineeUpdateRequest(null, LAST_NAME);
 
-        mockMvc.perform(put(BASE_PATH + "/trainees/{username}", USERNAME)
+        String content = mockMvc.perform(put(BASE_PATH + "/trainees/{username}", USERNAME)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidRequest)))
-                .andExpect(status().isBadRequest());
+                        .content(objectMapper.writeValueAsString(invalidRequestWithNullFirstName)))
+                .andExpect(status().isBadRequest())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
+        ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
+        assertThat(error.getErrorCode()).isEqualTo(ApiError.VALIDATION.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo("Validation error: firstName: must not be null");
         verifyNoInteractions(facade);
     }
 
     @Test
     void shouldFailUpdateTraineeProfileWhenLastNameIsNull() throws Exception {
-        TraineeUpdateRequest invalidRequest = buildTraineeUpdateRequest(FIRST_NAME, null);
+        TraineeUpdateRequest invalidRequestWithNullLastName = buildTraineeUpdateRequest(FIRST_NAME, null);
 
-        mockMvc.perform(put(BASE_PATH + "/trainees/{username}", USERNAME)
+        String content = mockMvc.perform(put(BASE_PATH + "/trainees/{username}", USERNAME)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidRequest)))
-                .andExpect(status().isBadRequest());
+                        .content(objectMapper.writeValueAsString(invalidRequestWithNullLastName)))
+                .andExpect(status().isBadRequest())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
+        ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
+        assertThat(error.getErrorCode()).isEqualTo(ApiError.VALIDATION.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo("Validation error: lastName: must not be null");
         verifyNoInteractions(facade);
     }
 
     @Test
     void shouldFailUpdateTraineeProfileWhenIsActiveIsNull() throws Exception {
-        TraineeUpdateRequest invalidRequest = new TraineeUpdateRequest();
-        invalidRequest.firstName(FIRST_NAME);
-        invalidRequest.lastName(LAST_NAME);
+        TraineeUpdateRequest invalidRequestWithNullIsActive = new TraineeUpdateRequest(FIRST_NAME, LAST_NAME, null);
 
-        mockMvc.perform(put(BASE_PATH + "/trainees/{username}", USERNAME)
+        String content = mockMvc.perform(put(BASE_PATH + "/trainees/{username}", USERNAME)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidRequest)))
-                .andExpect(status().isBadRequest());
+                        .content(objectMapper.writeValueAsString(invalidRequestWithNullIsActive)))
+                .andExpect(status().isBadRequest())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
+        ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
+        assertThat(error.getErrorCode()).isEqualTo(ApiError.VALIDATION.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo("Validation error: isActive: must not be null");
         verifyNoInteractions(facade);
     }
 
@@ -302,26 +405,37 @@ class TraineeRestControllerTest {
 
     @Test
     void shouldFailUpdateTraineeTrainersWhenTrainerUsernamesIsNull() throws Exception {
-        TraineeAssignedTrainersUpdateRequest invalidRequest = new TraineeAssignedTrainersUpdateRequest();
-        invalidRequest.setTrainerUsernames(null);
+        TraineeAssignedTrainersUpdateRequest invalidRequestWithNullTrainerUsernames = new TraineeAssignedTrainersUpdateRequest(null);
 
-        mockMvc.perform(put(BASE_PATH + "/trainees/{username}/trainers", USERNAME)
+        String content = mockMvc.perform(put(BASE_PATH + "/trainees/{username}/trainers", USERNAME)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidRequest)))
-                .andExpect(status().isBadRequest());
+                        .content(objectMapper.writeValueAsString(invalidRequestWithNullTrainerUsernames)))
+                .andExpect(status().isBadRequest())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
+        ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
+        assertThat(error.getErrorCode()).isEqualTo(ApiError.VALIDATION.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo("Validation error: trainerUsernames: must not be null");
         verifyNoInteractions(facade);
     }
 
     @Test
     void shouldFailUpdateTraineeTrainersWhenTrainerUsernamesIsEmpty() throws Exception {
-        TraineeAssignedTrainersUpdateRequest invalidRequest = buildTraineeAssignedTrainersUpdateRequest(List.of());
+        TraineeAssignedTrainersUpdateRequest invalidRequestWithEmptyTrainerUsernames = buildTraineeAssignedTrainersUpdateRequest(List.of());
 
-        mockMvc.perform(put(BASE_PATH + "/trainees/{username}/trainers", USERNAME)
+        String content = mockMvc.perform(put(BASE_PATH + "/trainees/{username}/trainers", USERNAME)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidRequest)))
-                .andExpect(status().isBadRequest());
+                        .content(objectMapper.writeValueAsString(invalidRequestWithEmptyTrainerUsernames)))
+                .andExpect(status().isBadRequest())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
+        ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
+        assertThat(error.getErrorCode()).isEqualTo(ApiError.VALIDATION.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo("Validation error: trainerUsernames: size must be between 1 and 2147483647");
         verifyNoInteractions(facade);
     }
 
@@ -339,14 +453,19 @@ class TraineeRestControllerTest {
 
     @Test
     void shouldFailChangeTraineeActivationStatusWhenIsActiveIsNull() throws Exception {
-        ActivationStatusRequest invalidRequest = new ActivationStatusRequest();
-        invalidRequest.setIsActive(null);
+        ActivationStatusRequest invalidRequestWithNullIsActive = new ActivationStatusRequest(null);
 
-        mockMvc.perform(patch(BASE_PATH + "/trainees/{username}/activation", USERNAME)
+        String content = mockMvc.perform(patch(BASE_PATH + "/trainees/{username}/activation", USERNAME)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidRequest)))
-                .andExpect(status().isBadRequest());
+                        .content(objectMapper.writeValueAsString(invalidRequestWithNullIsActive)))
+                .andExpect(status().isBadRequest())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
+        ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
+        assertThat(error.getErrorCode()).isEqualTo(ApiError.VALIDATION.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo("Validation error: isActive: must not be null");
         verifyNoInteractions(facade);
     }
 
@@ -356,6 +475,24 @@ class TraineeRestControllerTest {
                 .andExpect(status().isOk());
 
         verify(facade).deleteTraineeByUsername(USERNAME);
+    }
+
+    @Test
+    void shouldReturn404WhenDeletingNonExistentTrainee() throws Exception {
+        EntityNotFoundException exception = EntityNotFoundException.forUsername(EntityType.TRAINEE, USERNAME);
+
+        doThrow(exception)
+                .when(facade).deleteTraineeByUsername(USERNAME);
+
+        String content = mockMvc.perform(delete(BASE_PATH + "/trainees/{username}", USERNAME))
+                .andExpect(status().isNotFound())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
+        assertThat(error.getErrorCode()).isEqualTo(ApiError.NOT_FOUND.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo("%s: %s".formatted(ApiError.NOT_FOUND.getMessage(), exception.getMessage()));
     }
 
     private TraineeCreateRequest buildTraineeCreateRequest(String firstName, String lastName) {

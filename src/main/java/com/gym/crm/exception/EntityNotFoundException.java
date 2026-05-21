@@ -10,17 +10,13 @@ public class EntityNotFoundException extends ServiceException {
 
     private final EntityType entityType;
     private final String key;
-    private final Object entityKey;
+    private final Object value;
 
-    public EntityNotFoundException(EntityType entityType, String key, Object entityKey) {
-        super(String.format(ERROR_MESSAGE_TEMPLATE, entityType.getName(), key, entityKey));
+    public EntityNotFoundException(EntityType entityType, String key, Object value) {
+        super(String.format(ERROR_MESSAGE_TEMPLATE, entityType.getName(), key, value));
         this.entityType = entityType;
         this.key = key;
-        this.entityKey = entityKey;
-    }
-
-    public static EntityNotFoundException forId(EntityType entityType, Long id) {
-        return new EntityNotFoundException(entityType, "id", id);
+        this.value = value;
     }
 
     public static EntityNotFoundException forUsername(EntityType entityType, String username) {
