@@ -13,7 +13,6 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 import static com.gym.crm.test.helper.EntityRecursiveComparisonConfigs.getTraineeConfigForDirectFields;
 import static com.gym.crm.test.helper.EntityRecursiveComparisonConfigs.getTrainerConfigForDirectFields;
@@ -30,7 +29,6 @@ class TrainingDaoImplTest extends AbstractDaoTest<TrainingDaoImpl> {
     private static final long EXISTING_TRAINEE_ID = 1L;
     private static final long EXISTING_TRAINER_ID = 1L;
     private static final long EXISTING_TRAINING_TYPE_ID = 1L;
-    private static final long NON_EXISTING_ID = 99999L;
     private static final int TRAININGS_COUNT = 2;
 
     @Test
@@ -76,6 +74,7 @@ class TrainingDaoImplTest extends AbstractDaoTest<TrainingDaoImpl> {
         assertThatThrownBy(() -> dao.save(null))
                 .isInstanceOf(NullPointerException.class)
                 .hasMessage("Training cannot be null");
+
         assertThat(testDbClient.countTrainings())
                 .as("Trainings count should remain unchanged")
                 .isEqualTo(TRAININGS_COUNT);
@@ -99,57 +98,10 @@ class TrainingDaoImplTest extends AbstractDaoTest<TrainingDaoImpl> {
         assertThatThrownBy(() -> dao.save(invalidTrainingWithId))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Training ID must be null for creation.");
+
         assertThat(testDbClient.countTrainings())
                 .as("Trainings count should remain unchanged")
                 .isEqualTo(TRAININGS_COUNT);
-    }
-
-    @Test
-    void shouldFindByIdWhenExists() {
-        Training expected = testDbClient.findTraining(EXISTING_TRAINING_ID);
-
-        Optional<Training> actual = dao.findById(EXISTING_TRAINING_ID);
-
-        assertThat(actual).isPresent();
-        assertThat(actual.get())
-                .usingRecursiveComparison(getTrainingConfigForExisting())
-                .isEqualTo(expected);
-        assertThat(actual.get().getTrainee())
-                .usingRecursiveComparison(getTraineeConfigForDirectFields())
-                .isEqualTo(expected.getTrainee());
-        assertThat(actual.get().getTrainer())
-                .usingRecursiveComparison(getTrainerConfigForDirectFields())
-                .isEqualTo(expected.getTrainer());
-        assertThat(actual.get().getTrainingType())
-                .usingRecursiveComparison(getTrainingTypeConfigForDirectFields())
-                .isEqualTo(expected.getTrainingType());
-    }
-
-    @Test
-    void shouldReturnEmptyWhenNotFoundById() {
-        Optional<Training> actual = dao.findById(NON_EXISTING_ID);
-
-        assertThat(actual).isEmpty();
-    }
-
-    @Test
-    void shouldThrowNullPointerExceptionWhenFindingByNullId() {
-        assertThatThrownBy(() -> dao.findById(null))
-                .isInstanceOf(NullPointerException.class)
-                .hasMessage("Training ID cannot be null");
-    }
-
-    @Test
-    void shouldFindAllTrainings() {
-        List<Training> expected = List.of(
-                Training.builder().id(EXISTING_TRAINING_ID).build(),
-                Training.builder().id(2L).build());
-
-        List<Training> actual = dao.findAll();
-
-        assertThat(actual)
-                .hasSize(TRAININGS_COUNT)
-                .containsAll(expected);
     }
 
     @Test

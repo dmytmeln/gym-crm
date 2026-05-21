@@ -17,15 +17,16 @@ import com.gia.openapi.model.TrainerCreateResponse;
 import com.gia.openapi.model.TrainerGetResponse;
 import com.gia.openapi.model.TrainerUpdateRequest;
 import com.gia.openapi.model.TrainerUpdateResponse;
+import com.gia.openapi.model.TrainingCreateRequest;
+import com.gia.openapi.model.TrainingTypeResponse;
 import com.gym.crm.dto.LoginChangeDto;
-import com.gym.crm.dto.TrainingCreateDto;
-import com.gym.crm.dto.TrainingResponseDto;
 import com.gym.crm.dto.filter.TraineeTrainingSearchFilter;
 import com.gym.crm.dto.filter.TrainerTrainingSearchFilter;
 import com.gym.crm.entity.EntityType;
 import com.gym.crm.entity.Trainee;
 import com.gym.crm.entity.Trainer;
 import com.gym.crm.entity.Training;
+import com.gym.crm.entity.TrainingType;
 import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.exception.ValidationException;
 import com.gym.crm.mapper.AuthMapper;
@@ -60,8 +61,6 @@ import static com.gym.crm.factory.TrainerTestFactory.DEFAULT_SPECIALIZATION;
 import static com.gym.crm.factory.TrainerTestFactory.DEFAULT_TRAINER_ID;
 import static com.gym.crm.factory.TrainerTestFactory.buildTrainerWithId;
 import static com.gym.crm.factory.TrainingTestFactory.DEFAULT_TRAINING_ID;
-import static com.gym.crm.factory.TrainingTestFactory.buildTrainingCreateDto;
-import static com.gym.crm.factory.TrainingTestFactory.buildTrainingResponseDto;
 import static com.gym.crm.factory.TrainingTestFactory.buildTrainingWithId;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -629,121 +628,90 @@ class GymFacadeTest {
     }
 
     @Test
-    void shouldCreateTrainingAndReturnResponseDto() {
-        TrainingCreateDto createDto = buildTrainingCreateDto();
-        Training training = buildTrainingWithId(DEFAULT_TRAINING_ID);
-        TrainingResponseDto expected = buildTrainingResponseDto();
+    void shouldCreateTrainingWhenRequestIsValid() {
+        TrainingCreateRequest request = buildTrainingCreateRequest();
+        Training training = buildTrainingFromRequest(request);
 
-        doNothing().when(businessValidator).validate(createDto);
-        when(trainingMapper.toEntity(createDto)).thenReturn(training);
+        doNothing().when(businessValidator).validate(request);
+        when(trainingMapper.toEntity(request)).thenReturn(training);
         when(trainingService.createTraining(training)).thenReturn(training);
-        when(trainingMapper.toDto(training)).thenReturn(expected);
 
-        TrainingResponseDto actual = facade.createTraining(USERNAME, createDto);
+        facade.createTraining(DEFAULT_USERNAME, request);
 
-        assertNotNull(actual);
-        assertEquals(expected, actual);
-        verify(businessValidator).validate(createDto);
-        verify(trainingMapper).toEntity(createDto);
+        verify(businessValidator).validate(request);
+        verify(trainingMapper).toEntity(request);
         verify(trainingService).createTraining(training);
-        verify(trainingMapper).toDto(training);
     }
 
     @Test
-    void shouldThrowValidationExceptionWhenCreatingTrainingWithInvalidDto() {
-        TrainingCreateDto createDto = buildTrainingCreateDto();
+    void shouldThrowValidationExceptionWhenCreatingTrainingWithInvalidRequest() {
+        TrainingCreateRequest request = buildTrainingCreateRequest();
 
         doThrow(new ValidationException("Validation error"))
-                .when(businessValidator).validate(createDto);
+                .when(businessValidator).validate(request);
 
-        assertThrows(ValidationException.class, () -> facade.createTraining(USERNAME, createDto));
+        assertThrows(ValidationException.class, () -> facade.createTraining(DEFAULT_USERNAME, request));
 
-        verify(businessValidator).validate(createDto);
+        verify(businessValidator).validate(request);
         verifyNoInteractions(trainingMapper, trainingService);
     }
 
     @Test
-    void shouldThrowNullPointerWhenCreatingNullTrainingDto() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.createTraining(USERNAME, null));
+    void shouldThrowNullPointerWhenCreatingNullTrainingRequest() {
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.createTraining(DEFAULT_USERNAME, null));
 
-        assertEquals("TrainingCreateDto cannot be null", exception.getMessage());
-
+        assertEquals("TrainingCreateRequest cannot be null", exception.getMessage());
         verifyNoInteractions(trainingMapper, trainingService);
     }
 
     @Test
-    void shouldGetTrainingAndMapToDto() {
-        Training training = buildTrainingWithId(DEFAULT_TRAINING_ID);
-        TrainingResponseDto expected = buildTrainingResponseDto();
+    void shouldGetAllTrainingTypesAndMapToResponseList() {
+        TrainingType trainingType = TrainingType.builder().id(1L).trainingTypeName("Cardio").build();
+        TrainingTypeResponse expected = new TrainingTypeResponse().id(1).name("Cardio");
+        List<TrainingType> trainingTypes = List.of(trainingType);
+        List<TrainingTypeResponse> expectedList = List.of(expected);
 
-        when(trainingService.getTraining(DEFAULT_TRAINING_ID)).thenReturn(training);
-        when(trainingMapper.toDto(training)).thenReturn(expected);
+        when(trainingService.getAllTrainingTypes()).thenReturn(trainingTypes);
+        when(trainingMapper.toTrainingTypeResponseList(trainingTypes)).thenReturn(expectedList);
 
-        TrainingResponseDto actual = facade.getTraining(USERNAME, DEFAULT_TRAINING_ID);
+        List<TrainingTypeResponse> actual = facade.getAllTrainingTypes(DEFAULT_USERNAME);
 
         assertNotNull(actual);
-        assertEquals(expected, actual);
-        verify(trainingService).getTraining(DEFAULT_TRAINING_ID);
-        verify(trainingMapper).toDto(training);
+        assertEquals(expectedList, actual);
+        verify(trainingService).getAllTrainingTypes();
+        verify(trainingMapper).toTrainingTypeResponseList(trainingTypes);
     }
 
     @Test
-    void shouldPropagateEntityNotFoundExceptionWhenGettingTraining() {
-        when(trainingService.getTraining(DEFAULT_TRAINING_ID)).thenThrow(EntityNotFoundException.forId(EntityType.TRAINING, DEFAULT_TRAINING_ID));
+    void shouldGetAllTrainingTypesAndReturnEmptyList() {
+        when(trainingService.getAllTrainingTypes()).thenReturn(List.of());
+        when(trainingMapper.toTrainingTypeResponseList(List.of())).thenReturn(List.of());
 
-        assertThrows(EntityNotFoundException.class, () -> facade.getTraining(USERNAME, DEFAULT_TRAINING_ID));
-
-        verify(trainingService).getTraining(DEFAULT_TRAINING_ID);
-        verifyNoInteractions(trainingMapper);
-    }
-
-    @Test
-    void shouldThrowNullPointerWhenGettingNullTrainingId() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.getTraining(USERNAME, null));
-
-        assertEquals("Training ID cannot be null", exception.getMessage());
-
-        verifyNoInteractions(trainingMapper, trainingService);
-    }
-
-    @Test
-    void shouldGetAllTrainingsAndMapToDtoList() {
-        Training training = buildTrainingWithId(DEFAULT_TRAINING_ID);
-        TrainingResponseDto responseDto = buildTrainingResponseDto();
-        List<Training> trainings = List.of(training);
-        List<TrainingResponseDto> expected = List.of(responseDto);
-
-        when(trainingService.getAllTrainings()).thenReturn(trainings);
-        when(trainingMapper.toDtoList(trainings)).thenReturn(expected);
-
-        List<TrainingResponseDto> actual = facade.getAllTrainings(USERNAME);
-
-        assertNotNull(actual);
-        assertEquals(expected, actual);
-        verify(trainingService).getAllTrainings();
-        verify(trainingMapper).toDtoList(trainings);
-    }
-
-    @Test
-    void shouldGetAllTrainingsAndReturnEmptyList() {
-        when(trainingService.getAllTrainings()).thenReturn(List.of());
-        when(trainingMapper.toDtoList(List.of())).thenReturn(List.of());
-
-        List<TrainingResponseDto> actual = facade.getAllTrainings(USERNAME);
+        List<TrainingTypeResponse> actual = facade.getAllTrainingTypes(DEFAULT_USERNAME);
 
         assertNotNull(actual);
         assertTrue(actual.isEmpty());
-        verify(trainingService).getAllTrainings();
-        verify(trainingMapper).toDtoList(List.of());
+        verify(trainingService).getAllTrainingTypes();
+        verify(trainingMapper).toTrainingTypeResponseList(List.of());
     }
 
-    @Test
-    void shouldThrowNullPointerWhenGettingAllTrainingsWithNullUsername() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.getAllTrainings(null));
+    private TrainingCreateRequest buildTrainingCreateRequest() {
+        TrainingCreateRequest request = new TrainingCreateRequest();
+        request.setTraineeUsername(DEFAULT_USERNAME);
+        request.setTrainerUsername("trainer.test");
+        request.setTrainingName("Morning Cardio");
+        request.setTrainingDate(LocalDate.of(2025, 7, 20));
+        request.setTrainingDuration(55);
 
-        assertEquals("Username cannot be null", exception.getMessage());
+        return request;
+    }
 
-        verifyNoInteractions(trainingMapper, trainingService);
+    private Training buildTrainingFromRequest(TrainingCreateRequest request) {
+        return Training.builder()
+                .trainingName(request.getTrainingName())
+                .trainingDate(request.getTrainingDate())
+                .trainingDuration(request.getTrainingDuration())
+                .build();
     }
 
 }

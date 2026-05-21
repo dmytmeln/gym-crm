@@ -1,8 +1,9 @@
 package com.gym.crm.mapper;
 
-import com.gym.crm.dto.TrainingCreateDto;
-import com.gym.crm.dto.TrainingResponseDto;
+import com.gia.openapi.model.TrainingCreateRequest;
+import com.gia.openapi.model.TrainingTypeResponse;
 import com.gym.crm.entity.Training;
+import com.gym.crm.entity.TrainingType;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -13,17 +14,16 @@ import static org.mapstruct.MappingConstants.ComponentModel.SPRING;
 @Mapper(componentModel = SPRING)
 public interface TrainingMapper {
 
-    @Mapping(target = "traineeId", source = "trainee.id")
-    @Mapping(target = "trainerId", source = "trainer.id")
-    @Mapping(target = "trainingTypeName", source = "trainingType.trainingTypeName")
-    TrainingResponseDto toDto(Training training);
-
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "trainee.id", source = "traineeId")
-    @Mapping(target = "trainer.id", source = "trainerId")
-    @Mapping(target = "trainingType.id", source = "trainingTypeId")
-    Training toEntity(TrainingCreateDto dto);
+    @Mapping(target = "trainingType", ignore = true)
+    @Mapping(target = "trainee.user.username", source = "traineeUsername")
+    @Mapping(target = "trainer.user.username", source = "trainerUsername")
+    Training toEntity(TrainingCreateRequest request);
 
-    List<TrainingResponseDto> toDtoList(List<Training> trainings);
+    @Mapping(target = "id", source = "id")
+    @Mapping(target = "name", source = "trainingTypeName")
+    TrainingTypeResponse toTrainingTypeResponse(TrainingType trainingType);
+
+    List<TrainingTypeResponse> toTrainingTypeResponseList(List<TrainingType> trainingTypes);
 
 }

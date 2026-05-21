@@ -54,15 +54,15 @@ public class TrainingServiceImpl implements TrainingService {
         Objects.requireNonNull(training, "Training cannot be null");
         Objects.requireNonNull(training.getTrainee(), "Trainee cannot be null");
         Objects.requireNonNull(training.getTrainer(), "Trainer cannot be null");
-        Objects.requireNonNull(training.getTrainingType(), "Training type cannot be null");
         log.info("Creating training: {}", training.getTrainingName());
 
-        Trainee trainee = traineeDao.findById(training.getTrainee().getId())
-                .orElseThrow(() -> EntityNotFoundException.forId(EntityType.TRAINEE, training.getTrainee().getId()));
-        Trainer trainer = trainerDao.findById(training.getTrainer().getId())
-                .orElseThrow(() -> EntityNotFoundException.forId(EntityType.TRAINER, training.getTrainer().getId()));
-        TrainingType trainingType = trainingTypeDao.findById(training.getTrainingType().getId())
-                .orElseThrow(() -> EntityNotFoundException.forId(EntityType.TRAINING_TYPE, training.getTrainingType().getId()));
+        String traineeUsername = training.getTrainee().getUser().getUsername();
+        String trainerUsername = training.getTrainer().getUser().getUsername();
+        Trainee trainee = traineeDao.findByUsername(traineeUsername)
+                .orElseThrow(() -> EntityNotFoundException.forUsername(EntityType.TRAINEE, traineeUsername));
+        Trainer trainer = trainerDao.findByUsername(trainerUsername)
+                .orElseThrow(() -> EntityNotFoundException.forUsername(EntityType.TRAINER, trainerUsername));
+        TrainingType trainingType = trainer.getSpecialization();
 
         Training trainingWithAssociations = training.toBuilder()
                 .trainee(trainee)
@@ -78,16 +78,8 @@ public class TrainingServiceImpl implements TrainingService {
     }
 
     @Override
-    public Training getTraining(Long trainingId) {
-        Objects.requireNonNull(trainingId, "Training ID cannot be null");
-
-        return trainingDao.findById(trainingId)
-                .orElseThrow(() -> EntityNotFoundException.forId(EntityType.TRAINING, trainingId));
-    }
-
-    @Override
-    public List<Training> getAllTrainings() {
-        return trainingDao.findAll();
+    public List<TrainingType> getAllTrainingTypes() {
+        return trainingTypeDao.findAll();
     }
 
 }
