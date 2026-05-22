@@ -22,7 +22,6 @@ import com.gia.openapi.model.TrainingTypeResponse;
 import com.gym.crm.dto.LoginChangeDto;
 import com.gym.crm.dto.filter.TraineeTrainingSearchFilter;
 import com.gym.crm.dto.filter.TrainerTrainingSearchFilter;
-import com.gym.crm.entity.EntityType;
 import com.gym.crm.entity.Trainee;
 import com.gym.crm.entity.Trainer;
 import com.gym.crm.entity.Training;
@@ -48,6 +47,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
+import static com.gym.crm.entity.EntityType.TRAINEE;
+import static com.gym.crm.entity.EntityType.TRAINER;
 import static com.gym.crm.factory.TraineeTestFactory.DEFAULT_ADDRESS;
 import static com.gym.crm.factory.TraineeTestFactory.DEFAULT_DATE_OF_BIRTH;
 import static com.gym.crm.factory.TraineeTestFactory.DEFAULT_FIRST_NAME;
@@ -169,7 +170,7 @@ class GymFacadeTest {
     @Test
     void shouldPropagateEntityNotFoundExceptionWhenGettingTraineeByUsername() {
         String username = "username";
-        when(traineeService.getTraineeByUsername(username)).thenThrow(EntityNotFoundException.forUsername(EntityType.TRAINEE, username));
+        when(traineeService.getTraineeByUsername(username)).thenThrow(EntityNotFoundException.forUsername(TRAINEE, username));
 
         assertThrows(EntityNotFoundException.class, () -> facade.getTraineeByUsername(username));
 
@@ -404,8 +405,7 @@ class GymFacadeTest {
 
         when(authMapper.toDto(request)).thenReturn(dto);
         doNothing().when(businessValidator).validate(request);
-        doThrow(new ValidationException("Validation error"))
-                .when(businessValidator).validate(dto);
+        doThrow(new ValidationException("Validation error")).when(businessValidator).validate(dto);
 
         assertThrows(ValidationException.class, () -> facade.changePassword(USERNAME, request));
         verify(businessValidator).validate(request);
@@ -454,8 +454,7 @@ class GymFacadeTest {
                 .lastName(DEFAULT_LAST_NAME)
                 .specialization(DEFAULT_SPECIALIZATION);
 
-        doThrow(new ValidationException("Validation error"))
-                .when(businessValidator).validate(request);
+        doThrow(new ValidationException("Validation error")).when(businessValidator).validate(request);
 
         assertThrows(ValidationException.class, () -> facade.createTrainer(request));
 
@@ -496,7 +495,7 @@ class GymFacadeTest {
     @Test
     void shouldPropagateEntityNotFoundExceptionWhenGettingTrainerProfile() {
         String username = "username";
-        when(trainerService.getTrainerByUsername(username)).thenThrow(EntityNotFoundException.forUsername(EntityType.TRAINER, username));
+        when(trainerService.getTrainerByUsername(username)).thenThrow(EntityNotFoundException.forUsername(TRAINER, username));
 
         assertThrows(EntityNotFoundException.class, () -> facade.getTrainerByUsername(username));
 
@@ -548,8 +547,7 @@ class GymFacadeTest {
                 .lastName("Rodriguez")
                 .isActive(false);
 
-        doThrow(new ValidationException("Validation error"))
-                .when(businessValidator).validate(request);
+        doThrow(new ValidationException("Validation error")).when(businessValidator).validate(request);
 
         assertThrows(ValidationException.class, () -> facade.updateTrainer(USERNAME, request));
 
@@ -647,8 +645,7 @@ class GymFacadeTest {
     void shouldThrowValidationExceptionWhenCreatingTrainingWithInvalidRequest() {
         TrainingCreateRequest request = buildTrainingCreateRequest();
 
-        doThrow(new ValidationException("Validation error"))
-                .when(businessValidator).validate(request);
+        doThrow(new ValidationException("Validation error")).when(businessValidator).validate(request);
 
         assertThrows(ValidationException.class, () -> facade.createTraining(DEFAULT_USERNAME, request));
 

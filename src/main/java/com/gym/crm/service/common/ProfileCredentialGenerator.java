@@ -74,8 +74,7 @@ public class ProfileCredentialGenerator {
     }
 
     private Stream<String> findAllUsernames() {
-        return Stream.concat(
-                        traineeDao.findAll().stream().map(Trainee::getUser),
+        return Stream.concat(traineeDao.findAll().stream().map(Trainee::getUser),
                         trainerDao.findAll().stream().map(Trainer::getUser))
                 .map(User::getUsername);
     }

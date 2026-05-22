@@ -4,20 +4,26 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.gia.openapi.model.ActivationStatusRequest;
+import com.gia.openapi.model.ErrorResponse;
 import com.gia.openapi.model.GetTrainerTrainingResponse;
 import com.gia.openapi.model.TrainerCreateRequest;
 import com.gia.openapi.model.TrainerCreateResponse;
 import com.gia.openapi.model.TrainerGetResponse;
 import com.gia.openapi.model.TrainerUpdateRequest;
 import com.gia.openapi.model.TrainerUpdateResponse;
+import com.gym.crm.exception.ApiError;
+import com.gym.crm.exception.EntityNotFoundException;
+import com.gym.crm.exception.GlobalExceptionHandler;
+import com.gym.crm.exception.ValidationException;
 import com.gym.crm.facade.GymFacade;
+import com.gym.crm.security.AuthenticationException;
+import org.hibernate.HibernateException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
@@ -25,12 +31,20 @@ import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import java.time.LocalDate;
 import java.util.List;
 
+import static com.gym.crm.entity.EntityType.TRAINER;
+import static com.gym.crm.exception.ApiError.AUTHENTICATION_ERROR;
+import static com.gym.crm.exception.ApiError.DATABASE_ERROR;
+import static com.gym.crm.exception.ApiError.NOT_FOUND_ERROR;
+import static com.gym.crm.exception.ApiError.SERVICE_ERROR;
+import static com.gym.crm.exception.ApiError.VALIDATION_ERROR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -40,6 +54,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(MockitoExtension.class)
 class TrainerRestControllerTest {
 
+    private static final String EXPECTED_ERROR_MESSAGE_TEMPLATE = "%s: %s";
     private static final String BASE_PATH = "/api/v1";
     private static final String USERNAME = "liam.miller";
     private static final String FIRST_NAME = "Liam";
@@ -65,6 +80,7 @@ class TrainerRestControllerTest {
         validatorFactoryBean.afterPropertiesSet();
 
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .setControllerAdvice(new GlobalExceptionHandler())
                 .setValidator(validatorFactoryBean)
                 .addPlaceholderValue("app.api.base-path", BASE_PATH)
                 .build();
@@ -80,7 +96,7 @@ class TrainerRestControllerTest {
         when(facade.createTrainer(any(TrainerCreateRequest.class))).thenReturn(response);
 
         String content = mockMvc.perform(post(BASE_PATH + "/trainers/register")
-                        .contentType(MediaType.APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isOk())
                 .andReturn()
@@ -97,11 +113,17 @@ class TrainerRestControllerTest {
     void shouldFailRegisterTrainerWhenFirstNameIsNull() throws Exception {
         TrainerCreateRequest invalidRequest = buildTrainerCreateRequest(null, LAST_NAME, SPECIALIZATION);
 
-        mockMvc.perform(post(BASE_PATH + "/trainers/register")
-                        .contentType(MediaType.APPLICATION_JSON)
+        String content = mockMvc.perform(post(BASE_PATH + "/trainers/register")
+                        .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
+        ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
+        assertThat(error.getErrorCode()).isEqualTo(VALIDATION_ERROR.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo("Validation error: firstName: must not be null");
         verifyNoInteractions(facade);
     }
 
@@ -109,11 +131,17 @@ class TrainerRestControllerTest {
     void shouldFailRegisterTrainerWhenLastNameIsNull() throws Exception {
         TrainerCreateRequest invalidRequest = buildTrainerCreateRequest(FIRST_NAME, null, SPECIALIZATION);
 
-        mockMvc.perform(post(BASE_PATH + "/trainers/register")
-                        .contentType(MediaType.APPLICATION_JSON)
+        String content = mockMvc.perform(post(BASE_PATH + "/trainers/register")
+                        .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
+        ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
+        assertThat(error.getErrorCode()).isEqualTo(VALIDATION_ERROR.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo("Validation error: lastName: must not be null");
         verifyNoInteractions(facade);
     }
 
@@ -121,11 +149,17 @@ class TrainerRestControllerTest {
     void shouldFailRegisterTrainerWhenSpecializationIsNull() throws Exception {
         TrainerCreateRequest invalidRequest = buildTrainerCreateRequest(FIRST_NAME, LAST_NAME, null);
 
-        mockMvc.perform(post(BASE_PATH + "/trainers/register")
-                        .contentType(MediaType.APPLICATION_JSON)
+        String content = mockMvc.perform(post(BASE_PATH + "/trainers/register")
+                        .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
+        ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
+        assertThat(error.getErrorCode()).isEqualTo(VALIDATION_ERROR.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo("Validation error: specialization: must not be null");
         verifyNoInteractions(facade);
     }
 
@@ -151,6 +185,68 @@ class TrainerRestControllerTest {
         assertThat(actual.getSpecialization()).isEqualTo(SPECIALIZATION);
         assertThat(actual.getIsActive()).isTrue();
         verify(facade).getTrainerByUsername(USERNAME);
+    }
+
+    @Test
+    void shouldReturn404WhenTrainerNotFound() throws Exception {
+        EntityNotFoundException exception = EntityNotFoundException.forUsername(TRAINER, USERNAME);
+
+        doThrow(exception).when(facade).getTrainerByUsername(USERNAME);
+
+        String content = mockMvc.perform(get(BASE_PATH + "/trainers/{username}", USERNAME))
+                .andExpect(status().isNotFound())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
+        assertThat(error.getErrorCode()).isEqualTo(NOT_FOUND_ERROR.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo(buildExpectedErrorMessage(NOT_FOUND_ERROR, exception));
+    }
+
+    @Test
+    void shouldReturn401WhenAuthenticationFailsOnGetTrainerProfile() throws Exception {
+        doThrow(new AuthenticationException("User is not authenticated")).when(facade).getTrainerByUsername(USERNAME);
+
+        String content = mockMvc.perform(get(BASE_PATH + "/trainers/{username}", USERNAME))
+                .andExpect(status().isUnauthorized())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
+        assertThat(error.getErrorCode()).isEqualTo(AUTHENTICATION_ERROR.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo(AUTHENTICATION_ERROR.getMessage());
+    }
+
+    @Test
+    void shouldReturn500WhenUnexpectedErrorOccursOnGetTrainerProfile() throws Exception {
+        doThrow(new RuntimeException("Unexpected failure")).when(facade).getTrainerByUsername(USERNAME);
+
+        String content = mockMvc.perform(get(BASE_PATH + "/trainers/{username}", USERNAME))
+                .andExpect(status().isInternalServerError())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
+        assertThat(error.getErrorCode()).isEqualTo(SERVICE_ERROR.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo(SERVICE_ERROR.getMessage());
+    }
+
+    @Test
+    void shouldReturn500WhenHibernateExceptionOccursOnGetTrainerProfile() throws Exception {
+        doThrow(new HibernateException("Database connectivity failure")).when(facade).getTrainerByUsername(USERNAME);
+
+        String content = mockMvc.perform(get(BASE_PATH + "/trainers/{username}", USERNAME))
+                .andExpect(status().isInternalServerError())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
+        assertThat(error.getErrorCode()).isEqualTo(DATABASE_ERROR.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo(DATABASE_ERROR.getMessage());
     }
 
     @Test
@@ -205,7 +301,7 @@ class TrainerRestControllerTest {
         when(facade.updateTrainer(eq(USERNAME), any(TrainerUpdateRequest.class))).thenReturn(response);
 
         String content = mockMvc.perform(put(BASE_PATH + "/trainers/{username}", USERNAME)
-                        .contentType(MediaType.APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isOk())
                 .andReturn()
@@ -223,11 +319,17 @@ class TrainerRestControllerTest {
     void shouldFailUpdateTrainerProfileWhenFirstNameIsNull() throws Exception {
         TrainerUpdateRequest invalidRequest = buildTrainerUpdateRequest(null, LAST_NAME);
 
-        mockMvc.perform(put(BASE_PATH + "/trainers/{username}", USERNAME)
-                        .contentType(MediaType.APPLICATION_JSON)
+        String content = mockMvc.perform(put(BASE_PATH + "/trainers/{username}", USERNAME)
+                        .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
+        ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
+        assertThat(error.getErrorCode()).isEqualTo(VALIDATION_ERROR.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo("Validation error: firstName: must not be null");
         verifyNoInteractions(facade);
     }
 
@@ -235,11 +337,17 @@ class TrainerRestControllerTest {
     void shouldFailUpdateTrainerProfileWhenLastNameIsNull() throws Exception {
         TrainerUpdateRequest invalidRequest = buildTrainerUpdateRequest(FIRST_NAME, null);
 
-        mockMvc.perform(put(BASE_PATH + "/trainers/{username}", USERNAME)
-                        .contentType(MediaType.APPLICATION_JSON)
+        String content = mockMvc.perform(put(BASE_PATH + "/trainers/{username}", USERNAME)
+                        .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
+        ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
+        assertThat(error.getErrorCode()).isEqualTo(VALIDATION_ERROR.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo("Validation error: lastName: must not be null");
         verifyNoInteractions(facade);
     }
 
@@ -249,11 +357,17 @@ class TrainerRestControllerTest {
         invalidRequest.firstName(FIRST_NAME);
         invalidRequest.lastName(LAST_NAME);
 
-        mockMvc.perform(put(BASE_PATH + "/trainers/{username}", USERNAME)
-                        .contentType(MediaType.APPLICATION_JSON)
+        String content = mockMvc.perform(put(BASE_PATH + "/trainers/{username}", USERNAME)
+                        .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
+        ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
+        assertThat(error.getErrorCode()).isEqualTo(VALIDATION_ERROR.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo("Validation error: isActive: must not be null");
         verifyNoInteractions(facade);
     }
 
@@ -262,7 +376,7 @@ class TrainerRestControllerTest {
         ActivationStatusRequest validRequest = new ActivationStatusRequest(true);
 
         mockMvc.perform(patch(BASE_PATH + "/trainers/{username}/activation", USERNAME)
-                        .contentType(MediaType.APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isOk());
 
@@ -271,15 +385,40 @@ class TrainerRestControllerTest {
 
     @Test
     void shouldFailChangeTrainerActivationStatusWhenIsActiveIsNull() throws Exception {
-        ActivationStatusRequest invalidRequest = new ActivationStatusRequest();
-        invalidRequest.setIsActive(null);
+        ActivationStatusRequest invalidRequest = new ActivationStatusRequest(null);
 
-        mockMvc.perform(patch(BASE_PATH + "/trainers/{username}/activation", USERNAME)
-                        .contentType(MediaType.APPLICATION_JSON)
+        String content = mockMvc.perform(patch(BASE_PATH + "/trainers/{username}/activation", USERNAME)
+                        .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
+        ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
+        assertThat(error.getErrorCode()).isEqualTo(VALIDATION_ERROR.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo("Validation error: isActive: must not be null");
         verifyNoInteractions(facade);
+    }
+
+    @Test
+    void shouldReturn400WhenValidationExceptionOccursDuringRegistration() throws Exception {
+        TrainerCreateRequest validRequest = buildTrainerCreateRequest(FIRST_NAME, LAST_NAME, SPECIALIZATION);
+        ValidationException exception = new ValidationException("Custom validation failed");
+
+        doThrow(exception).when(facade).createTrainer(any(TrainerCreateRequest.class));
+
+        String content = mockMvc.perform(post(BASE_PATH + "/trainers/register")
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validRequest)))
+                .andExpect(status().isBadRequest())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
+        assertThat(error.getErrorCode()).isEqualTo(VALIDATION_ERROR.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo(buildExpectedErrorMessage(VALIDATION_ERROR, exception));
     }
 
     private TrainerCreateRequest buildTrainerCreateRequest(String firstName, String lastName, String specialization) {
@@ -294,6 +433,10 @@ class TrainerRestControllerTest {
                 .firstName(firstName)
                 .lastName(lastName)
                 .isActive(true);
+    }
+
+    private String buildExpectedErrorMessage(ApiError apiError, Exception exception) {
+        return String.format(EXPECTED_ERROR_MESSAGE_TEMPLATE, apiError.getMessage(), exception.getMessage());
     }
 
 }

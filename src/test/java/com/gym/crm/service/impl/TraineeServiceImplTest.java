@@ -332,9 +332,7 @@ class TraineeServiceImplTest {
         when(dao.findByUsername(DEFAULT_USERNAME)).thenReturn(Optional.of(trainee));
         when(passwordEncoder.matches("wrongPassword", trainee.getUser().getPassword())).thenReturn(false);
 
-        AuthenticationException exception = assertThrows(
-                AuthenticationException.class,
-                () -> service.updateTraineePassword(dto));
+        AuthenticationException exception = assertThrows(AuthenticationException.class, () -> service.updateTraineePassword(dto));
 
         assertEquals("Invalid username or password", exception.getMessage());
         verify(dao, never()).update(any(Trainee.class));

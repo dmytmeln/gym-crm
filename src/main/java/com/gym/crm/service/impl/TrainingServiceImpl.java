@@ -4,7 +4,6 @@ import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.dao.TrainerDao;
 import com.gym.crm.dao.TrainingDao;
 import com.gym.crm.dao.TrainingTypeDao;
-import com.gym.crm.entity.EntityType;
 import com.gym.crm.entity.Trainee;
 import com.gym.crm.entity.Trainer;
 import com.gym.crm.entity.Training;
@@ -18,6 +17,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Objects;
+
+import static com.gym.crm.entity.EntityType.TRAINEE;
+import static com.gym.crm.entity.EntityType.TRAINER;
 
 @Slf4j
 @Service
@@ -59,9 +61,9 @@ public class TrainingServiceImpl implements TrainingService {
         String traineeUsername = training.getTrainee().getUser().getUsername();
         String trainerUsername = training.getTrainer().getUser().getUsername();
         Trainee trainee = traineeDao.findByUsername(traineeUsername)
-                .orElseThrow(() -> EntityNotFoundException.forUsername(EntityType.TRAINEE, traineeUsername));
+                .orElseThrow(() -> EntityNotFoundException.forUsername(TRAINEE, traineeUsername));
         Trainer trainer = trainerDao.findByUsername(trainerUsername)
-                .orElseThrow(() -> EntityNotFoundException.forUsername(EntityType.TRAINER, trainerUsername));
+                .orElseThrow(() -> EntityNotFoundException.forUsername(TRAINER, trainerUsername));
         TrainingType trainingType = trainer.getSpecialization();
 
         Training trainingWithAssociations = training.toBuilder()

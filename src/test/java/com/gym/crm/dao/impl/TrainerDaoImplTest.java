@@ -204,8 +204,7 @@ class TrainerDaoImplTest extends AbstractDaoTest<TrainerDaoImpl> {
 
     @Test
     void shouldFindAllTrainers() {
-        List<Trainer> expected = List.of(
-                Trainer.builder().id(EXISTING_ID).build(),
+        List<Trainer> expected = List.of(Trainer.builder().id(EXISTING_ID).build(),
                 Trainer.builder().id(2L).build(),
                 Trainer.builder().id(3L).build());
 

@@ -4,7 +4,6 @@ import com.gym.crm.dao.TraineeDao;
 import com.gym.crm.dao.TrainingDao;
 import com.gym.crm.dto.LoginChangeDto;
 import com.gym.crm.dto.filter.TraineeTrainingSearchFilter;
-import com.gym.crm.entity.EntityType;
 import com.gym.crm.entity.Trainee;
 import com.gym.crm.entity.Trainer;
 import com.gym.crm.entity.Training;
@@ -22,6 +21,8 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+
+import static com.gym.crm.entity.EntityType.TRAINEE;
 
 @Slf4j
 @Service
@@ -82,7 +83,7 @@ public class TraineeServiceImpl implements TraineeService {
         Objects.requireNonNull(username, USERNAME_NULL_MSG);
 
         return traineeDao.findByUsername(username)
-                .orElseThrow(() -> EntityNotFoundException.forUsername(EntityType.TRAINEE, username));
+                .orElseThrow(() -> EntityNotFoundException.forUsername(TRAINEE, username));
     }
 
     @Override
@@ -91,7 +92,7 @@ public class TraineeServiceImpl implements TraineeService {
         log.info("Getting available trainers for trainee username: {}", username);
 
         traineeDao.findByUsername(username)
-                .orElseThrow(() -> EntityNotFoundException.forUsername(EntityType.TRAINEE, username));
+                .orElseThrow(() -> EntityNotFoundException.forUsername(TRAINEE, username));
 
         return traineeDao.findTraineeAvailableTrainers(username);
     }
@@ -136,7 +137,7 @@ public class TraineeServiceImpl implements TraineeService {
         log.info("Updating trainee with username: {}", username);
 
         Trainee existingTrainee = traineeDao.findByUsername(username)
-                .orElseThrow(() -> EntityNotFoundException.forUsername(EntityType.TRAINEE, username));
+                .orElseThrow(() -> EntityNotFoundException.forUsername(TRAINEE, username));
 
         User updatedUser = existingTrainee.getUser().toBuilder()
                 .firstName(trainee.getUser().getFirstName())
@@ -163,7 +164,7 @@ public class TraineeServiceImpl implements TraineeService {
         log.info("Updating trainers for trainee with username: {}", username);
 
         Trainee trainee = traineeDao.findByUsername(username)
-                .orElseThrow(() -> EntityNotFoundException.forUsername(EntityType.TRAINEE, username));
+                .orElseThrow(() -> EntityNotFoundException.forUsername(TRAINEE, username));
         List<Trainer> trainers = traineeDao.findTraineeTrainersByUsernames(trainerUsernames);
 
         if (trainers.size() != trainerUsernames.size()) {
@@ -206,9 +207,9 @@ public class TraineeServiceImpl implements TraineeService {
         log.info("Updating activation status for trainee with username: {} to {}", username, isActive);
 
         Trainee trainee = traineeDao.findByUsername(username)
-                .orElseThrow(() -> EntityNotFoundException.forUsername(EntityType.TRAINEE, username));
+                .orElseThrow(() -> EntityNotFoundException.forUsername(TRAINEE, username));
 
-        if (trainee.getUser().getIsActive() == isActive) {
+        if (Objects.equals(trainee.getUser().getIsActive(), isActive)) {
             log.warn("Trainee with username: {} is already {}", username, isActive ? "active" : "inactive");
             return;
         }

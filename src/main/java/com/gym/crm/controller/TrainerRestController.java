@@ -44,11 +44,10 @@ public class TrainerRestController {
     }
 
     @GetMapping("/{username}/trainings")
-    public ResponseEntity<List<GetTrainerTrainingResponse>> getTrainerTrainings(
-            @PathVariable String username,
-            @RequestParam(value = "fromDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
-            @RequestParam(value = "toDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
-            @RequestParam(value = "traineeName", required = false) String traineeName) {
+    public ResponseEntity<List<GetTrainerTrainingResponse>> getTrainerTrainings(@PathVariable String username,
+                                                                                @RequestParam(value = "fromDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+                                                                                @RequestParam(value = "toDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
+                                                                                @RequestParam(value = "traineeName", required = false) String traineeName) {
         TrainerTrainingSearchFilter filter = TrainerTrainingSearchFilter.builder()
                 .username(username)
                 .fromDate(fromDate)
@@ -60,16 +59,14 @@ public class TrainerRestController {
     }
 
     @PutMapping("/{username}")
-    public ResponseEntity<TrainerUpdateResponse> updateTrainerProfile(
-            @PathVariable String username,
-            @Valid @RequestBody TrainerUpdateRequest trainerUpdateRequest) {
+    public ResponseEntity<TrainerUpdateResponse> updateTrainerProfile(@PathVariable String username,
+                                                                      @Valid @RequestBody TrainerUpdateRequest trainerUpdateRequest) {
         return ResponseEntity.ok(facade.updateTrainer(username, trainerUpdateRequest));
     }
 
     @PatchMapping("/{username}/activation")
-    public ResponseEntity<Void> changeTrainerActivationStatus(
-            @PathVariable String username,
-            @Valid @RequestBody ActivationStatusRequest activationStatusRequest) {
+    public ResponseEntity<Void> changeTrainerActivationStatus(@PathVariable String username,
+                                                              @Valid @RequestBody ActivationStatusRequest activationStatusRequest) {
         facade.updateTrainerActivationStatus(username, activationStatusRequest.getIsActive());
         return ResponseEntity.ok().build();
     }
