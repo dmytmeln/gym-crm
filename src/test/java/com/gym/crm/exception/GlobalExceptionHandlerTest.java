@@ -187,7 +187,7 @@ class GlobalExceptionHandlerTest {
         ErrorResponse body = (ErrorResponse) response.getBody();
         assertThat(body).isNotNull();
         assertThat(body.getErrorCode()).isEqualTo(VALIDATION_ERROR.getCode());
-        assertThat(body.getErrorMessage()).isEqualTo(String.format("%s: defaultMessage: fieldName", VALIDATION_ERROR.getMessage()));
+        assertThat(body.getErrorMessage()).isEqualTo(String.format("%s: fieldName: defaultMessage", VALIDATION_ERROR.getMessage()));
     }
 
     private String buildExpectedErrorMessage(ApiError apiError, Exception exception) {

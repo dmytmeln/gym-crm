@@ -209,7 +209,7 @@ public class TraineeServiceImpl implements TraineeService {
         Trainee trainee = traineeDao.findByUsername(username)
                 .orElseThrow(() -> EntityNotFoundException.forUsername(TRAINEE, username));
 
-        if (trainee.getUser().getIsActive() == isActive) {
+        if (Objects.equals(trainee.getUser().getIsActive(), isActive)) {
             log.warn("Trainee with username: {} is already {}", username, isActive ? "active" : "inactive");
             return;
         }

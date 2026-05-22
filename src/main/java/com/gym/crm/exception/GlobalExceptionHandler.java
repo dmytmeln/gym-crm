@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -65,12 +66,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @Override
-    protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(@NonNull MethodArgumentNotValidException ex,
                                                                   @NonNull HttpHeaders headers,
                                                                   @NonNull HttpStatusCode status,
                                                                   @NonNull WebRequest request) {
         String violations = ex.getBindingResult().getFieldErrors().stream()
-                .map(fieldError -> String.format(RESPONSE_MESSAGE_TEMPLATE, fieldError.getDefaultMessage(), fieldError.getField()))
+                .map(fieldError -> String.format(RESPONSE_MESSAGE_TEMPLATE, fieldError.getField(), fieldError.getDefaultMessage()))
                 .collect(Collectors.joining(", "));
 
         String message = String.format(RESPONSE_MESSAGE_TEMPLATE, VALIDATION_ERROR.getMessage(), violations);
@@ -81,8 +82,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @Override
-    protected ResponseEntity<Object> handleExceptionInternal(Exception ex,
-                                                             Object body,
+    protected ResponseEntity<Object> handleExceptionInternal(@NonNull Exception ex,
+                                                             @Nullable Object body,
                                                              @NonNull HttpHeaders headers,
                                                              @NonNull HttpStatusCode statusCode,
                                                              @NonNull WebRequest request) {

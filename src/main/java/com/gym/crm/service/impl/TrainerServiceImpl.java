@@ -187,7 +187,7 @@ public class TrainerServiceImpl implements TrainerService {
         Trainer trainer = trainerDao.findByUsername(username)
                 .orElseThrow(() -> EntityNotFoundException.forUsername(TRAINER, username));
 
-        if (trainer.getUser().getIsActive() == isActive) {
+        if (Objects.equals(trainer.getUser().getIsActive(), isActive)) {
             log.warn("Trainer with username: {} is already {}", username, isActive ? "active" : "inactive");
             return;
         }
