@@ -8,6 +8,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -16,71 +17,75 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 import java.util.stream.Collectors;
 
+import static com.gym.crm.exception.ApiError.AUTHENTICATION_ERROR;
+import static com.gym.crm.exception.ApiError.AUTHORIZATION_ERROR;
+import static com.gym.crm.exception.ApiError.DATABASE_ERROR;
+import static com.gym.crm.exception.ApiError.NOT_FOUND_ERROR;
+import static com.gym.crm.exception.ApiError.SERVICE_ERROR;
+import static com.gym.crm.exception.ApiError.VALIDATION_ERROR;
+
 @Slf4j
 @RestControllerAdvice
-public class GlobalRestExceptionHandler extends ResponseEntityExceptionHandler {
+public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
+
+    private static final String RESPONSE_MESSAGE_TEMPLATE = "%s: %s";
 
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleEntityNotFoundException(EntityNotFoundException ex) {
-        ApiError notFound = ApiError.NOT_FOUND;
-        String message = "%s: %s".formatted(notFound.getMessage(), ex.getMessage());
+        String message = String.format(RESPONSE_MESSAGE_TEMPLATE, NOT_FOUND_ERROR.getMessage(), ex.getMessage());
 
         log.warn("Entity not found: {}", ex.getMessage());
-        return buildResponse(notFound, message);
+        return buildResponse(NOT_FOUND_ERROR, message);
     }
 
     @ExceptionHandler(ValidationException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(ValidationException ex) {
-        ApiError validation = ApiError.VALIDATION;
-        String message = "%s: %s".formatted(validation.getMessage(), ex.getMessage());
+        String message = String.format(RESPONSE_MESSAGE_TEMPLATE, VALIDATION_ERROR.getMessage(), ex.getMessage());
 
         log.warn("Validation error: {}", ex.getMessage());
-        return buildResponse(validation, message);
+        return buildResponse(VALIDATION_ERROR, message);
     }
 
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ErrorResponse> handleAuthenticationException(AuthenticationException ex) {
         log.warn("Authentication error: {}", ex.getMessage());
-        return buildResponse(ApiError.AUTHENTICATION);
+        return buildResponse(AUTHENTICATION_ERROR);
     }
 
     @ExceptionHandler(PersistenceException.class)
     public ResponseEntity<ErrorResponse> handleHibernateException(PersistenceException ex) {
         log.error("Database error occurred", ex);
-        return buildResponse(ApiError.DATABASE);
+        return buildResponse(DATABASE_ERROR);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUnexpectedException(Exception ex) {
         log.error("Unexpected error occurred", ex);
-        return buildResponse(ApiError.SERVICE);
+        return buildResponse(SERVICE_ERROR);
     }
 
     @Override
-    protected ResponseEntity<Object> handleMethodArgumentNotValid(
-            MethodArgumentNotValidException ex,
-            HttpHeaders headers,
-            HttpStatusCode status,
-            WebRequest request) {
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
+                                                                  @NonNull HttpHeaders headers,
+                                                                  @NonNull HttpStatusCode status,
+                                                                  @NonNull WebRequest request) {
         String violations = ex.getBindingResult().getFieldErrors().stream()
-                .map(fieldError -> "%s: %s".formatted(fieldError.getField(), fieldError.getDefaultMessage()))
+                .map(fieldError -> String.format(RESPONSE_MESSAGE_TEMPLATE, fieldError.getDefaultMessage(), fieldError.getField()))
                 .collect(Collectors.joining(", "));
 
-        ApiError validation = ApiError.VALIDATION;
-        String message = "%s: %s".formatted(validation.getMessage(), violations);
-        ErrorResponse body = new ErrorResponse(validation.getCode(), message);
+        String message = String.format(RESPONSE_MESSAGE_TEMPLATE, VALIDATION_ERROR.getMessage(), violations);
+        ErrorResponse body = new ErrorResponse(VALIDATION_ERROR.getCode(), message);
 
         log.warn("Request body validation failed: {}", ex.getMessage());
-        return ResponseEntity.status(validation.getStatus()).body(body);
+        return ResponseEntity.status(VALIDATION_ERROR.getStatus()).body(body);
     }
 
     @Override
-    protected ResponseEntity<Object> handleExceptionInternal(
-            Exception ex,
-            Object body,
-            HttpHeaders headers,
-            HttpStatusCode statusCode,
-            WebRequest request) {
+    protected ResponseEntity<Object> handleExceptionInternal(Exception ex,
+                                                             Object body,
+                                                             @NonNull HttpHeaders headers,
+                                                             @NonNull HttpStatusCode statusCode,
+                                                             @NonNull WebRequest request) {
         ApiError apiError = getApiErrorForStatus(statusCode);
         ErrorResponse errorResponse = new ErrorResponse(apiError.getCode(), ex.getMessage());
 
@@ -89,17 +94,17 @@ public class GlobalRestExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     private ApiError getApiErrorForStatus(HttpStatusCode status) {
-        if (status.isSameCodeAs(HttpStatus.BAD_REQUEST)) {
-            return ApiError.VALIDATION;
-        } else if (status.isSameCodeAs(HttpStatus.UNAUTHORIZED)) {
-            return ApiError.AUTHENTICATION;
-        } else if (status.isSameCodeAs(HttpStatus.FORBIDDEN)) {
-            return ApiError.AUTHORIZATION;
-        } else if (status.isSameCodeAs(HttpStatus.NOT_FOUND)) {
-            return ApiError.NOT_FOUND;
-        } else {
-            return ApiError.SERVICE;
+        if (!(status instanceof HttpStatus httpStatus)) {
+            return SERVICE_ERROR;
         }
+
+        return switch (httpStatus) {
+            case BAD_REQUEST -> VALIDATION_ERROR;
+            case UNAUTHORIZED -> AUTHENTICATION_ERROR;
+            case FORBIDDEN -> AUTHORIZATION_ERROR;
+            case NOT_FOUND -> NOT_FOUND_ERROR;
+            default -> SERVICE_ERROR;
+        };
     }
 
     private ResponseEntity<ErrorResponse> buildResponse(ApiError apiError) {

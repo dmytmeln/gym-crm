@@ -4,10 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gia.openapi.model.ErrorResponse;
 import com.gia.openapi.model.LoginChangeRequest;
 import com.gia.openapi.model.LoginRequest;
-import com.gym.crm.entity.EntityType;
 import com.gym.crm.exception.ApiError;
 import com.gym.crm.exception.EntityNotFoundException;
-import com.gym.crm.exception.GlobalRestExceptionHandler;
+import com.gym.crm.exception.GlobalExceptionHandler;
 import com.gym.crm.exception.ValidationException;
 import com.gym.crm.facade.GymFacade;
 import com.gym.crm.security.AuthenticationException;
@@ -18,17 +17,23 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
+import static com.gym.crm.entity.EntityType.USER;
+import static com.gym.crm.exception.ApiError.AUTHENTICATION_ERROR;
+import static com.gym.crm.exception.ApiError.DATABASE_ERROR;
+import static com.gym.crm.exception.ApiError.NOT_FOUND_ERROR;
+import static com.gym.crm.exception.ApiError.SERVICE_ERROR;
+import static com.gym.crm.exception.ApiError.VALIDATION_ERROR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -36,6 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(MockitoExtension.class)
 class AuthRestControllerTest {
 
+    private static final String EXPECTED_ERROR_MESSAGE_TEMPLATE = "%s: %s";
     private static final String BASE_PATH = "/api/v1";
     private static final String USERNAME = "liam.miller";
     private static final String PASSWORD = "password123";
@@ -58,7 +64,7 @@ class AuthRestControllerTest {
         validatorFactoryBean.afterPropertiesSet();
 
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
-                .setControllerAdvice(new GlobalRestExceptionHandler())
+                .setControllerAdvice(new GlobalExceptionHandler())
                 .setValidator(validatorFactoryBean)
                 .addPlaceholderValue("app.api.base-path", BASE_PATH)
                 .build();
@@ -69,7 +75,7 @@ class AuthRestControllerTest {
         LoginRequest validRequest = buildLoginRequest(USERNAME, PASSWORD);
 
         mockMvc.perform(post(BASE_PATH + "/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isOk());
 
@@ -78,36 +84,36 @@ class AuthRestControllerTest {
 
     @Test
     void shouldFailLoginWhenUsernameIsNull() throws Exception {
-        LoginRequest invalidRequestWithNullUsername = buildLoginRequest(null, PASSWORD);
+        LoginRequest invalidRequest = buildLoginRequest(null, PASSWORD);
 
         String content = mockMvc.perform(post(BASE_PATH + "/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidRequestWithNullUsername)))
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest())
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
 
         ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
-        assertThat(error.getErrorCode()).isEqualTo(ApiError.VALIDATION.getCode());
+        assertThat(error.getErrorCode()).isEqualTo(VALIDATION_ERROR.getCode());
         assertThat(error.getErrorMessage()).isEqualTo("Validation error: username: must not be null");
         verifyNoInteractions(facade);
     }
 
     @Test
     void shouldFailLoginWhenPasswordIsNull() throws Exception {
-        LoginRequest invalidRequestWithNullPassword = buildLoginRequest(USERNAME, null);
+        LoginRequest invalidRequest = buildLoginRequest(USERNAME, null);
 
         String content = mockMvc.perform(post(BASE_PATH + "/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidRequestWithNullPassword)))
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest())
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
 
         ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
-        assertThat(error.getErrorCode()).isEqualTo(ApiError.VALIDATION.getCode());
+        assertThat(error.getErrorCode()).isEqualTo(VALIDATION_ERROR.getCode());
         assertThat(error.getErrorMessage()).isEqualTo("Validation error: password: must not be null");
         verifyNoInteractions(facade);
     }
@@ -115,13 +121,12 @@ class AuthRestControllerTest {
     @Test
     void shouldReturn404WhenLoginUserNotFound() throws Exception {
         LoginRequest validRequest = buildLoginRequest(USERNAME, PASSWORD);
-        EntityNotFoundException exception = EntityNotFoundException.forUsername(EntityType.USER, USERNAME);
+        EntityNotFoundException exception = EntityNotFoundException.forUsername(USER, USERNAME);
 
-        doThrow(exception)
-                .when(facade).login(any());
+        doThrow(exception).when(facade).login(any());
 
         String content = mockMvc.perform(post(BASE_PATH + "/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isNotFound())
                 .andReturn()
@@ -129,19 +134,18 @@ class AuthRestControllerTest {
                 .getContentAsString();
 
         ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
-        assertThat(error.getErrorCode()).isEqualTo(ApiError.NOT_FOUND.getCode());
-        assertThat(error.getErrorMessage()).isEqualTo("%s: %s".formatted(ApiError.NOT_FOUND.getMessage(), exception.getMessage()));
+        assertThat(error.getErrorCode()).isEqualTo(NOT_FOUND_ERROR.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo(buildExpectedErrorMessage(NOT_FOUND_ERROR, exception));
     }
 
     @Test
     void shouldReturn500WhenUnexpectedErrorOccursDuringLogin() throws Exception {
         LoginRequest validRequest = buildLoginRequest(USERNAME, PASSWORD);
 
-        doThrow(new RuntimeException("Unexpected failure"))
-                .when(facade).login(any());
+        doThrow(new RuntimeException("Unexpected failure")).when(facade).login(any());
 
         String content = mockMvc.perform(post(BASE_PATH + "/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isInternalServerError())
                 .andReturn()
@@ -149,19 +153,18 @@ class AuthRestControllerTest {
                 .getContentAsString();
 
         ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
-        assertThat(error.getErrorCode()).isEqualTo(ApiError.SERVICE.getCode());
-        assertThat(error.getErrorMessage()).isEqualTo(ApiError.SERVICE.getMessage());
+        assertThat(error.getErrorCode()).isEqualTo(SERVICE_ERROR.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo(SERVICE_ERROR.getMessage());
     }
 
     @Test
     void shouldReturn500WhenHibernateExceptionOccursDuringLogin() throws Exception {
         LoginRequest validRequest = buildLoginRequest(USERNAME, PASSWORD);
 
-        doThrow(new HibernateException("Database connectivity failure"))
-                .when(facade).login(any());
+        doThrow(new HibernateException("Database connectivity failure")).when(facade).login(any());
 
         String content = mockMvc.perform(post(BASE_PATH + "/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isInternalServerError())
                 .andReturn()
@@ -169,8 +172,8 @@ class AuthRestControllerTest {
                 .getContentAsString();
 
         ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
-        assertThat(error.getErrorCode()).isEqualTo(ApiError.DATABASE.getCode());
-        assertThat(error.getErrorMessage()).isEqualTo(ApiError.DATABASE.getMessage());
+        assertThat(error.getErrorCode()).isEqualTo(DATABASE_ERROR.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo(DATABASE_ERROR.getMessage());
     }
 
     @Test
@@ -178,7 +181,7 @@ class AuthRestControllerTest {
         LoginChangeRequest validRequest = buildLoginChangeRequest(USERNAME, PASSWORD, NEW_PASSWORD);
 
         mockMvc.perform(put(BASE_PATH + "/auth/password")
-                        .contentType(MediaType.APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isOk());
 
@@ -187,54 +190,54 @@ class AuthRestControllerTest {
 
     @Test
     void shouldFailChangePasswordWhenUsernameIsNull() throws Exception {
-        LoginChangeRequest invalidRequestWithNullUsername = buildLoginChangeRequest(null, PASSWORD, NEW_PASSWORD);
+        LoginChangeRequest invalidRequest = buildLoginChangeRequest(null, PASSWORD, NEW_PASSWORD);
 
         String content = mockMvc.perform(put(BASE_PATH + "/auth/password")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidRequestWithNullUsername)))
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest())
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
 
         ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
-        assertThat(error.getErrorCode()).isEqualTo(ApiError.VALIDATION.getCode());
+        assertThat(error.getErrorCode()).isEqualTo(VALIDATION_ERROR.getCode());
         assertThat(error.getErrorMessage()).isEqualTo("Validation error: username: must not be null");
         verifyNoInteractions(facade);
     }
 
     @Test
     void shouldFailChangePasswordWhenOldPasswordIsNull() throws Exception {
-        LoginChangeRequest invalidRequestWithNullOldPassword = buildLoginChangeRequest(USERNAME, null, NEW_PASSWORD);
+        LoginChangeRequest invalidRequest = buildLoginChangeRequest(USERNAME, null, NEW_PASSWORD);
 
         String content = mockMvc.perform(put(BASE_PATH + "/auth/password")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidRequestWithNullOldPassword)))
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest())
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
 
         ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
-        assertThat(error.getErrorCode()).isEqualTo(ApiError.VALIDATION.getCode());
+        assertThat(error.getErrorCode()).isEqualTo(VALIDATION_ERROR.getCode());
         assertThat(error.getErrorMessage()).isEqualTo("Validation error: oldPassword: must not be null");
         verifyNoInteractions(facade);
     }
 
     @Test
     void shouldFailChangePasswordWhenNewPasswordIsNull() throws Exception {
-        LoginChangeRequest invalidRequestWithNullNewPassword = buildLoginChangeRequest(USERNAME, PASSWORD, null);
+        LoginChangeRequest invalidRequest = buildLoginChangeRequest(USERNAME, PASSWORD, null);
 
         String content = mockMvc.perform(put(BASE_PATH + "/auth/password")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidRequestWithNullNewPassword)))
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest())
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
 
         ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
-        assertThat(error.getErrorCode()).isEqualTo(ApiError.VALIDATION.getCode());
+        assertThat(error.getErrorCode()).isEqualTo(VALIDATION_ERROR.getCode());
         assertThat(error.getErrorMessage()).isEqualTo("Validation error: newPassword: must not be null");
         verifyNoInteractions(facade);
     }
@@ -243,11 +246,10 @@ class AuthRestControllerTest {
     void shouldReturn401WhenAuthenticationFailsDuringPasswordChange() throws Exception {
         LoginChangeRequest validRequest = buildLoginChangeRequest(USERNAME, PASSWORD, NEW_PASSWORD);
 
-        doThrow(new AuthenticationException("User is not authenticated"))
-                .when(facade).changePassword(eq(USERNAME), any(LoginChangeRequest.class));
+        doThrow(new AuthenticationException("User is not authenticated")).when(facade).changePassword(eq(USERNAME), any(LoginChangeRequest.class));
 
         String content = mockMvc.perform(put(BASE_PATH + "/auth/password")
-                        .contentType(MediaType.APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isUnauthorized())
                 .andReturn()
@@ -255,8 +257,8 @@ class AuthRestControllerTest {
                 .getContentAsString();
 
         ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
-        assertThat(error.getErrorCode()).isEqualTo(ApiError.AUTHENTICATION.getCode());
-        assertThat(error.getErrorMessage()).isEqualTo(ApiError.AUTHENTICATION.getMessage());
+        assertThat(error.getErrorCode()).isEqualTo(AUTHENTICATION_ERROR.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo(AUTHENTICATION_ERROR.getMessage());
     }
 
     @Test
@@ -264,11 +266,10 @@ class AuthRestControllerTest {
         LoginRequest validRequest = buildLoginRequest(USERNAME, PASSWORD);
         ValidationException exception = new ValidationException("Custom validation failed");
 
-        doThrow(exception)
-                .when(facade).login(any());
+        doThrow(exception).when(facade).login(any());
 
         String content = mockMvc.perform(post(BASE_PATH + "/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isBadRequest())
                 .andReturn()
@@ -276,8 +277,8 @@ class AuthRestControllerTest {
                 .getContentAsString();
 
         ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
-        assertThat(error.getErrorCode()).isEqualTo(ApiError.VALIDATION.getCode());
-        assertThat(error.getErrorMessage()).isEqualTo("%s: %s".formatted(ApiError.VALIDATION.getMessage(), exception.getMessage()));
+        assertThat(error.getErrorCode()).isEqualTo(VALIDATION_ERROR.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo(buildExpectedErrorMessage(VALIDATION_ERROR, exception));
     }
 
     private LoginRequest buildLoginRequest(String username, String password) {
@@ -291,6 +292,10 @@ class AuthRestControllerTest {
                 .username(username)
                 .oldPassword(oldPassword)
                 .newPassword(newPassword);
+    }
+
+    private String buildExpectedErrorMessage(ApiError apiError, Exception exception) {
+        return String.format(EXPECTED_ERROR_MESSAGE_TEMPLATE, apiError.getMessage(), exception.getMessage());
     }
 
 }

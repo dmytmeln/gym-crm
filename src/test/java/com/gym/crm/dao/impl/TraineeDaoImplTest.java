@@ -199,8 +199,7 @@ class TraineeDaoImplTest extends AbstractDaoTest<TraineeDaoImpl> {
 
     @Test
     void shouldFindAllTrainees() {
-        List<Trainee> expected = List.of(
-                Trainee.builder().id(EXISTING_ID).build(),
+        List<Trainee> expected = List.of(Trainee.builder().id(EXISTING_ID).build(),
                 Trainee.builder().id(2L).build());
 
         List<Trainee> actual = dao.findAll();
@@ -322,8 +321,7 @@ class TraineeDaoImplTest extends AbstractDaoTest<TraineeDaoImpl> {
 
     @Test
     void shouldFindTraineeAvailableTrainers() {
-        List<Trainer> expected = List.of(
-                Trainer.builder().id(2L).build(),
+        List<Trainer> expected = List.of(Trainer.builder().id(2L).build(),
                 Trainer.builder().id(3L).build());
 
         List<Trainer> actual = dao.findTraineeAvailableTrainers(EXISTING_USERNAME);

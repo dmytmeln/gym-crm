@@ -42,11 +42,11 @@ public class TraineeDaoImpl implements TraineeDao {
         Objects.requireNonNull(id, "Trainee ID cannot be null");
 
         return transactionManager.executeReturningWithinTx(session -> session
-                .createQuery(
-                        """
+                .createQuery("""
                                 SELECT t FROM Trainee t JOIN FETCH t.user LEFT JOIN FETCH t.trainers tr
                                 LEFT JOIN FETCH tr.user LEFT JOIN FETCH tr.specialization
-                                WHERE t.id = :id""",
+                                WHERE t.id = :id
+                                """,
                         Trainee.class)
                 .setParameter("id", id)
                 .uniqueResultOptional());
@@ -57,11 +57,11 @@ public class TraineeDaoImpl implements TraineeDao {
         Objects.requireNonNull(username, "Trainee username cannot be null");
 
         return transactionManager.executeReturningWithinTx(session -> session
-                .createQuery(
-                        """
+                .createQuery("""
                                 SELECT t FROM Trainee t JOIN FETCH t.user u LEFT JOIN FETCH t.trainers tr
                                 LEFT JOIN FETCH tr.user LEFT JOIN FETCH tr.specialization
-                                WHERE u.username = :username""",
+                                WHERE u.username = :username
+                                """,
                         Trainee.class)
                 .setParameter("username", username)
                 .uniqueResultOptional());
@@ -71,8 +71,10 @@ public class TraineeDaoImpl implements TraineeDao {
     public List<Trainee> findAll() {
         return transactionManager.executeReturningWithinTx(session -> session
                 .createQuery("""
-                        SELECT t FROM Trainee t JOIN FETCH t.user LEFT JOIN FETCH t.trainers tr
-                        LEFT JOIN FETCH tr.user LEFT JOIN FETCH tr.specialization""", Trainee.class)
+                                SELECT t FROM Trainee t JOIN FETCH t.user LEFT JOIN FETCH t.trainers tr
+                                LEFT JOIN FETCH tr.user LEFT JOIN FETCH tr.specialization
+                                """,
+                        Trainee.class)
                 .list());
     }
 
@@ -110,11 +112,11 @@ public class TraineeDaoImpl implements TraineeDao {
             session.merge(entity.getUser());
             Trainee merged = session.merge(entity);
 
-            return session.createQuery(
-                            """
+            return session.createQuery("""
                                     SELECT t FROM Trainee t JOIN FETCH t.user LEFT JOIN FETCH t.trainers tr
                                     LEFT JOIN FETCH tr.user LEFT JOIN FETCH tr.specialization
-                                    WHERE t.id = :id""",
+                                    WHERE t.id = :id
+                                    """,
                             Trainee.class)
                     .setParameter("id", merged.getId())
                     .uniqueResult();
@@ -126,8 +128,7 @@ public class TraineeDaoImpl implements TraineeDao {
         Objects.requireNonNull(username, "Trainee username cannot be null");
 
         return transactionManager.executeReturningWithinTx(session -> {
-            Optional<Trainee> traineeOptional = session.createQuery(
-                            "SELECT t FROM Trainee t JOIN FETCH t.user u WHERE u.username = :username", Trainee.class)
+            Optional<Trainee> traineeOptional = session.createQuery("SELECT t FROM Trainee t JOIN FETCH t.user u WHERE u.username = :username", Trainee.class)
                     .setParameter("username", username)
                     .uniqueResultOptional();
 

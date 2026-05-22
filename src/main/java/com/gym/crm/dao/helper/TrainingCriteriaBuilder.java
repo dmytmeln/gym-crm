@@ -84,8 +84,7 @@ public abstract class TrainingCriteriaBuilder<C extends TrainingSearchFilter> {
     }
 
     private Expression<String> concatFirstnameAndLastname(CriteriaBuilder cb, Join<?, User> userJoin) {
-        return cb.concat(
-                cb.concat(userJoin.get(User_.FIRST_NAME), " "),
+        return cb.concat(cb.concat(userJoin.get(User_.FIRST_NAME), " "),
                 userJoin.get(User_.LAST_NAME));
     }
 

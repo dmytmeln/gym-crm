@@ -90,8 +90,7 @@ class ProfileCredentialGeneratorTest {
 
     @Test
     void shouldUseHighestSerialPlusOneWhenSerialGapsExist() {
-        when(traineeDao.findAll()).thenReturn(List.of(
-                Trainee.builder().user(User.builder().username("Liam.Miller").build()).build(),
+        when(traineeDao.findAll()).thenReturn(List.of(Trainee.builder().user(User.builder().username("Liam.Miller").build()).build(),
                 Trainee.builder().user(User.builder().username("liam.Miller2").build()).build(),
                 Trainee.builder().user(User.builder().username("liam.Miller5").build()).build()));
         when(trainerDao.findAll()).thenReturn(Collections.emptyList());
@@ -103,11 +102,11 @@ class ProfileCredentialGeneratorTest {
 
     @Test
     void shouldHandleUsersFromBothTraineeAndTrainerDaos() {
-        when(traineeDao.findAll()).thenReturn(List.of(
-                Trainee.builder().user(User.builder().username("liam.miller").build()).build(),
+        User user1 = User.builder().username("liam.miller").build();
+        User user2 = User.builder().username("liam.miller3").build();
+        when(traineeDao.findAll()).thenReturn(List.of(Trainee.builder().user(user1).build(),
                 Trainee.builder().user(User.builder().username("liam.miller1").build()).build()));
-        when(trainerDao.findAll()).thenReturn(List.of(
-                Trainer.builder().user(User.builder().username("liam.miller3").build()).build()));
+        when(trainerDao.findAll()).thenReturn(List.of(Trainer.builder().user(user2).build()));
 
         String actual = generator.generateUsername(FIRST_NAME, LAST_NAME);
 
@@ -123,8 +122,7 @@ class ProfileCredentialGeneratorTest {
             "liam.miller, Liam.Miller1"
     })
     void shouldHandleUsernameMatching(String existingUsername, String expectedUsername) {
-        when(traineeDao.findAll()).thenReturn(List.of(
-                Trainee.builder().user(User.builder().username(existingUsername).build()).build()));
+        when(traineeDao.findAll()).thenReturn(List.of(Trainee.builder().user(User.builder().username(existingUsername).build()).build()));
         when(trainerDao.findAll()).thenReturn(Collections.emptyList());
 
         String actual = generator.generateUsername(FIRST_NAME, LAST_NAME);
@@ -135,8 +133,7 @@ class ProfileCredentialGeneratorTest {
     @Test
     void shouldIgnoreUsersWithDifferentFullName() {
         when(traineeDao.findAll()).thenReturn(Collections.emptyList());
-        when(trainerDao.findAll()).thenReturn(List.of(
-                Trainer.builder().user(User.builder().username("sophia.wilson").build()).build()));
+        when(trainerDao.findAll()).thenReturn(List.of(Trainer.builder().user(User.builder().username("sophia.wilson").build()).build()));
 
         String actual = generator.generateUsername(FIRST_NAME, LAST_NAME);
 
@@ -145,9 +142,10 @@ class ProfileCredentialGeneratorTest {
 
     @Test
     void shouldIgnoreUsernamesWithNonNumericSuffix() {
-        when(traineeDao.findAll()).thenReturn(List.of(
-                Trainee.builder().user(User.builder().username("liam.millerX").build()).build(),
-                Trainee.builder().user(User.builder().username("liam.miller_1").build()).build()));
+        User user1 = User.builder().username("liam.millerX").build();
+        User user2 = User.builder().username("liam.miller_1").build();
+        when(traineeDao.findAll()).thenReturn(List.of(Trainee.builder().user(user1).build(),
+                Trainee.builder().user(user2).build()));
         when(trainerDao.findAll()).thenReturn(Collections.emptyList());
 
         String actual = generator.generateUsername(FIRST_NAME, LAST_NAME);
@@ -190,9 +188,7 @@ class ProfileCredentialGeneratorTest {
     void shouldGeneratePasswordWithValidCharactersOnly() {
         String actual = generator.generatePassword();
 
-        assertTrue(
-                StringUtils.containsOnly(actual, PASSWORD_ALPHABET),
-                "Password contains invalid characters");
+        assertTrue(StringUtils.containsOnly(actual, PASSWORD_ALPHABET), "Password contains invalid characters");
     }
 
 }

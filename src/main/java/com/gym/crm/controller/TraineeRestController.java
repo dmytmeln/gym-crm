@@ -53,12 +53,11 @@ public class TraineeRestController {
     }
 
     @GetMapping("/{username}/trainings")
-    public ResponseEntity<List<GetTraineeTrainingResponse>> getTraineeTrainings(
-            @PathVariable String username,
-            @RequestParam(value = "fromDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
-            @RequestParam(value = "toDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
-            @RequestParam(value = "trainerName", required = false) String trainerName,
-            @RequestParam(value = "trainingType", required = false) String trainingType) {
+    public ResponseEntity<List<GetTraineeTrainingResponse>> getTraineeTrainings(@PathVariable String username,
+                                                                                @RequestParam(value = "fromDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+                                                                                @RequestParam(value = "toDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
+                                                                                @RequestParam(value = "trainerName", required = false) String trainerName,
+                                                                                @RequestParam(value = "trainingType", required = false) String trainingType) {
         TraineeTrainingSearchFilter filter = TraineeTrainingSearchFilter.builder()
                 .username(username)
                 .fromDate(fromDate)
@@ -71,23 +70,20 @@ public class TraineeRestController {
     }
 
     @PutMapping("/{username}")
-    public ResponseEntity<TraineeUpdateResponse> updateTraineeProfile(
-            @PathVariable String username,
-            @Valid @RequestBody TraineeUpdateRequest traineeUpdateRequest) {
+    public ResponseEntity<TraineeUpdateResponse> updateTraineeProfile(@PathVariable String username,
+                                                                      @Valid @RequestBody TraineeUpdateRequest traineeUpdateRequest) {
         return ResponseEntity.ok(facade.updateTrainee(username, traineeUpdateRequest));
     }
 
     @PutMapping("/{username}/trainers")
-    public ResponseEntity<TraineeAssignedTrainersUpdateResponse> updateTraineeTrainers(
-            @PathVariable String username,
-            @Valid @RequestBody TraineeAssignedTrainersUpdateRequest traineeAssignedTrainersUpdateRequest) {
+    public ResponseEntity<TraineeAssignedTrainersUpdateResponse> updateTraineeTrainers(@PathVariable String username,
+                                                                                       @Valid @RequestBody TraineeAssignedTrainersUpdateRequest traineeAssignedTrainersUpdateRequest) {
         return ResponseEntity.ok(facade.updateTraineeTrainers(username, traineeAssignedTrainersUpdateRequest));
     }
 
     @PatchMapping("/{username}/activation")
-    public ResponseEntity<Void> changeTraineeActivationStatus(
-            @PathVariable String username,
-            @Valid @RequestBody ActivationStatusRequest activationStatusRequest) {
+    public ResponseEntity<Void> changeTraineeActivationStatus(@PathVariable String username,
+                                                              @Valid @RequestBody ActivationStatusRequest activationStatusRequest) {
         facade.updateTraineeActivationStatus(username, activationStatusRequest);
         return ResponseEntity.ok().build();
     }

@@ -41,11 +41,11 @@ public class TrainerDaoImpl implements TrainerDao {
         Objects.requireNonNull(id, "Trainer ID cannot be null");
 
         return transactionManager.executeReturningWithinTx(session -> session
-                .createQuery(
-                        """
+                .createQuery("""
                                 SELECT t FROM Trainer t
                                 LEFT JOIN FETCH t.user LEFT JOIN FETCH t.specialization
-                                WHERE t.id = :id""",
+                                WHERE t.id = :id
+                                """,
                         Trainer.class)
                 .setParameter("id", id)
                 .uniqueResultOptional());
@@ -56,11 +56,11 @@ public class TrainerDaoImpl implements TrainerDao {
         Objects.requireNonNull(username, "Trainer username cannot be null");
 
         return transactionManager.executeReturningWithinTx(session -> session
-                .createQuery(
-                        """
+                .createQuery("""
                                 SELECT t FROM Trainer t
                                 LEFT JOIN FETCH t.user u LEFT JOIN FETCH t.specialization LEFT JOIN FETCH t.trainees tr LEFT JOIN FETCH tr.user
-                                WHERE u.username = :username""",
+                                WHERE u.username = :username
+                                """,
                         Trainer.class)
                 .setParameter("username", username)
                 .uniqueResultOptional());
@@ -84,11 +84,11 @@ public class TrainerDaoImpl implements TrainerDao {
             session.merge(entity.getUser());
             Trainer merged = session.merge(entity);
 
-            return session.createQuery(
-                            """
+            return session.createQuery("""
                                     SELECT t FROM Trainer t
                                     LEFT JOIN FETCH t.user LEFT JOIN FETCH t.specialization LEFT JOIN FETCH t.trainees tr LEFT JOIN FETCH tr.user
-                                    WHERE t.id = :id""",
+                                    WHERE t.id = :id
+                                    """,
                             Trainer.class)
                     .setParameter("id", merged.getId())
                     .uniqueResult();

@@ -56,8 +56,7 @@ class HibernateConfigTest {
     void shouldHaveAllEntitiesInMetamodel() {
         assertThat(factory.getMetamodel().getEntities())
                 .extracting(e -> e.getJavaType().getName())
-                .containsExactlyInAnyOrder(
-                        Trainee.class.getName(), Trainer.class.getName(), Training.class.getName(), TrainingType.class.getName(),
+                .containsExactlyInAnyOrder(Trainee.class.getName(), Trainer.class.getName(), Training.class.getName(), TrainingType.class.getName(),
                         User.class.getName());
     }
 
