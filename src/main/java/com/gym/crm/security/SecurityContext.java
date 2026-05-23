@@ -5,12 +5,11 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class SecurityContext {
+public final class SecurityContext {
 
     private static UserCredentials currentUser;
 
     private SecurityContext() {
-        throw new UnsupportedOperationException("Utility class cannot be instantiated");
     }
 
     public static void setCurrentUser(UserCredentials userCredentials) {

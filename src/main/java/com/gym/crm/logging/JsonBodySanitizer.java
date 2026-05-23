@@ -11,20 +11,26 @@ import org.springframework.http.MediaType;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
-public class JsonBodySanitizer {
+public final class JsonBodySanitizer {
 
     private static final int MAX_BODY_CHARS = 5000;
     private static final int MAX_FIELD_CHARS = 200;
     private static final Set<String> MASKED_FIELDS = Set.of("password", "oldpassword", "newpassword");
     private static final Set<String> PARTIAL_FIELDS = Set.of("address");
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final List<SanitizingRule> SANITIZING_RULES = List.of(
+            new FullMaskingRule(),
+            new PartialMaskingRule(),
+            new TextTruncationRule()
+    );
+
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     private JsonBodySanitizer() {
-        throw new UnsupportedOperationException("Utility class");
     }
 
     public static String sanitize(String body) {
@@ -33,9 +39,9 @@ public class JsonBodySanitizer {
         }
 
         try {
-            JsonNode node = MAPPER.readTree(body);
+            JsonNode node = mapper.readTree(body);
             JsonNode masked = maskNode(node);
-            String maskedJson = MAPPER.writeValueAsString(masked);
+            String maskedJson = mapper.writeValueAsString(masked);
 
             return truncateBody(maskedJson);
         } catch (JsonProcessingException e) {
@@ -63,7 +69,7 @@ public class JsonBodySanitizer {
         }
 
         if (node.isArray()) {
-            ArrayNode arr = MAPPER.createArrayNode();
+            ArrayNode arr = mapper.createArrayNode();
             node.forEach(element -> arr.add(maskNode(element)));
             return arr;
         }
@@ -90,46 +96,11 @@ public class JsonBodySanitizer {
             return maskNode(value);
         }
 
-        String lowerKey = key.toLowerCase();
-
-        if (shouldBeMasked(lowerKey, value)) {
-            return TextNode.valueOf("***");
-        }
-
-        if (shouldBeMaskedPartially(lowerKey, value)) {
-            return TextNode.valueOf(maskValuePartially(value.asText()));
-        }
-
-        if (value.isTextual()) {
-            return TextNode.valueOf(truncateValue(value.asText()));
-        }
-
-        return value;
-    }
-
-    private static boolean shouldBeMasked(String key, JsonNode value) {
-        return MASKED_FIELDS.contains(key) && !value.isNull();
-    }
-
-    private static boolean shouldBeMaskedPartially(String key, JsonNode value) {
-        return PARTIAL_FIELDS.contains(key) && value.isTextual();
-    }
-
-    private static String maskValuePartially(String value) {
-        if (value.length() <= 4) {
-            return "***";
-        }
-
-        int visible = Math.min(4, value.length() / 4);
-        return value.substring(0, visible) + "***";
-    }
-
-    private static String truncateValue(String value) {
-        if (value.length() <= MAX_FIELD_CHARS) {
-            return value;
-        }
-
-        return value.substring(0, MAX_FIELD_CHARS) + "...[truncated]";
+        return SANITIZING_RULES.stream()
+                .filter(rule -> rule.matches(key, value))
+                .findFirst()
+                .map(rule -> rule.apply(value))
+                .orElse(value);
     }
 
     private static String truncateBody(String body) {
@@ -138,6 +109,65 @@ public class JsonBodySanitizer {
         }
 
         return body.substring(0, MAX_BODY_CHARS) + "...[body truncated]";
+    }
+
+    private interface SanitizingRule {
+        boolean matches(String key, JsonNode value);
+
+        JsonNode apply(JsonNode value);
+    }
+
+    private static class FullMaskingRule implements SanitizingRule {
+        @Override
+        public boolean matches(String key, JsonNode value) {
+            return MASKED_FIELDS.contains(key.toLowerCase(Locale.ROOT)) && !value.isNull();
+        }
+
+        @Override
+        public JsonNode apply(JsonNode value) {
+            return TextNode.valueOf("***");
+        }
+    }
+
+    private static class PartialMaskingRule implements SanitizingRule {
+        @Override
+        public boolean matches(String key, JsonNode value) {
+            return PARTIAL_FIELDS.contains(key.toLowerCase(Locale.ROOT)) && value.isTextual();
+        }
+
+        @Override
+        public JsonNode apply(JsonNode value) {
+            return TextNode.valueOf(maskValuePartially(value.asText()));
+        }
+
+        private String maskValuePartially(String value) {
+            if (value.length() <= 4) {
+                return "***";
+            }
+
+            int visible = Math.min(4, value.length() / 4);
+            return value.substring(0, visible) + "***";
+        }
+    }
+
+    private static class TextTruncationRule implements SanitizingRule {
+        @Override
+        public boolean matches(String key, JsonNode value) {
+            return value.isTextual();
+        }
+
+        @Override
+        public JsonNode apply(JsonNode value) {
+            return TextNode.valueOf(truncateValue(value.asText()));
+        }
+
+        private String truncateValue(String value) {
+            if (value.length() <= MAX_FIELD_CHARS) {
+                return value;
+            }
+
+            return value.substring(0, MAX_FIELD_CHARS) + "...[truncated]";
+        }
     }
 
 }
