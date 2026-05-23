@@ -1,6 +1,13 @@
 package com.gym.crm.logging;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
+
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -24,37 +31,10 @@ class JsonBodySanitizerTest {
         assertThat(result).isTrue();
     }
 
-    @Test
-    void shouldNotSupportNonJsonContentTypes() {
-        String contentType = "text/html";
-
-        boolean result = JsonBodySanitizer.supports(contentType);
-
-        assertThat(result).isFalse();
-    }
-
-    @Test
-    void shouldNotSupportNullContentType() {
-        String contentType = null;
-
-        boolean result = JsonBodySanitizer.supports(contentType);
-
-        assertThat(result).isFalse();
-    }
-
-    @Test
-    void shouldNotSupportWildcardContentType() {
-        String contentType = "*/*";
-
-        boolean result = JsonBodySanitizer.supports(contentType);
-
-        assertThat(result).isFalse();
-    }
-
-    @Test
-    void shouldHandleInvalidMediaTypeFormatGracefully() {
-        String contentType = "invalid-type/";
-
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = {"text/html", "*/*", "invalid-type/"})
+    void shouldNotSupportInvalidContentTypes(String contentType) {
         boolean result = JsonBodySanitizer.supports(contentType);
 
         assertThat(result).isFalse();
@@ -85,76 +65,12 @@ class JsonBodySanitizerTest {
         assertThat(result).isEmpty();
     }
 
-    @Test
-    void shouldReturnOriginalStringWhenBodyIsNotJson() {
-        String body = "Hello, World!";
+    @ParameterizedTest
+    @MethodSource("provideSanitizeTestData")
+    void shouldSanitizeJsonCorrectly(String inputBody, String expectedResult) {
+        String result = JsonBodySanitizer.sanitize(inputBody);
 
-        String result = JsonBodySanitizer.sanitize(body);
-
-        assertThat(result).isEqualTo("Hello, World!");
-    }
-
-    @Test
-    void shouldMaskSensitiveFieldsCaseInsensitively() {
-        String body = "{\"password\": \"secret123\", \"oldpassword\": \"old123\", \"newpassword\": \"new123\"}";
-
-        String result = JsonBodySanitizer.sanitize(body);
-
-        assertThat(result).isEqualTo("{\"password\":\"***\",\"oldpassword\":\"***\",\"newpassword\":\"***\"}");
-    }
-
-    @Test
-    void shouldMaskSensitiveFieldsWithDifferentCasing() {
-        String body = "{\"Password\": \"secret123\", \"OLDpassword\": \"old123\", \"NewPassword\": \"new123\"}";
-
-        String result = JsonBodySanitizer.sanitize(body);
-
-        assertThat(result).isEqualTo("{\"Password\":\"***\",\"OLDpassword\":\"***\",\"NewPassword\":\"***\"}");
-    }
-
-    @Test
-    void shouldNotMaskSensitiveFieldsWhenValueIsNull() {
-        String body = "{\"password\": null}";
-
-        String result = JsonBodySanitizer.sanitize(body);
-
-        assertThat(result).isEqualTo("{\"password\":null}");
-    }
-
-    @Test
-    void shouldFullyMaskShortAddress() {
-        String body = "{\"address\": \"123\"}";
-
-        String result = JsonBodySanitizer.sanitize(body);
-
-        assertThat(result).isEqualTo("{\"address\":\"***\"}");
-    }
-
-    @Test
-    void shouldPartiallyMaskLongAddress() {
-        String body = "{\"address\": \"12345678\"}";
-
-        String result = JsonBodySanitizer.sanitize(body);
-
-        assertThat(result).isEqualTo("{\"address\":\"12***\"}");
-    }
-
-    @Test
-    void shouldNotPartiallyMaskNonTextualAddress() {
-        String body = "{\"address\": 12345}";
-
-        String result = JsonBodySanitizer.sanitize(body);
-
-        assertThat(result).isEqualTo("{\"address\":12345}");
-    }
-
-    @Test
-    void shouldNotPartiallyMaskNullAddress() {
-        String body = "{\"address\": null}";
-
-        String result = JsonBodySanitizer.sanitize(body);
-
-        assertThat(result).isEqualTo("{\"address\":null}");
+        assertThat(result).isEqualTo(expectedResult);
     }
 
     @Test
@@ -178,13 +94,27 @@ class JsonBodySanitizerTest {
         assertThat(result).isEqualTo(expected);
     }
 
-    @Test
-    void shouldSanitizeRecursivelyInNestedObjectsAndArrays() {
-        String body = "{\"user\": {\"password\": \"secret\"}, \"items\": [{\"address\": \"12345678\"}]}";
-
-        String result = JsonBodySanitizer.sanitize(body);
-
-        assertThat(result).isEqualTo("{\"user\":{\"password\":\"***\"},\"items\":[{\"address\":\"12***\"}]}");
+    private static Stream<Arguments> provideSanitizeTestData() {
+        return Stream.of(
+                Arguments.of("Hello, World!",
+                        "Hello, World!"),
+                Arguments.of("{\"password\": \"secret123\", \"oldpassword\": \"old123\", \"newpassword\": \"new123\"}",
+                        "{\"password\":\"***\",\"oldpassword\":\"***\",\"newpassword\":\"***\"}"),
+                Arguments.of("{\"Password\": \"secret123\", \"OLDpassword\": \"old123\", \"NewPassword\": \"new123\"}",
+                        "{\"Password\":\"***\",\"OLDpassword\":\"***\",\"NewPassword\":\"***\"}"),
+                Arguments.of("{\"password\": null}",
+                        "{\"password\":null}"),
+                Arguments.of("{\"address\": \"123\"}",
+                        "{\"address\":\"***\"}"),
+                Arguments.of("{\"address\": \"12345678\"}",
+                        "{\"address\":\"12***\"}"),
+                Arguments.of("{\"address\": 12345}",
+                        "{\"address\":12345}"),
+                Arguments.of("{\"address\": null}",
+                        "{\"address\":null}"),
+                Arguments.of("{\"user\": {\"password\": \"secret\"}, \"items\": [{\"address\": \"12345678\"}]}",
+                        "{\"user\":{\"password\":\"***\"},\"items\":[{\"address\":\"12***\"}]}")
+        );
     }
 
 }

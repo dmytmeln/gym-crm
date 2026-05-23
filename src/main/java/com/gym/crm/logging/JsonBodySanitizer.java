@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import org.springframework.http.InvalidMediaTypeException;
 import org.springframework.http.MediaType;
 
@@ -21,6 +22,10 @@ public class JsonBodySanitizer {
     private static final Set<String> MASKED_FIELDS = Set.of("password", "oldpassword", "newpassword");
     private static final Set<String> PARTIAL_FIELDS = Set.of("address");
     private static final ObjectMapper MAPPER = new ObjectMapper();
+
+    private JsonBodySanitizer() {
+        throw new UnsupportedOperationException("Utility class");
+    }
 
     public static String sanitize(String body) {
         if (body == null || body.isBlank()) {
@@ -74,27 +79,32 @@ public class JsonBodySanitizer {
         obj.fieldNames().forEachRemaining(fieldNames::add);
 
         for (String key : fieldNames) {
-            JsonNode value = obj.get(key);
-
-            if (value.isContainerNode()) {
-                obj.set(key, maskNode(value));
-                continue;
-            }
-
-            if (shouldBeMasked(key.toLowerCase(), value)) {
-                obj.put(key, "***");
-                continue;
-            }
-
-            if (shouldBeMaskedPartially(key.toLowerCase(), value)) {
-                obj.put(key, maskValuePartially(value.asText()));
-                continue;
-            }
-
-            if (value.isTextual()) {
-                obj.put(key, truncateValue(value.asText()));
-            }
+            JsonNode originalValue = obj.get(key);
+            JsonNode sanitizedValue = sanitizeValue(key, originalValue);
+            obj.set(key, sanitizedValue);
         }
+    }
+
+    private static JsonNode sanitizeValue(String key, JsonNode value) {
+        if (value.isContainerNode()) {
+            return maskNode(value);
+        }
+
+        String lowerKey = key.toLowerCase();
+
+        if (shouldBeMasked(lowerKey, value)) {
+            return TextNode.valueOf("***");
+        }
+
+        if (shouldBeMaskedPartially(lowerKey, value)) {
+            return TextNode.valueOf(maskValuePartially(value.asText()));
+        }
+
+        if (value.isTextual()) {
+            return TextNode.valueOf(truncateValue(value.asText()));
+        }
+
+        return value;
     }
 
     private static boolean shouldBeMasked(String key, JsonNode value) {
