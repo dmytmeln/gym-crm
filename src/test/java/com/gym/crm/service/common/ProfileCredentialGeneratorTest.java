@@ -51,7 +51,7 @@ class ProfileCredentialGeneratorTest {
 
         String actual = generator.generateUsername(FIRST_NAME, LAST_NAME);
 
-        assertEquals("Liam.Miller", actual);
+        assertEquals("liam.miller", actual);
         verify(traineeDao).findAll();
         verify(trainerDao).findAll();
     }
@@ -66,7 +66,7 @@ class ProfileCredentialGeneratorTest {
 
         String actual = generator.generateUsername(FIRST_NAME, LAST_NAME);
 
-        assertEquals("Liam.Miller1", actual);
+        assertEquals("liam.miller1", actual);
     }
 
     @Test
@@ -85,7 +85,7 @@ class ProfileCredentialGeneratorTest {
 
         String actual = generator.generateUsername(FIRST_NAME, LAST_NAME);
 
-        assertEquals("Liam.Miller3", actual);
+        assertEquals("liam.miller3", actual);
     }
 
     @Test
@@ -97,7 +97,7 @@ class ProfileCredentialGeneratorTest {
 
         String actual = generator.generateUsername(FIRST_NAME, LAST_NAME);
 
-        assertEquals("Liam.Miller6", actual);
+        assertEquals("liam.miller6", actual);
     }
 
     @Test
@@ -110,16 +110,16 @@ class ProfileCredentialGeneratorTest {
 
         String actual = generator.generateUsername(FIRST_NAME, LAST_NAME);
 
-        assertEquals("Liam.Miller4", actual);
+        assertEquals("liam.miller4", actual);
         verify(traineeDao).findAll();
         verify(trainerDao).findAll();
     }
 
     @ParameterizedTest
     @CsvSource({
-            "sophia.miller, Liam.Miller",
-            "liam.wilson, Liam.Miller",
-            "liam.miller, Liam.Miller1"
+            "sophia.miller, liam.miller",
+            "liam.wilson, liam.miller",
+            "liam.miller, liam.miller1"
     })
     void shouldHandleUsernameMatching(String existingUsername, String expectedUsername) {
         when(traineeDao.findAll()).thenReturn(List.of(Trainee.builder().user(User.builder().username(existingUsername).build()).build()));
@@ -137,7 +137,7 @@ class ProfileCredentialGeneratorTest {
 
         String actual = generator.generateUsername(FIRST_NAME, LAST_NAME);
 
-        assertEquals("Liam.Miller", actual);
+        assertEquals("liam.miller", actual);
     }
 
     @Test
@@ -150,7 +150,7 @@ class ProfileCredentialGeneratorTest {
 
         String actual = generator.generateUsername(FIRST_NAME, LAST_NAME);
 
-        assertEquals("Liam.Miller", actual);
+        assertEquals("liam.miller", actual);
     }
 
     @Test

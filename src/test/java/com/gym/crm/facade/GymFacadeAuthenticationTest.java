@@ -59,6 +59,9 @@ class GymFacadeAuthenticationTest extends BaseDbIntegrationTest {
         assertThat(response).isNotNull();
         assertThat(response.getUsername()).isNotBlank();
         assertThat(response.getPassword()).isNotBlank();
+        LoginRequest loginDto = new LoginRequest().username(response.getUsername()).password(response.getPassword());
+        gymFacade.login(loginDto);
+        assertThat(SecurityContext.getCurrentUser().username()).isEqualTo(response.getUsername());
     }
 
     @Test
@@ -73,6 +76,9 @@ class GymFacadeAuthenticationTest extends BaseDbIntegrationTest {
         assertThat(response).isNotNull();
         assertThat(response.getUsername()).isNotBlank();
         assertThat(response.getPassword()).isNotBlank();
+        LoginRequest loginDto = new LoginRequest().username(response.getUsername()).password(response.getPassword());
+        gymFacade.login(loginDto);
+        assertThat(SecurityContext.getCurrentUser().username()).isEqualTo(response.getUsername());
     }
 
     @Test
