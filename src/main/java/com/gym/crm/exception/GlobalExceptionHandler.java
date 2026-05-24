@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 
 import static com.gym.crm.exception.ApiError.AUTHENTICATION_ERROR;
 import static com.gym.crm.exception.ApiError.AUTHORIZATION_ERROR;
+import static com.gym.crm.exception.ApiError.CONFLICT_ERROR;
 import static com.gym.crm.exception.ApiError.DATABASE_ERROR;
 import static com.gym.crm.exception.ApiError.NOT_FOUND_ERROR;
 import static com.gym.crm.exception.ApiError.SERVICE_ERROR;
@@ -45,6 +46,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
         log.warn("Validation error: {}", ex.getMessage());
         return buildResponse(VALIDATION_ERROR, message);
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ErrorResponse> handleConflictException(ConflictException ex) {
+        String message = String.format(RESPONSE_MESSAGE_TEMPLATE, CONFLICT_ERROR.getMessage(), ex.getMessage());
+
+        log.warn("Conflict error: {}", ex.getMessage());
+        return buildResponse(CONFLICT_ERROR, message);
     }
 
     @ExceptionHandler(AuthenticationException.class)
@@ -104,6 +113,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             case UNAUTHORIZED -> AUTHENTICATION_ERROR;
             case FORBIDDEN -> AUTHORIZATION_ERROR;
             case NOT_FOUND -> NOT_FOUND_ERROR;
+            case CONFLICT -> CONFLICT_ERROR;
             default -> SERVICE_ERROR;
         };
     }

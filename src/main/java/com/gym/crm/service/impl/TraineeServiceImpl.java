@@ -9,6 +9,7 @@ import com.gym.crm.entity.Trainer;
 import com.gym.crm.entity.Training;
 import com.gym.crm.entity.User;
 import com.gym.crm.exception.EntityNotFoundException;
+import com.gym.crm.exception.ConflictException;
 import com.gym.crm.security.AuthenticationException;
 import com.gym.crm.service.TraineeService;
 import com.gym.crm.service.common.ProfileCredentialGenerator;
@@ -75,7 +76,12 @@ public class TraineeServiceImpl implements TraineeService {
         Trainee createdTrainee = traineeDao.save(traineeWithCredentials);
         log.info("Trainee created with ID: {} and username: {}", createdTrainee.getId(), createdTrainee.getUser().getUsername());
 
-        return createdTrainee;
+        User userWithRawPassword = createdTrainee.getUser().toBuilder()
+                .password(password)
+                .build();
+        return createdTrainee.toBuilder()
+                .user(userWithRawPassword)
+                .build();
     }
 
     @Override
@@ -210,8 +216,7 @@ public class TraineeServiceImpl implements TraineeService {
                 .orElseThrow(() -> EntityNotFoundException.forUsername(TRAINEE, username));
 
         if (Objects.equals(trainee.getUser().getIsActive(), isActive)) {
-            log.warn("Trainee with username: {} is already {}", username, isActive ? "active" : "inactive");
-            return;
+            throw new ConflictException(String.format("Trainee with username: %s is already %s", username, isActive ? "active" : "inactive"));
         }
 
         User updatedUser = trainee.getUser().toBuilder()

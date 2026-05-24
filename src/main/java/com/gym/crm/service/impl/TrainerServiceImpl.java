@@ -10,6 +10,7 @@ import com.gym.crm.entity.Training;
 import com.gym.crm.entity.TrainingType;
 import com.gym.crm.entity.User;
 import com.gym.crm.exception.EntityNotFoundException;
+import com.gym.crm.exception.ConflictException;
 import com.gym.crm.security.AuthenticationException;
 import com.gym.crm.service.TrainerService;
 import com.gym.crm.service.common.ProfileCredentialGenerator;
@@ -89,7 +90,12 @@ public class TrainerServiceImpl implements TrainerService {
         log.info("Trainer created with ID: {} and username: {}",
                 createdTrainer.getId(), createdTrainer.getUser().getUsername());
 
-        return createdTrainer;
+        User userWithRawPassword = createdTrainer.getUser().toBuilder()
+                .password(password)
+                .build();
+        return createdTrainer.toBuilder()
+                .user(userWithRawPassword)
+                .build();
     }
 
     @Override
@@ -188,8 +194,7 @@ public class TrainerServiceImpl implements TrainerService {
                 .orElseThrow(() -> EntityNotFoundException.forUsername(TRAINER, username));
 
         if (Objects.equals(trainer.getUser().getIsActive(), isActive)) {
-            log.warn("Trainer with username: {} is already {}", username, isActive ? "active" : "inactive");
-            return;
+            throw new ConflictException(String.format("Trainer with username: %s is already %s", username, isActive ? "active" : "inactive"));
         }
 
         User updatedUser = trainer.getUser().toBuilder()
