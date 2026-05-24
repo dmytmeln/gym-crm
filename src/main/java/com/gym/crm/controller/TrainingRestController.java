@@ -31,95 +31,33 @@ public class TrainingRestController {
     private final GymFacade facade;
 
     @PostMapping
-    @Operation(
-            summary = "Add new training",
-            description = "Creates a new training session with the specified trainee, trainer, date, and duration",
-            responses = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            description = "Training created successfully"
-                    ),
-                    @ApiResponse(
-                            responseCode = "400",
-                            description = "Invalid input data",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = ErrorResponse.class)
-                            )
-                    ),
-                    @ApiResponse(
-                            responseCode = "401",
-                            description = "Unauthorized access",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = ErrorResponse.class)
-                            )
-                    ),
-                    @ApiResponse(
-                            responseCode = "404",
-                            description = "Trainee or trainer not found",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = ErrorResponse.class)
-                            )
-                    ),
-                    @ApiResponse(
-                            responseCode = "500",
-                            description = "Internal server error",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = ErrorResponse.class)
-                            )
-                    )
-            }
-    )
+    @Operation(summary = "Add new training", description = "Creates a new training session with the specified trainee, trainer, date, and duration", responses = {
+            @ApiResponse(responseCode = "200", description = "Training created successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid input data",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized access",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Trainee or trainer not found",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))})
     public ResponseEntity<Void> addTraining(@Valid @RequestBody TrainingCreateRequest trainingCreateRequest) {
         facade.createTraining(trainingCreateRequest.getTrainerUsername(), trainingCreateRequest);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/types")
-    @Operation(
-            summary = "Get training types",
-            description = "Returns list of all available training types",
-            responses = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            description = "List of training types",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = TrainingTypeResponse.class)
-                            )
-                    ),
-                    @ApiResponse(
-                            responseCode = "401",
-                            description = "Unauthorized access",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = ErrorResponse.class)
-                            )
-                    ),
-                    @ApiResponse(
-                            responseCode = "404",
-                            description = "Training types not found",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = ErrorResponse.class)
-                            )
-                    ),
-                    @ApiResponse(
-                            responseCode = "500",
-                            description = "Internal server error",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = ErrorResponse.class)
-                            )
-                    )
-            }
-    )
-    public ResponseEntity<List<TrainingTypeResponse>> getTrainingTypes(
-            @Parameter(description = "The username of the user requesting the training types", required = true)
-            @RequestParam String username) {
+    @Operation(summary = "Get training types", description = "Returns list of all available training types", responses = {
+            @ApiResponse(responseCode = "200", description = "List of training types",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = TrainingTypeResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized access",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Training types not found",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))})
+    public ResponseEntity<List<TrainingTypeResponse>> getTrainingTypes(@Parameter(description = "The username of the user requesting the training types", required = true)
+                                                                       @RequestParam String username) {
         return ResponseEntity.ok(facade.getAllTrainingTypes(username));
     }
 
