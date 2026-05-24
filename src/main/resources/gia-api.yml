@@ -212,6 +212,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Trainee activation status is already in the requested state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -532,6 +538,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Trainer activation status is already in the requested state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -692,7 +704,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-        '404':
+        '401':
           description: Invalid user credentials
           content:
             application/json:
@@ -730,12 +742,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '401':
-          description: Unauthorized access
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
           description: Invalid user credentials
           content:
             application/json:
@@ -817,11 +823,15 @@ components:
           type: string
           description: First name
           maxLength: 100
+          minLength: 1
+          pattern: '.*\S.*'
           example: Billy
         lastName:
           type: string
           description: Last name
           maxLength: 100
+          minLength: 1
+          pattern: '.*\S.*'
           example: Herrington
     Trainee:
       allOf:
@@ -997,6 +1007,8 @@ components:
           type: string
           example: Morning Cardio
           maxLength: 100
+          minLength: 1
+          pattern: '.*\S.*'
         trainingDate:
           type: string
           format: date
