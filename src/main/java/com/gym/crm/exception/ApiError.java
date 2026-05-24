@@ -10,6 +10,7 @@ public enum ApiError {
     AUTHENTICATION_ERROR(2805, "Authentication fails", HttpStatus.UNAUTHORIZED),
     AUTHORIZATION_ERROR(2806, "User is not authorized for request operation", HttpStatus.FORBIDDEN),
     NOT_FOUND_ERROR(2835, "Requested data was not found", HttpStatus.NOT_FOUND),
+    CONFLICT_ERROR(2809, "Conflict error", HttpStatus.CONFLICT),
     SERVICE_ERROR(3200, "Internal processing error", HttpStatus.INTERNAL_SERVER_ERROR),
     DATABASE_ERROR(3358, "Database error", HttpStatus.INTERNAL_SERVER_ERROR);
 

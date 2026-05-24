@@ -9,6 +9,7 @@ import com.gym.crm.entity.Trainer;
 import com.gym.crm.entity.Training;
 import com.gym.crm.entity.User;
 import com.gym.crm.exception.EntityNotFoundException;
+import com.gym.crm.exception.ConflictException;
 import com.gym.crm.security.AuthenticationException;
 import com.gym.crm.service.TraineeService;
 import com.gym.crm.service.common.ProfileCredentialGenerator;
@@ -97,6 +98,7 @@ class TraineeServiceImplTest {
         assertEquals(DEFAULT_FIRST_NAME, traineeWithCredentials.getUser().getFirstName());
         assertEquals(DEFAULT_LAST_NAME, traineeWithCredentials.getUser().getLastName());
         assertEquals(expected, actual);
+        assertEquals(DEFAULT_PASSWORD, actual.getUser().getPassword());
     }
 
     @Test
@@ -354,27 +356,29 @@ class TraineeServiceImplTest {
     }
 
     @Test
-    void shouldReturnEarlyWhenActivatingAlreadyActiveTrainee() {
+    void shouldThrowConflictExceptionWhenActivatingAlreadyActiveTrainee() {
         Trainee activeTrainee = buildTraineeWithUsername(DEFAULT_USERNAME);
 
         when(dao.findByUsername(DEFAULT_USERNAME)).thenReturn(Optional.of(activeTrainee));
 
-        service.updateActivationStatus(DEFAULT_USERNAME, true);
+        ConflictException exception = assertThrows(ConflictException.class, () -> service.updateActivationStatus(DEFAULT_USERNAME, true));
 
+        assertEquals("Trainee with username: " + DEFAULT_USERNAME + " is already active", exception.getMessage());
         verify(dao).findByUsername(DEFAULT_USERNAME);
         verify(dao, never()).update(any(Trainee.class));
     }
 
     @Test
-    void shouldReturnEarlyWhenDeactivatingAlreadyInactiveTrainee() {
+    void shouldThrowConflictExceptionWhenDeactivatingAlreadyInactiveTrainee() {
         Trainee trainee = buildTraineeWithUsername(DEFAULT_USERNAME);
         User inactiveUser = trainee.getUser().toBuilder().isActive(false).build();
         Trainee inactiveTrainee = trainee.toBuilder().user(inactiveUser).build();
 
         when(dao.findByUsername(DEFAULT_USERNAME)).thenReturn(Optional.of(inactiveTrainee));
 
-        service.updateActivationStatus(DEFAULT_USERNAME, false);
+        ConflictException exception = assertThrows(ConflictException.class, () -> service.updateActivationStatus(DEFAULT_USERNAME, false));
 
+        assertEquals("Trainee with username: " + DEFAULT_USERNAME + " is already inactive", exception.getMessage());
         verify(dao).findByUsername(DEFAULT_USERNAME);
         verify(dao, never()).update(any(Trainee.class));
     }

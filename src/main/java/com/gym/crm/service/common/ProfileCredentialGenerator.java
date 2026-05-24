@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import java.security.SecureRandom;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.stream.Stream;
 
@@ -41,7 +42,7 @@ public class ProfileCredentialGenerator {
         Objects.requireNonNull(firstName, "First Name cannot be null");
         Objects.requireNonNull(lastName, "Last Name cannot be null");
 
-        String baseUsername = firstName + USERNAME_SEPARATOR + lastName;
+        String baseUsername = buildBaseUsername(firstName, lastName);
         log.debug("Generating username for base: {}", baseUsername);
 
         List<String> takenUsernames = findUsernamesWithSameBase(baseUsername);
@@ -65,6 +66,10 @@ public class ProfileCredentialGenerator {
         }
 
         return new String(password);
+    }
+
+    private String buildBaseUsername(String firstName, String lastName) {
+        return firstName.toLowerCase(Locale.ROOT) + USERNAME_SEPARATOR + lastName.toLowerCase(Locale.ROOT);
     }
 
     private List<String> findUsernamesWithSameBase(String baseUsername) {

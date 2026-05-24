@@ -16,6 +16,7 @@ import java.util.List;
 import static com.gym.crm.entity.EntityType.USER;
 import static com.gym.crm.exception.ApiError.AUTHENTICATION_ERROR;
 import static com.gym.crm.exception.ApiError.AUTHORIZATION_ERROR;
+import static com.gym.crm.exception.ApiError.CONFLICT_ERROR;
 import static com.gym.crm.exception.ApiError.DATABASE_ERROR;
 import static com.gym.crm.exception.ApiError.NOT_FOUND_ERROR;
 import static com.gym.crm.exception.ApiError.SERVICE_ERROR;
@@ -188,6 +189,18 @@ class GlobalExceptionHandlerTest {
         assertThat(body).isNotNull();
         assertThat(body.getErrorCode()).isEqualTo(VALIDATION_ERROR.getCode());
         assertThat(body.getErrorMessage()).isEqualTo(String.format("%s: fieldName: defaultMessage", VALIDATION_ERROR.getMessage()));
+    }
+
+    @Test
+    void shouldHandleConflictException() {
+        ConflictException exception = new ConflictException("Test conflict message");
+
+        ResponseEntity<ErrorResponse> response = handler.handleConflictException(exception);
+
+        assertThat(response.getStatusCode()).isEqualTo(CONFLICT_ERROR.getStatus());
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getErrorCode()).isEqualTo(CONFLICT_ERROR.getCode());
+        assertThat(response.getBody().getErrorMessage()).isEqualTo(buildExpectedErrorMessage(CONFLICT_ERROR, exception));
     }
 
     private String buildExpectedErrorMessage(ApiError apiError, Exception exception) {

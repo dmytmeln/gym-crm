@@ -15,6 +15,7 @@ import com.gym.crm.exception.ApiError;
 import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.exception.GlobalExceptionHandler;
 import com.gym.crm.exception.ValidationException;
+import com.gym.crm.exception.ConflictException;
 import com.gym.crm.facade.GymFacade;
 import com.gym.crm.security.AuthenticationException;
 import org.hibernate.HibernateException;
@@ -33,6 +34,7 @@ import java.util.List;
 
 import static com.gym.crm.entity.EntityType.TRAINER;
 import static com.gym.crm.exception.ApiError.AUTHENTICATION_ERROR;
+import static com.gym.crm.exception.ApiError.CONFLICT_ERROR;
 import static com.gym.crm.exception.ApiError.DATABASE_ERROR;
 import static com.gym.crm.exception.ApiError.NOT_FOUND_ERROR;
 import static com.gym.crm.exception.ApiError.SERVICE_ERROR;
@@ -399,6 +401,27 @@ class TrainerRestControllerTest {
         assertThat(error.getErrorCode()).isEqualTo(VALIDATION_ERROR.getCode());
         assertThat(error.getErrorMessage()).isEqualTo("Validation error: isActive: must not be null");
         verifyNoInteractions(facade);
+    }
+
+    @Test
+    void shouldReturn409WhenChangingTrainerActivationStatusToAlreadySameStatus() throws Exception {
+        ActivationStatusRequest request = new ActivationStatusRequest(true);
+        ConflictException exception = new ConflictException("Trainer with username: username is already active");
+
+        doThrow(exception).when(facade).updateTrainerActivationStatus(USERNAME, true);
+
+        String content = mockMvc.perform(patch(BASE_PATH + "/trainers/{username}/activation", USERNAME)
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        ErrorResponse error = objectMapper.readValue(content, ErrorResponse.class);
+        assertThat(error.getErrorCode()).isEqualTo(CONFLICT_ERROR.getCode());
+        assertThat(error.getErrorMessage()).isEqualTo("Conflict error: Trainer with username: username is already active");
+        verify(facade).updateTrainerActivationStatus(USERNAME, true);
     }
 
     @Test
