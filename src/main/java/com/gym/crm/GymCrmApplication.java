@@ -1,5 +1,6 @@
 package com.gym.crm;
 
+import com.gym.crm.config.OpenApiConfig;
 import com.gym.crm.config.WebConfig;
 import com.gym.crm.config.YamlPropertySourceFactory;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
         basePackages = "com.gym.crm",
         excludeFilters = {
                 @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = WebConfig.class),
+                @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = OpenApiConfig.class),
                 @ComponentScan.Filter(type = FilterType.ANNOTATION, value = RestController.class)
         }
 )
