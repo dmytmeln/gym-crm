@@ -1,7 +1,5 @@
 package com.gym.crm.dao.impl;
 
-import com.gym.crm.dao.helper.TraineeTrainingCriteriaBuilder;
-import com.gym.crm.dao.helper.TrainerTrainingCriteriaBuilder;
 import com.gym.crm.dto.filter.TraineeTrainingSearchFilter;
 import com.gym.crm.dto.filter.TrainerTrainingSearchFilter;
 import com.gym.crm.entity.Trainee;
@@ -9,7 +7,6 @@ import com.gym.crm.entity.Trainer;
 import com.gym.crm.entity.Training;
 import com.gym.crm.entity.TrainingType;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -22,7 +19,6 @@ import static com.gym.crm.test.helper.EntityRecursiveComparisonConfigs.getTraini
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@SpringJUnitConfig({TrainingDaoImpl.class, TrainerTrainingCriteriaBuilder.class, TraineeTrainingCriteriaBuilder.class})
 class TrainingDaoImplTest extends AbstractDaoTest<TrainingDaoImpl> {
 
     private static final long EXISTING_TRAINING_ID = 1L;

@@ -9,13 +9,13 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringJUnitConfig({HibernateConfig.class, DatasourceConfig.class, LiquibaseConfig.class})
-@TestPropertySource(locations = "classpath:application-test.yml", factory = YamlPropertySourceFactory.class)
+@SpringBootTest
+@ActiveProfiles("test")
 class HibernateConfigTest {
 
     @Autowired

@@ -2,7 +2,6 @@ package com.gym.crm.dao.impl;
 
 import com.gym.crm.entity.TrainingType;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import java.util.List;
 import java.util.Optional;
@@ -11,7 +10,6 @@ import static com.gym.crm.test.helper.EntityRecursiveComparisonConfigs.getTraini
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@SpringJUnitConfig(TrainingTypeDaoImpl.class)
 class TrainingTypeDaoImplTest extends AbstractDaoTest<TrainingTypeDaoImpl> {
 
     private static final long EXISTING_ID = 1L;
