@@ -159,6 +159,7 @@
                         <exclude>**/dto/**</exclude>
                         <exclude>**/entity/**</exclude>
                         <exclude>**/mapper/**</exclude>
+                        <exclude>**/GymCrmApplication*</exclude>
                     </excludes>
                 </configuration>
                 <executions>
