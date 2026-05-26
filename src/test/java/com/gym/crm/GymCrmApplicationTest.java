@@ -3,11 +3,13 @@ package com.gym.crm;
 import com.gym.crm.config.BaseDbIntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@SpringJUnitConfig(GymCrmApplication.class)
+@SpringBootTest
+@ActiveProfiles("test")
 class GymCrmApplicationTest extends BaseDbIntegrationTest {
 
     @Autowired

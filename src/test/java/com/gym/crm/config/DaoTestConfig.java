@@ -1,16 +1,13 @@
 package com.gym.crm.config;
 
 import com.gym.crm.test.helper.TestDbClient;
-import com.gym.crm.transaction.TransactionManager;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
 import javax.sql.DataSource;
 
-@Configuration
-@Import({HibernateConfig.class, LiquibaseConfig.class, DatasourceConfig.class, TransactionManager.class})
+@TestConfiguration
 public class DaoTestConfig {
 
     @Bean
