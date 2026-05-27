@@ -77,6 +77,7 @@ class TraineeServiceImplTest {
         implementation.setCredentialGenerator(generator);
         implementation.setPasswordEncoder(passwordEncoder);
         implementation.setTrainingCriteriaBuilder(new TraineeTrainingCriteriaBuilder());
+        implementation.setSelf(implementation);
         service = implementation;
     }
 

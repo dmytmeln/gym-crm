@@ -17,6 +17,7 @@ import com.gym.crm.service.TrainerService;
 import com.gym.crm.service.common.ProfileCredentialGenerator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +41,13 @@ public class TrainerServiceImpl implements TrainerService {
     private ProfileCredentialGenerator credentialGenerator;
     private PasswordEncoder passwordEncoder;
     private TrainerTrainingCriteriaBuilder trainingCriteriaBuilder;
+    private TrainerService self;
+
+    @Autowired
+    @Lazy
+    public void setSelf(TrainerService self) {
+        this.self = self;
+    }
 
     @Autowired
     public void setTrainingCriteriaBuilder(TrainerTrainingCriteriaBuilder trainingCriteriaBuilder) {
@@ -181,7 +189,7 @@ public class TrainerServiceImpl implements TrainerService {
         Objects.requireNonNull(loginChangeDto, "LoginChangeDto cannot be null");
         log.info("Updating password for trainer with username: {}", loginChangeDto.username());
 
-        if (!doesUsernameAndPasswordMatch(loginChangeDto.username(), loginChangeDto.oldPassword())) {
+        if (!self.doesUsernameAndPasswordMatch(loginChangeDto.username(), loginChangeDto.oldPassword())) {
             throw new AuthenticationException("Invalid username or password");
         }
 
