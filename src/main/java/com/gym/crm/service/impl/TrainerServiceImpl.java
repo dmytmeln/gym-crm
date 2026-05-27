@@ -168,11 +168,11 @@ public class TrainerServiceImpl implements TrainerService {
                 .user(updatedUser)
                 .build();
 
-        Trainer savedTrainer = trainerRepository.save(mergedTrainer);
+        Trainer updatedTrainer = trainerRepository.save(mergedTrainer);
         log.info("Trainer with ID: {} and username: {} updated successfully",
-                savedTrainer.getId(), savedTrainer.getUser().getUsername());
+                updatedTrainer.getId(), updatedTrainer.getUser().getUsername());
 
-        return savedTrainer;
+        return updatedTrainer;
     }
 
     @Override

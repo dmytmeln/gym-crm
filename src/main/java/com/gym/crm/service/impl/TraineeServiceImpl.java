@@ -201,10 +201,10 @@ public class TraineeServiceImpl implements TraineeService {
         trainee.getTrainers().clear();
         trainers.forEach(trainee::addTrainer);
 
-        Trainee savedTrainee = traineeRepository.save(trainee);
+        Trainee updatedTrainee = traineeRepository.save(trainee);
         log.info("Trainers successfully updated for trainee with username: {}", username);
 
-        return savedTrainee;
+        return updatedTrainee;
     }
 
     @Override
