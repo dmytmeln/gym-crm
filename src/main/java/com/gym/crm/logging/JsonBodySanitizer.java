@@ -22,11 +22,9 @@ public final class JsonBodySanitizer {
     private static final int MAX_FIELD_CHARS = 200;
     private static final Set<String> MASKED_FIELDS = Set.of("password", "oldpassword", "newpassword");
     private static final Set<String> PARTIAL_FIELDS = Set.of("address");
-    private static final List<SanitizingRule> SANITIZING_RULES = List.of(
-            new FullMaskingRule(),
+    private static final List<SanitizingRule> SANITIZING_RULES = List.of(new FullMaskingRule(),
             new PartialMaskingRule(),
-            new TextTruncationRule()
-    );
+            new TextTruncationRule());
 
     private static final ObjectMapper mapper = new ObjectMapper();
 
