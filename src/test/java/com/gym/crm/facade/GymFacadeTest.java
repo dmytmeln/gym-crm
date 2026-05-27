@@ -110,11 +110,15 @@ class GymFacadeTest {
 
     @BeforeEach
     void setUp() {
-        facade = new GymFacade(traineeService, trainerService, trainingService, authenticationService, businessValidator);
-        facade.setTraineeMapper(traineeMapper);
-        facade.setTrainerMapper(trainerMapper);
-        facade.setTrainingMapper(trainingMapper);
-        facade.setAuthMapper(authMapper);
+        facade = new GymFacade(traineeService,
+                trainerService,
+                trainingService,
+                authenticationService,
+                businessValidator,
+                traineeMapper,
+                trainerMapper,
+                trainingMapper,
+                authMapper);
     }
 
     @Test

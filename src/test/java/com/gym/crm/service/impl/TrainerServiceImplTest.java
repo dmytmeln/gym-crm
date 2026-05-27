@@ -42,6 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -66,19 +67,19 @@ class TrainerServiceImplTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private TrainerTrainingCriteriaBuilder trainingCriteriaBuilder;
+
     private TrainerService service;
 
     @BeforeEach
     void setUp() {
-        TrainerServiceImpl implementation = new TrainerServiceImpl();
-        implementation.setTrainerRepository(trainerRepository);
-        implementation.setTrainingTypeRepository(trainingTypeRepository);
-        implementation.setTrainingRepository(trainingRepository);
-        implementation.setCredentialGenerator(generator);
-        implementation.setPasswordEncoder(passwordEncoder);
-        implementation.setTrainingCriteriaBuilder(new TrainerTrainingCriteriaBuilder());
-        implementation.setSelf(implementation);
-        service = implementation;
+        service = new TrainerServiceImpl(trainerRepository,
+                trainingTypeRepository,
+                trainingRepository,
+                generator,
+                passwordEncoder,
+                trainingCriteriaBuilder);
     }
 
     @Test
@@ -166,12 +167,16 @@ class TrainerServiceImplTest {
     void shouldReturnTrainerTrainingsSuccessfully() {
         TrainerTrainingSearchFilter filter = TrainerTrainingSearchFilter.builder().username(DEFAULT_USERNAME).build();
         List<Training> expected = List.of(Training.builder().id(1L).build());
+        @SuppressWarnings("unchecked")
+        Specification<Training> spec = mock(Specification.class);
 
-        when(trainingRepository.findAll(any(Specification.class))).thenReturn(expected);
+        when(trainingCriteriaBuilder.build(filter)).thenReturn(spec);
+        when(trainingRepository.findAll(spec)).thenReturn(expected);
 
         List<Training> actual = service.getTrainerTrainings(filter);
 
-        verify(trainingRepository).findAll(any(Specification.class));
+        verify(trainingCriteriaBuilder).build(filter);
+        verify(trainingRepository).findAll(spec);
         assertEquals(expected, actual);
     }
 
@@ -339,7 +344,7 @@ class TrainerServiceImplTest {
 
         service.updateTrainerPassword(dto);
 
-        verify(trainerRepository, times(2)).findByUsernameWithUser(trainer.getUser().getUsername());
+        verify(trainerRepository).findByUsernameWithUser(trainer.getUser().getUsername());
         verify(trainerRepository, never()).findByUsernameWithUserAndTraineesDetails(any());
         ArgumentCaptor<Trainer> trainerCaptor = ArgumentCaptor.forClass(Trainer.class);
         verify(trainerRepository).save(trainerCaptor.capture());

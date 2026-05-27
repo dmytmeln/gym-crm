@@ -54,12 +54,10 @@ class TrainingServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        TrainingServiceImpl implementation = new TrainingServiceImpl();
-        implementation.setTrainingRepository(trainingRepository);
-        implementation.setTraineeRepository(traineeRepository);
-        implementation.setTrainerRepository(trainerRepository);
-        implementation.setTrainingTypeRepository(trainingTypeRepository);
-        service = implementation;
+        service = new TrainingServiceImpl(trainingRepository,
+                traineeRepository,
+                trainerRepository,
+                trainingTypeRepository);
     }
 
     @Test

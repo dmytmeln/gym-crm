@@ -11,6 +11,7 @@ import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.repository.TraineeRepository;
 import com.gym.crm.repository.TrainerRepository;
 import com.gym.crm.repository.TrainingRepository;
+import com.gym.crm.repository.specification.TraineeTrainingCriteriaBuilder;
 import com.gym.crm.security.AuthenticationException;
 import com.gym.crm.service.TraineeService;
 import com.gym.crm.service.common.ProfileCredentialGenerator;
@@ -22,7 +23,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import com.gym.crm.repository.specification.TraineeTrainingCriteriaBuilder;
 
 import java.util.List;
 import java.util.Optional;
@@ -42,6 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -66,19 +67,19 @@ class TraineeServiceImplTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private TraineeTrainingCriteriaBuilder trainingCriteriaBuilder;
+
     private TraineeService service;
 
     @BeforeEach
     void setUp() {
-        TraineeServiceImpl implementation = new TraineeServiceImpl();
-        implementation.setTraineeRepository(repository);
-        implementation.setTrainerRepository(trainerRepository);
-        implementation.setTrainingRepository(trainingRepository);
-        implementation.setCredentialGenerator(generator);
-        implementation.setPasswordEncoder(passwordEncoder);
-        implementation.setTrainingCriteriaBuilder(new TraineeTrainingCriteriaBuilder());
-        implementation.setSelf(implementation);
-        service = implementation;
+        service = new TraineeServiceImpl(repository,
+                trainerRepository,
+                trainingRepository,
+                generator,
+                passwordEncoder,
+                trainingCriteriaBuilder);
     }
 
     @Test
@@ -183,12 +184,16 @@ class TraineeServiceImplTest {
     void shouldGetTrainingsByCriteriaSuccessfully() {
         TraineeTrainingSearchFilter filter = TraineeTrainingSearchFilter.builder().username(DEFAULT_USERNAME).build();
         List<Training> expected = List.of(Training.builder().id(1L).build());
+        @SuppressWarnings("unchecked")
+        Specification<Training> spec = mock(Specification.class);
 
-        when(trainingRepository.findAll(any(Specification.class))).thenReturn(expected);
+        when(trainingCriteriaBuilder.build(filter)).thenReturn(spec);
+        when(trainingRepository.findAll(spec)).thenReturn(expected);
 
         List<Training> actual = service.getTrainingsByCriteria(filter);
 
-        verify(trainingRepository).findAll(any(Specification.class));
+        verify(trainingCriteriaBuilder).build(filter);
+        verify(trainingRepository).findAll(spec);
         assertEquals(expected, actual);
     }
 
@@ -312,7 +317,7 @@ class TraineeServiceImplTest {
 
         service.updateTraineePassword(dto);
 
-        verify(repository, times(2)).findByUsernameWithUser(DEFAULT_USERNAME);
+        verify(repository).findByUsernameWithUser(DEFAULT_USERNAME);
         verify(repository, never()).findByUsernameWithUserAndTrainersDetails(any());
         ArgumentCaptor<Trainee> captor = ArgumentCaptor.forClass(Trainee.class);
         verify(repository).save(captor.capture());

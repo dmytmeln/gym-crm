@@ -40,7 +40,6 @@ import com.gym.crm.service.TrainerService;
 import com.gym.crm.service.TrainingService;
 import com.gym.crm.service.common.BusinessValidator;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -57,31 +56,10 @@ public class GymFacade {
     private final TrainingService trainingService;
     private final AuthenticationService authenticationService;
     private final BusinessValidator validator;
-
-    private TraineeMapper traineeMapper;
-    private TrainerMapper trainerMapper;
-    private TrainingMapper trainingMapper;
-    private AuthMapper authMapper;
-
-    @Autowired
-    public void setTraineeMapper(TraineeMapper traineeMapper) {
-        this.traineeMapper = traineeMapper;
-    }
-
-    @Autowired
-    public void setTrainerMapper(TrainerMapper trainerMapper) {
-        this.trainerMapper = trainerMapper;
-    }
-
-    @Autowired
-    public void setTrainingMapper(TrainingMapper trainingMapper) {
-        this.trainingMapper = trainingMapper;
-    }
-
-    @Autowired
-    public void setAuthMapper(AuthMapper authMapper) {
-        this.authMapper = authMapper;
-    }
+    private final TraineeMapper traineeMapper;
+    private final TrainerMapper trainerMapper;
+    private final TrainingMapper trainingMapper;
+    private final AuthMapper authMapper;
 
     public void login(LoginRequest loginRequest) {
         Objects.requireNonNull(loginRequest, "LoginRequestDto cannot be null");

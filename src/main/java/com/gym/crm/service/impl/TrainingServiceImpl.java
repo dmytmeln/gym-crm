@@ -10,8 +10,8 @@ import com.gym.crm.repository.TrainerRepository;
 import com.gym.crm.repository.TrainingRepository;
 import com.gym.crm.repository.TrainingTypeRepository;
 import com.gym.crm.service.TrainingService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,32 +23,13 @@ import static com.gym.crm.entity.EntityType.TRAINER;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class TrainingServiceImpl implements TrainingService {
 
-    private TrainingRepository trainingRepository;
-    private TraineeRepository traineeRepository;
-    private TrainerRepository trainerRepository;
-    private TrainingTypeRepository trainingTypeRepository;
-
-    @Autowired
-    public void setTrainingRepository(TrainingRepository trainingRepository) {
-        this.trainingRepository = trainingRepository;
-    }
-
-    @Autowired
-    public void setTraineeRepository(TraineeRepository traineeRepository) {
-        this.traineeRepository = traineeRepository;
-    }
-
-    @Autowired
-    public void setTrainerRepository(TrainerRepository trainerRepository) {
-        this.trainerRepository = trainerRepository;
-    }
-
-    @Autowired
-    public void setTrainingTypeRepository(TrainingTypeRepository trainingTypeRepository) {
-        this.trainingTypeRepository = trainingTypeRepository;
-    }
+    private final TrainingRepository trainingRepository;
+    private final TraineeRepository traineeRepository;
+    private final TrainerRepository trainerRepository;
+    private final TrainingTypeRepository trainingTypeRepository;
 
     @Override
     @Transactional

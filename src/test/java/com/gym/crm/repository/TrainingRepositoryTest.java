@@ -6,11 +6,7 @@ import com.gym.crm.entity.Trainee;
 import com.gym.crm.entity.Trainer;
 import com.gym.crm.entity.Training;
 import com.gym.crm.entity.TrainingType;
-import com.gym.crm.repository.specification.TraineeTrainingCriteriaBuilder;
-import com.gym.crm.repository.specification.TrainerTrainingCriteriaBuilder;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Import;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -22,7 +18,6 @@ import static com.gym.crm.test.helper.EntityRecursiveComparisonConfigs.getTraini
 import static com.gym.crm.test.helper.EntityRecursiveComparisonConfigs.getTrainingTypeConfigForDirectFields;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@Import({TraineeTrainingCriteriaBuilder.class, TrainerTrainingCriteriaBuilder.class})
 class TrainingRepositoryTest extends AbstractRepositoryTest<TrainingRepository> {
 
     private static final int TRAINERS_COUNT = 3;
@@ -30,12 +25,6 @@ class TrainingRepositoryTest extends AbstractRepositoryTest<TrainingRepository> 
     private static final int TRAINEES_COUNT = 2;
     private static final int TRAININGS_COUNT = 2;
     private static final int TRAINING_TYPES_COUNT = 3;
-
-    @Autowired
-    private TraineeTrainingCriteriaBuilder traineeCriteriaBuilder;
-
-    @Autowired
-    private TrainerTrainingCriteriaBuilder trainerCriteriaBuilder;
 
     @Test
     void shouldSaveTraining() {

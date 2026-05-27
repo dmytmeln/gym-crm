@@ -15,9 +15,8 @@ import com.gym.crm.repository.specification.TrainerTrainingCriteriaBuilder;
 import com.gym.crm.security.AuthenticationException;
 import com.gym.crm.service.TrainerService;
 import com.gym.crm.service.common.ProfileCredentialGenerator;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,53 +30,17 @@ import static com.gym.crm.entity.EntityType.TRAINING_TYPE;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class TrainerServiceImpl implements TrainerService {
 
     private static final String USERNAME_NULL_MSG = "Trainer username cannot be null";
 
-    private TrainerRepository trainerRepository;
-    private TrainingTypeRepository trainingTypeRepository;
-    private TrainingRepository trainingRepository;
-    private ProfileCredentialGenerator credentialGenerator;
-    private PasswordEncoder passwordEncoder;
-    private TrainerTrainingCriteriaBuilder trainingCriteriaBuilder;
-    private TrainerService self;
-
-    @Autowired
-    @Lazy
-    public void setSelf(TrainerService self) {
-        this.self = self;
-    }
-
-    @Autowired
-    public void setTrainingCriteriaBuilder(TrainerTrainingCriteriaBuilder trainingCriteriaBuilder) {
-        this.trainingCriteriaBuilder = trainingCriteriaBuilder;
-    }
-
-    @Autowired
-    public void setTrainerRepository(TrainerRepository trainerRepository) {
-        this.trainerRepository = trainerRepository;
-    }
-
-    @Autowired
-    public void setTrainingTypeRepository(TrainingTypeRepository trainingTypeRepository) {
-        this.trainingTypeRepository = trainingTypeRepository;
-    }
-
-    @Autowired
-    public void setTrainingRepository(TrainingRepository trainingRepository) {
-        this.trainingRepository = trainingRepository;
-    }
-
-    @Autowired
-    public void setCredentialGenerator(ProfileCredentialGenerator credentialGenerator) {
-        this.credentialGenerator = credentialGenerator;
-    }
-
-    @Autowired
-    public void setPasswordEncoder(PasswordEncoder passwordEncoder) {
-        this.passwordEncoder = passwordEncoder;
-    }
+    private final TrainerRepository trainerRepository;
+    private final TrainingTypeRepository trainingTypeRepository;
+    private final TrainingRepository trainingRepository;
+    private final ProfileCredentialGenerator credentialGenerator;
+    private final PasswordEncoder passwordEncoder;
+    private final TrainerTrainingCriteriaBuilder trainingCriteriaBuilder;
 
     @Override
     @Transactional
@@ -189,12 +152,12 @@ public class TrainerServiceImpl implements TrainerService {
         Objects.requireNonNull(loginChangeDto, "LoginChangeDto cannot be null");
         log.info("Updating password for trainer with username: {}", loginChangeDto.username());
 
-        if (!self.doesUsernameAndPasswordMatch(loginChangeDto.username(), loginChangeDto.oldPassword())) {
+        Trainer trainer = trainerRepository.findByUsernameWithUser(loginChangeDto.username())
+                .orElseThrow(() -> new AuthenticationException("Invalid username or password"));
+
+        if (!passwordEncoder.matches(loginChangeDto.oldPassword(), trainer.getUser().getPassword())) {
             throw new AuthenticationException("Invalid username or password");
         }
-
-        Trainer trainer = trainerRepository.findByUsernameWithUser(loginChangeDto.username())
-                .orElseThrow(() -> EntityNotFoundException.forUsername(TRAINER, loginChangeDto.username()));
 
         User updatedUser = trainer.getUser().toBuilder()
                 .password(passwordEncoder.encode(loginChangeDto.newPassword()))
