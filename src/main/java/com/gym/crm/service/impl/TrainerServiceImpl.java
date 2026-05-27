@@ -1,24 +1,25 @@
 package com.gym.crm.service.impl;
 
-import com.gym.crm.dao.TrainerDao;
-import com.gym.crm.dao.TrainingDao;
-import com.gym.crm.dao.TrainingTypeDao;
 import com.gym.crm.dto.LoginChangeDto;
 import com.gym.crm.dto.filter.TrainerTrainingSearchFilter;
 import com.gym.crm.entity.Trainer;
 import com.gym.crm.entity.Training;
 import com.gym.crm.entity.TrainingType;
 import com.gym.crm.entity.User;
-import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.exception.ConflictException;
+import com.gym.crm.exception.EntityNotFoundException;
+import com.gym.crm.repository.TrainerRepository;
+import com.gym.crm.repository.TrainingRepository;
+import com.gym.crm.repository.TrainingTypeRepository;
+import com.gym.crm.repository.specification.TrainerTrainingCriteriaBuilder;
 import com.gym.crm.security.AuthenticationException;
 import com.gym.crm.service.TrainerService;
 import com.gym.crm.service.common.ProfileCredentialGenerator;
-import com.gym.crm.transaction.Transaction;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
@@ -33,25 +34,31 @@ public class TrainerServiceImpl implements TrainerService {
 
     private static final String USERNAME_NULL_MSG = "Trainer username cannot be null";
 
-    private TrainerDao trainerDao;
-    private TrainingTypeDao trainingTypeDao;
-    private TrainingDao trainingDao;
+    private TrainerRepository trainerRepository;
+    private TrainingTypeRepository trainingTypeRepository;
+    private TrainingRepository trainingRepository;
     private ProfileCredentialGenerator credentialGenerator;
     private PasswordEncoder passwordEncoder;
+    private TrainerTrainingCriteriaBuilder trainingCriteriaBuilder;
 
     @Autowired
-    public void setTrainerDao(TrainerDao trainerDao) {
-        this.trainerDao = trainerDao;
+    public void setTrainingCriteriaBuilder(TrainerTrainingCriteriaBuilder trainingCriteriaBuilder) {
+        this.trainingCriteriaBuilder = trainingCriteriaBuilder;
     }
 
     @Autowired
-    public void setTrainingTypeDao(TrainingTypeDao trainingTypeDao) {
-        this.trainingTypeDao = trainingTypeDao;
+    public void setTrainerRepository(TrainerRepository trainerRepository) {
+        this.trainerRepository = trainerRepository;
     }
 
     @Autowired
-    public void setTrainingDao(TrainingDao trainingDao) {
-        this.trainingDao = trainingDao;
+    public void setTrainingTypeRepository(TrainingTypeRepository trainingTypeRepository) {
+        this.trainingTypeRepository = trainingTypeRepository;
+    }
+
+    @Autowired
+    public void setTrainingRepository(TrainingRepository trainingRepository) {
+        this.trainingRepository = trainingRepository;
     }
 
     @Autowired
@@ -65,13 +72,14 @@ public class TrainerServiceImpl implements TrainerService {
     }
 
     @Override
+    @Transactional
     public Trainer createTrainer(Trainer trainer) {
         Objects.requireNonNull(trainer, "Trainer cannot be null");
         Objects.requireNonNull(trainer.getUser(), "Trainer user cannot be null");
         log.info("Creating trainer: {} {}", trainer.getUser().getFirstName(), trainer.getUser().getLastName());
 
         String trainingTypeName = trainer.getSpecialization().getTrainingTypeName();
-        TrainingType trainerSpecialization = trainingTypeDao.findByName(trainingTypeName)
+        TrainingType trainerSpecialization = trainingTypeRepository.findByTrainingTypeName(trainingTypeName)
                 .orElseThrow(() -> EntityNotFoundException.forName(TRAINING_TYPE, trainingTypeName));
 
         String username = credentialGenerator.generateUsername(trainer.getUser().getFirstName(), trainer.getUser().getLastName());
@@ -86,7 +94,7 @@ public class TrainerServiceImpl implements TrainerService {
                 .specialization(trainerSpecialization)
                 .build();
 
-        Trainer createdTrainer = trainerDao.save(trainerWithCredentialsAndSpecialization);
+        Trainer createdTrainer = trainerRepository.save(trainerWithCredentialsAndSpecialization);
         log.info("Trainer created with ID: {} and username: {}",
                 createdTrainer.getId(), createdTrainer.getUser().getUsername());
 
@@ -99,28 +107,31 @@ public class TrainerServiceImpl implements TrainerService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Trainer getTrainerByUsername(String username) {
         Objects.requireNonNull(username, USERNAME_NULL_MSG);
 
-        return trainerDao.findByUsername(username)
+        return trainerRepository.findByUsernameWithUserAndTraineesDetails(username)
                 .orElseThrow(() -> EntityNotFoundException.forUsername(TRAINER, username));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Training> getTrainerTrainings(TrainerTrainingSearchFilter filter) {
         Objects.requireNonNull(filter, "Filter cannot be null");
         log.info("Getting trainings for trainer with username: {}", filter.getUsername());
 
-        return trainingDao.findTrainerTrainingsByCriteria(filter);
+        return trainingRepository.findAll(trainingCriteriaBuilder.build(filter));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public boolean doesUsernameAndPasswordMatch(String username, String password) {
         Objects.requireNonNull(username, USERNAME_NULL_MSG);
         Objects.requireNonNull(password, "Password cannot be null");
         log.info("Checking if username and password match for trainer username: {}", username);
 
-        Optional<Trainer> trainerOptional = trainerDao.findByUsername(username);
+        Optional<Trainer> trainerOptional = trainerRepository.findByUsernameWithUser(username);
         if (trainerOptional.isEmpty()) {
             log.warn("Trainer not found with username: {}", username);
             return false;
@@ -138,14 +149,14 @@ public class TrainerServiceImpl implements TrainerService {
     }
 
     @Override
-    @Transaction
+    @Transactional
     public Trainer updateTrainer(Trainer trainer) {
         Objects.requireNonNull(trainer, "Trainer cannot be null");
         Objects.requireNonNull(trainer.getUser(), "Trainer user cannot be null");
         Objects.requireNonNull(trainer.getUser().getUsername(), USERNAME_NULL_MSG);
         log.info("Updating trainer with username: {}", trainer.getUser().getUsername());
 
-        Trainer existingTrainer = trainerDao.findByUsername(trainer.getUser().getUsername())
+        Trainer existingTrainer = trainerRepository.findByUsernameWithUserAndTraineesDetails(trainer.getUser().getUsername())
                 .orElseThrow(() -> EntityNotFoundException.forUsername(TRAINER, trainer.getUser().getUsername()));
 
         User updatedUser = existingTrainer.getUser().toBuilder()
@@ -157,14 +168,15 @@ public class TrainerServiceImpl implements TrainerService {
                 .user(updatedUser)
                 .build();
 
-        Trainer updatedTrainer = trainerDao.update(mergedTrainer);
+        Trainer savedTrainer = trainerRepository.save(mergedTrainer);
         log.info("Trainer with ID: {} and username: {} updated successfully",
-                updatedTrainer.getId(), updatedTrainer.getUser().getUsername());
+                savedTrainer.getId(), savedTrainer.getUser().getUsername());
 
-        return updatedTrainer;
+        return savedTrainer;
     }
 
     @Override
+    @Transactional
     public void updateTrainerPassword(LoginChangeDto loginChangeDto) {
         Objects.requireNonNull(loginChangeDto, "LoginChangeDto cannot be null");
         log.info("Updating password for trainer with username: {}", loginChangeDto.username());
@@ -173,7 +185,9 @@ public class TrainerServiceImpl implements TrainerService {
             throw new AuthenticationException("Invalid username or password");
         }
 
-        Trainer trainer = getTrainerByUsername(loginChangeDto.username());
+        Trainer trainer = trainerRepository.findByUsernameWithUser(loginChangeDto.username())
+                .orElseThrow(() -> EntityNotFoundException.forUsername(TRAINER, loginChangeDto.username()));
+
         User updatedUser = trainer.getUser().toBuilder()
                 .password(passwordEncoder.encode(loginChangeDto.newPassword()))
                 .build();
@@ -181,16 +195,17 @@ public class TrainerServiceImpl implements TrainerService {
                 .user(updatedUser)
                 .build();
 
-        trainerDao.update(updatedTrainer);
+        trainerRepository.save(updatedTrainer);
         log.info("Password for trainer with username: {} updated successfully", loginChangeDto.username());
     }
 
     @Override
+    @Transactional
     public void updateActivationStatus(String username, boolean isActive) {
         Objects.requireNonNull(username, USERNAME_NULL_MSG);
         log.info("Updating activation status for trainer with username: {} to {}", username, isActive);
 
-        Trainer trainer = trainerDao.findByUsername(username)
+        Trainer trainer = trainerRepository.findByUsernameWithUser(username)
                 .orElseThrow(() -> EntityNotFoundException.forUsername(TRAINER, username));
 
         if (Objects.equals(trainer.getUser().getIsActive(), isActive)) {
@@ -204,7 +219,7 @@ public class TrainerServiceImpl implements TrainerService {
                 .user(updatedUser)
                 .build();
 
-        trainerDao.update(updatedTrainer);
+        trainerRepository.save(updatedTrainer);
         log.info("Activation status for trainer with username: {} updated successfully", username);
     }
 

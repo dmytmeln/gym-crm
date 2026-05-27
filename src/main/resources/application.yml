@@ -10,9 +10,16 @@ spring:
       connection-timeout: 30000
       idle-timeout: 600000
       max-lifetime: 1800000
-
   liquibase:
     change-log: classpath:db/changelog/changelog-root.xml
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
 
 server:
   servlet:
@@ -22,8 +29,3 @@ server:
 app:
   api:
     base-path: /api/v1
-
-hibernate:
-  hbm2ddl-auto: validate
-  show-sql: false
-  format-sql: false

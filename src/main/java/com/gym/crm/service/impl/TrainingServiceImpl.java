@@ -1,19 +1,19 @@
 package com.gym.crm.service.impl;
 
-import com.gym.crm.dao.TraineeDao;
-import com.gym.crm.dao.TrainerDao;
-import com.gym.crm.dao.TrainingDao;
-import com.gym.crm.dao.TrainingTypeDao;
 import com.gym.crm.entity.Trainee;
 import com.gym.crm.entity.Trainer;
 import com.gym.crm.entity.Training;
 import com.gym.crm.entity.TrainingType;
 import com.gym.crm.exception.EntityNotFoundException;
+import com.gym.crm.repository.TraineeRepository;
+import com.gym.crm.repository.TrainerRepository;
+import com.gym.crm.repository.TrainingRepository;
+import com.gym.crm.repository.TrainingTypeRepository;
 import com.gym.crm.service.TrainingService;
-import com.gym.crm.transaction.Transaction;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
@@ -25,33 +25,33 @@ import static com.gym.crm.entity.EntityType.TRAINER;
 @Service
 public class TrainingServiceImpl implements TrainingService {
 
-    private TrainingDao trainingDao;
-    private TraineeDao traineeDao;
-    private TrainerDao trainerDao;
-    private TrainingTypeDao trainingTypeDao;
+    private TrainingRepository trainingRepository;
+    private TraineeRepository traineeRepository;
+    private TrainerRepository trainerRepository;
+    private TrainingTypeRepository trainingTypeRepository;
 
     @Autowired
-    public void setTrainingDao(TrainingDao trainingDao) {
-        this.trainingDao = trainingDao;
+    public void setTrainingRepository(TrainingRepository trainingRepository) {
+        this.trainingRepository = trainingRepository;
     }
 
     @Autowired
-    public void setTraineeDao(TraineeDao traineeDao) {
-        this.traineeDao = traineeDao;
+    public void setTraineeRepository(TraineeRepository traineeRepository) {
+        this.traineeRepository = traineeRepository;
     }
 
     @Autowired
-    public void setTrainerDao(TrainerDao trainerDao) {
-        this.trainerDao = trainerDao;
+    public void setTrainerRepository(TrainerRepository trainerRepository) {
+        this.trainerRepository = trainerRepository;
     }
 
     @Autowired
-    public void setTrainingTypeDao(TrainingTypeDao trainingTypeDao) {
-        this.trainingTypeDao = trainingTypeDao;
+    public void setTrainingTypeRepository(TrainingTypeRepository trainingTypeRepository) {
+        this.trainingTypeRepository = trainingTypeRepository;
     }
 
     @Override
-    @Transaction
+    @Transactional
     public Training createTraining(Training training) {
         Objects.requireNonNull(training, "Training cannot be null");
         Objects.requireNonNull(training.getTrainee(), "Trainee cannot be null");
@@ -60,9 +60,9 @@ public class TrainingServiceImpl implements TrainingService {
 
         String traineeUsername = training.getTrainee().getUser().getUsername();
         String trainerUsername = training.getTrainer().getUser().getUsername();
-        Trainee trainee = traineeDao.findByUsername(traineeUsername)
+        Trainee trainee = traineeRepository.findByUsername(traineeUsername)
                 .orElseThrow(() -> EntityNotFoundException.forUsername(TRAINEE, traineeUsername));
-        Trainer trainer = trainerDao.findByUsername(trainerUsername)
+        Trainer trainer = trainerRepository.findByUsername(trainerUsername)
                 .orElseThrow(() -> EntityNotFoundException.forUsername(TRAINER, trainerUsername));
         TrainingType trainingType = trainer.getSpecialization();
 
@@ -72,7 +72,7 @@ public class TrainingServiceImpl implements TrainingService {
                 .trainingType(trainingType)
                 .build();
 
-        Training createdTraining = trainingDao.save(trainingWithAssociations);
+        Training createdTraining = trainingRepository.save(trainingWithAssociations);
         log.info("Training created with ID: {} for trainee ID: {} and trainer ID: {}",
                 createdTraining.getId(), createdTraining.getTrainee().getId(), createdTraining.getTrainer().getId());
 
@@ -80,8 +80,9 @@ public class TrainingServiceImpl implements TrainingService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<TrainingType> getAllTrainingTypes() {
-        return trainingTypeDao.findAll();
+        return trainingTypeRepository.findAll();
     }
 
 }

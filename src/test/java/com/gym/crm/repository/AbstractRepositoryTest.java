@@ -1,28 +1,31 @@
-package com.gym.crm.dao.impl;
+package com.gym.crm.repository;
 
 import com.gym.crm.config.BaseDbIntegrationTest;
 import com.gym.crm.config.DaoTestConfig;
 import com.gym.crm.test.helper.TestDbClient;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@SpringBootTest
+@DataJpaTest
+@Transactional(propagation = Propagation.NOT_SUPPORTED)
 @Import(DaoTestConfig.class)
 @ActiveProfiles("test")
 @Sql(scripts = {"classpath:datasets/cleanup-all.sql", "classpath:datasets/seed-data.sql"})
-abstract class AbstractDaoTest<T> extends BaseDbIntegrationTest {
+abstract class AbstractRepositoryTest<T> extends BaseDbIntegrationTest {
 
     @Autowired
-    TestDbClient testDbClient;
+    protected TestDbClient testDbClient;
 
     @Autowired
-    T dao;
+    protected T repository;
 
     @Test
     void shouldStartContainer() {

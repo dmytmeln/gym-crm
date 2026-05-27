@@ -1,15 +1,15 @@
 package com.gym.crm.service.impl;
 
-import com.gym.crm.dao.TraineeDao;
-import com.gym.crm.dao.TrainerDao;
-import com.gym.crm.dao.TrainingDao;
-import com.gym.crm.dao.TrainingTypeDao;
 import com.gym.crm.entity.Trainee;
 import com.gym.crm.entity.Trainer;
 import com.gym.crm.entity.Training;
 import com.gym.crm.entity.TrainingType;
 import com.gym.crm.entity.User;
 import com.gym.crm.exception.EntityNotFoundException;
+import com.gym.crm.repository.TraineeRepository;
+import com.gym.crm.repository.TrainerRepository;
+import com.gym.crm.repository.TrainingRepository;
+import com.gym.crm.repository.TrainingTypeRepository;
 import com.gym.crm.service.TrainingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,26 +39,26 @@ class TrainingServiceImplTest {
     private static final Long DEFAULT_TRAINING_TYPE_ID = 1L;
 
     @Mock
-    private TrainingDao trainingDao;
+    private TrainingRepository trainingRepository;
 
     @Mock
-    private TraineeDao traineeDao;
+    private TraineeRepository traineeRepository;
 
     @Mock
-    private TrainerDao trainerDao;
+    private TrainerRepository trainerRepository;
 
     @Mock
-    private TrainingTypeDao trainingTypeDao;
+    private TrainingTypeRepository trainingTypeRepository;
 
     private TrainingService service;
 
     @BeforeEach
     void setUp() {
         TrainingServiceImpl implementation = new TrainingServiceImpl();
-        implementation.setTrainingDao(trainingDao);
-        implementation.setTraineeDao(traineeDao);
-        implementation.setTrainerDao(trainerDao);
-        implementation.setTrainingTypeDao(trainingTypeDao);
+        implementation.setTrainingRepository(trainingRepository);
+        implementation.setTraineeRepository(traineeRepository);
+        implementation.setTrainerRepository(trainerRepository);
+        implementation.setTrainingTypeRepository(trainingTypeRepository);
         service = implementation;
     }
 
@@ -75,16 +75,16 @@ class TrainingServiceImplTest {
                 .trainingType(trainingType)
                 .build();
 
-        when(traineeDao.findByUsername(TRAINEE_USERNAME)).thenReturn(Optional.of(existingTrainee));
-        when(trainerDao.findByUsername(TRAINER_USERNAME)).thenReturn(Optional.of(existingTrainer));
-        when(trainingDao.save(any(Training.class))).thenReturn(expected);
+        when(traineeRepository.findByUsername(TRAINEE_USERNAME)).thenReturn(Optional.of(existingTrainee));
+        when(trainerRepository.findByUsername(TRAINER_USERNAME)).thenReturn(Optional.of(existingTrainer));
+        when(trainingRepository.save(any(Training.class))).thenReturn(expected);
 
         Training actual = service.createTraining(training);
 
         assertEquals(expected, actual);
-        verify(traineeDao).findByUsername(TRAINEE_USERNAME);
-        verify(trainerDao).findByUsername(TRAINER_USERNAME);
-        verify(trainingDao).save(any(Training.class));
+        verify(traineeRepository).findByUsername(TRAINEE_USERNAME);
+        verify(trainerRepository).findByUsername(TRAINER_USERNAME);
+        verify(trainingRepository).save(any(Training.class));
     }
 
     @Test
@@ -92,7 +92,7 @@ class TrainingServiceImplTest {
         NullPointerException exception = assertThrows(NullPointerException.class, () -> service.createTraining(null));
 
         assertEquals("Training cannot be null", exception.getMessage());
-        verifyNoInteractions(trainingDao, traineeDao, trainerDao, trainingTypeDao);
+        verifyNoInteractions(trainingRepository, traineeRepository, trainerRepository, trainingTypeRepository);
     }
 
     @Test
@@ -107,7 +107,7 @@ class TrainingServiceImplTest {
         NullPointerException exception = assertThrows(NullPointerException.class, () -> service.createTraining(training));
 
         assertEquals("Trainee cannot be null", exception.getMessage());
-        verifyNoInteractions(trainingDao, traineeDao, trainerDao, trainingTypeDao);
+        verifyNoInteractions(trainingRepository, traineeRepository, trainerRepository, trainingTypeRepository);
     }
 
     @Test
@@ -122,21 +122,21 @@ class TrainingServiceImplTest {
         NullPointerException exception = assertThrows(NullPointerException.class, () -> service.createTraining(training));
 
         assertEquals("Trainer cannot be null", exception.getMessage());
-        verifyNoInteractions(trainingDao, traineeDao, trainerDao, trainingTypeDao);
+        verifyNoInteractions(trainingRepository, traineeRepository, trainerRepository, trainingTypeRepository);
     }
 
     @Test
     void shouldThrowEntityNotFoundWhenTraineeDoesNotExist() {
         Training training = buildTrainingWithUsernames();
 
-        when(traineeDao.findByUsername(TRAINEE_USERNAME)).thenReturn(Optional.empty());
+        when(traineeRepository.findByUsername(TRAINEE_USERNAME)).thenReturn(Optional.empty());
 
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> service.createTraining(training));
 
         assertEquals("Trainee not found with username: " + TRAINEE_USERNAME, exception.getMessage());
-        verify(traineeDao).findByUsername(TRAINEE_USERNAME);
-        verify(trainerDao, never()).findByUsername(TRAINER_USERNAME);
-        verify(trainingDao, never()).save(any());
+        verify(traineeRepository).findByUsername(TRAINEE_USERNAME);
+        verify(trainerRepository, never()).findByUsername(TRAINER_USERNAME);
+        verify(trainingRepository, never()).save(any());
     }
 
     @Test
@@ -144,15 +144,15 @@ class TrainingServiceImplTest {
         Training training = buildTrainingWithUsernames();
         Trainee existingTrainee = Trainee.builder().id(1L).build();
 
-        when(traineeDao.findByUsername(TRAINEE_USERNAME)).thenReturn(Optional.of(existingTrainee));
-        when(trainerDao.findByUsername(TRAINER_USERNAME)).thenReturn(Optional.empty());
+        when(traineeRepository.findByUsername(TRAINEE_USERNAME)).thenReturn(Optional.of(existingTrainee));
+        when(trainerRepository.findByUsername(TRAINER_USERNAME)).thenReturn(Optional.empty());
 
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> service.createTraining(training));
 
         assertEquals("Trainer not found with username: " + TRAINER_USERNAME, exception.getMessage());
-        verify(traineeDao).findByUsername(TRAINEE_USERNAME);
-        verify(trainerDao).findByUsername(TRAINER_USERNAME);
-        verify(trainingDao, never()).save(any());
+        verify(traineeRepository).findByUsername(TRAINEE_USERNAME);
+        verify(trainerRepository).findByUsername(TRAINER_USERNAME);
+        verify(trainingRepository, never()).save(any());
     }
 
     @Test
@@ -161,26 +161,26 @@ class TrainingServiceImplTest {
         TrainingType type2 = TrainingType.builder().id(2L).trainingTypeName("Yoga").build();
         List<TrainingType> expected = List.of(type1, type2);
 
-        when(trainingTypeDao.findAll()).thenReturn(expected);
+        when(trainingTypeRepository.findAll()).thenReturn(expected);
 
         List<TrainingType> actual = service.getAllTrainingTypes();
 
         assertNotNull(actual);
         assertEquals(expected, actual);
-        verify(trainingTypeDao).findAll();
+        verify(trainingTypeRepository).findAll();
     }
 
     @Test
     void shouldReturnEmptyTrainingTypes() {
         List<TrainingType> expected = List.of();
 
-        when(trainingTypeDao.findAll()).thenReturn(expected);
+        when(trainingTypeRepository.findAll()).thenReturn(expected);
 
         List<TrainingType> actual = service.getAllTrainingTypes();
 
         assertNotNull(actual);
         assertEquals(expected, actual);
-        verify(trainingTypeDao).findAll();
+        verify(trainingTypeRepository).findAll();
     }
 
     private Training buildTrainingWithUsernames() {

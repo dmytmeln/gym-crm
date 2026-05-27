@@ -1,4 +1,4 @@
-package com.gym.crm.dao.helper;
+package com.gym.crm.repository.specification;
 
 import com.gym.crm.dto.filter.TrainerTrainingSearchFilter;
 import com.gym.crm.entity.Trainee_;

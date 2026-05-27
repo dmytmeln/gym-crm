@@ -4,8 +4,8 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
-import com.gym.crm.dao.TraineeDao;
-import com.gym.crm.dao.TrainerDao;
+import com.gym.crm.entity.Trainee;
+import com.gym.crm.repository.TraineeRepository;
 import com.gym.crm.service.TraineeService;
 import com.gym.crm.service.common.ProfileCredentialGenerator;
 import com.gym.crm.service.impl.TraineeServiceImpl;
@@ -17,7 +17,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.LoggerFactory;
 
+import java.util.Optional;
+
 import static com.gym.crm.factory.TraineeTestFactory.DEFAULT_USERNAME;
+import static com.gym.crm.factory.TraineeTestFactory.buildTraineeWithUsername;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -25,10 +28,7 @@ import static org.mockito.Mockito.when;
 class LoggingTest {
 
     @Mock
-    private TraineeDao dao;
-
-    @Mock
-    private TrainerDao trainerDao;
+    private TraineeRepository traineeRepository;
 
     @Mock
     private ProfileCredentialGenerator generator;
@@ -42,7 +42,7 @@ class LoggingTest {
     @BeforeEach
     void setUp() {
         TraineeServiceImpl implementation = new TraineeServiceImpl();
-        implementation.setTraineeDao(dao);
+        implementation.setTraineeRepository(traineeRepository);
         implementation.setCredentialGenerator(generator);
         service = implementation;
 
@@ -59,7 +59,9 @@ class LoggingTest {
 
     @Test
     void shouldLogInfoWhenDeleteSucceeds() {
-        when(dao.deleteByUsername(DEFAULT_USERNAME)).thenReturn(true);
+        Trainee trainee = buildTraineeWithUsername(DEFAULT_USERNAME);
+
+        when(traineeRepository.findByUsername(DEFAULT_USERNAME)).thenReturn(Optional.of(trainee));
 
         service.deleteTraineeByUsername(DEFAULT_USERNAME);
 
@@ -70,7 +72,7 @@ class LoggingTest {
 
     @Test
     void shouldLogWarnWhenNotDeleted() {
-        when(dao.deleteByUsername(DEFAULT_USERNAME)).thenReturn(false);
+        when(traineeRepository.findByUsername(DEFAULT_USERNAME)).thenReturn(Optional.empty());
 
         service.deleteTraineeByUsername(DEFAULT_USERNAME);
 

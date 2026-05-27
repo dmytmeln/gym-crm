@@ -1,10 +1,6 @@
 package com.gym.crm.service.common;
 
-import com.gym.crm.dao.TraineeDao;
-import com.gym.crm.dao.TrainerDao;
-import com.gym.crm.entity.Trainee;
-import com.gym.crm.entity.Trainer;
-import com.gym.crm.entity.User;
+import com.gym.crm.repository.UserRepository;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,41 +24,29 @@ import static org.mockito.Mockito.when;
 class ProfileCredentialGeneratorTest {
 
     private static final String PASSWORD_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
-
     private static final int PASSWORD_LENGTH = 10;
-
     private static final String FIRST_NAME = "Liam";
-
     private static final String LAST_NAME = "Miller";
 
     @Mock
-    private TraineeDao traineeDao;
-
-    @Mock
-    private TrainerDao trainerDao;
+    private UserRepository userRepository;
 
     @InjectMocks
     private ProfileCredentialGenerator generator;
 
     @Test
     void shouldGenerateUsernameWithoutSerialWhenNoExistingUsers() {
-        when(traineeDao.findAll()).thenReturn(Collections.emptyList());
-        when(trainerDao.findAll()).thenReturn(Collections.emptyList());
+        when(userRepository.findUsernamesStartingWith("liam.miller")).thenReturn(Collections.emptyList());
 
         String actual = generator.generateUsername(FIRST_NAME, LAST_NAME);
 
         assertEquals("liam.miller", actual);
-        verify(traineeDao).findAll();
-        verify(trainerDao).findAll();
+        verify(userRepository).findUsernamesStartingWith("liam.miller");
     }
 
     @Test
     void shouldAppendNextSerialWhenBaseUsernameIsTaken() {
-        Trainee trainee = Trainee.builder()
-                .user(User.builder().username("Liam.Miller").build())
-                .build();
-        when(traineeDao.findAll()).thenReturn(List.of(trainee));
-        when(trainerDao.findAll()).thenReturn(Collections.emptyList());
+        when(userRepository.findUsernamesStartingWith("liam.miller")).thenReturn(List.of("Liam.Miller"));
 
         String actual = generator.generateUsername(FIRST_NAME, LAST_NAME);
 
@@ -71,17 +55,7 @@ class ProfileCredentialGeneratorTest {
 
     @Test
     void shouldUseHighestSerialPlusOneWhenMatchingUsernamesExist() {
-        Trainee trainee1 = Trainee.builder()
-                .user(User.builder().username("liam.miller").build())
-                .build();
-        Trainee trainee2 = Trainee.builder()
-                .user(User.builder().username("Liam.Miller1").build())
-                .build();
-        Trainee trainee3 = Trainee.builder()
-                .user(User.builder().username("liam.Miller2").build())
-                .build();
-        when(traineeDao.findAll()).thenReturn(List.of(trainee1, trainee2, trainee3));
-        when(trainerDao.findAll()).thenReturn(Collections.emptyList());
+        when(userRepository.findUsernamesStartingWith("liam.miller")).thenReturn(List.of("liam.miller", "Liam.Miller1", "liam.Miller2"));
 
         String actual = generator.generateUsername(FIRST_NAME, LAST_NAME);
 
@@ -90,10 +64,7 @@ class ProfileCredentialGeneratorTest {
 
     @Test
     void shouldUseHighestSerialPlusOneWhenSerialGapsExist() {
-        when(traineeDao.findAll()).thenReturn(List.of(Trainee.builder().user(User.builder().username("Liam.Miller").build()).build(),
-                Trainee.builder().user(User.builder().username("liam.Miller2").build()).build(),
-                Trainee.builder().user(User.builder().username("liam.Miller5").build()).build()));
-        when(trainerDao.findAll()).thenReturn(Collections.emptyList());
+        when(userRepository.findUsernamesStartingWith("liam.miller")).thenReturn(List.of("Liam.Miller", "liam.Miller2", "liam.Miller5"));
 
         String actual = generator.generateUsername(FIRST_NAME, LAST_NAME);
 
@@ -101,18 +72,13 @@ class ProfileCredentialGeneratorTest {
     }
 
     @Test
-    void shouldHandleUsersFromBothTraineeAndTrainerDaos() {
-        User user1 = User.builder().username("liam.miller").build();
-        User user2 = User.builder().username("liam.miller3").build();
-        when(traineeDao.findAll()).thenReturn(List.of(Trainee.builder().user(user1).build(),
-                Trainee.builder().user(User.builder().username("liam.miller1").build()).build()));
-        when(trainerDao.findAll()).thenReturn(List.of(Trainer.builder().user(user2).build()));
+    void shouldHandleMultipleMatchingUsers() {
+        when(userRepository.findUsernamesStartingWith("liam.miller")).thenReturn(List.of("liam.miller", "liam.miller1", "liam.miller3"));
 
         String actual = generator.generateUsername(FIRST_NAME, LAST_NAME);
 
         assertEquals("liam.miller4", actual);
-        verify(traineeDao).findAll();
-        verify(trainerDao).findAll();
+        verify(userRepository).findUsernamesStartingWith("liam.miller");
     }
 
     @ParameterizedTest
@@ -122,8 +88,7 @@ class ProfileCredentialGeneratorTest {
             "liam.miller, liam.miller1"
     })
     void shouldHandleUsernameMatching(String existingUsername, String expectedUsername) {
-        when(traineeDao.findAll()).thenReturn(List.of(Trainee.builder().user(User.builder().username(existingUsername).build()).build()));
-        when(trainerDao.findAll()).thenReturn(Collections.emptyList());
+        when(userRepository.findUsernamesStartingWith("liam.miller")).thenReturn(List.of(existingUsername));
 
         String actual = generator.generateUsername(FIRST_NAME, LAST_NAME);
 
@@ -132,8 +97,7 @@ class ProfileCredentialGeneratorTest {
 
     @Test
     void shouldIgnoreUsersWithDifferentFullName() {
-        when(traineeDao.findAll()).thenReturn(Collections.emptyList());
-        when(trainerDao.findAll()).thenReturn(List.of(Trainer.builder().user(User.builder().username("sophia.wilson").build()).build()));
+        when(userRepository.findUsernamesStartingWith("liam.miller")).thenReturn(List.of("sophia.wilson"));
 
         String actual = generator.generateUsername(FIRST_NAME, LAST_NAME);
 
@@ -142,11 +106,7 @@ class ProfileCredentialGeneratorTest {
 
     @Test
     void shouldIgnoreUsernamesWithNonNumericSuffix() {
-        User user1 = User.builder().username("liam.millerX").build();
-        User user2 = User.builder().username("liam.miller_1").build();
-        when(traineeDao.findAll()).thenReturn(List.of(Trainee.builder().user(user1).build(),
-                Trainee.builder().user(user2).build()));
-        when(trainerDao.findAll()).thenReturn(Collections.emptyList());
+        when(userRepository.findUsernamesStartingWith("liam.miller")).thenReturn(List.of("liam.millerX", "liam.miller_1"));
 
         String actual = generator.generateUsername(FIRST_NAME, LAST_NAME);
 
@@ -158,7 +118,7 @@ class ProfileCredentialGeneratorTest {
         NullPointerException exception = assertThrows(NullPointerException.class, () -> generator.generateUsername(null, LAST_NAME));
 
         assertEquals("First Name cannot be null", exception.getMessage());
-        verifyNoInteractions(traineeDao, trainerDao);
+        verifyNoInteractions(userRepository);
     }
 
     @Test
@@ -166,7 +126,7 @@ class ProfileCredentialGeneratorTest {
         NullPointerException exception = assertThrows(NullPointerException.class, () -> generator.generateUsername(FIRST_NAME, null));
 
         assertEquals("Last Name cannot be null", exception.getMessage());
-        verifyNoInteractions(traineeDao, trainerDao);
+        verifyNoInteractions(userRepository);
     }
 
     @Test
@@ -174,7 +134,7 @@ class ProfileCredentialGeneratorTest {
         NullPointerException exception = assertThrows(NullPointerException.class, () -> generator.generateUsername(null, null));
 
         assertEquals("First Name cannot be null", exception.getMessage());
-        verifyNoInteractions(traineeDao, trainerDao);
+        verifyNoInteractions(userRepository);
     }
 
     @Test
