@@ -35,8 +35,8 @@ public class HikariPoolSaturationHealthIndicator implements HealthIndicator {
         int total = hikari.getHikariPoolMXBean().getTotalConnections();
         int max = hikari.getMaximumPoolSize();
 
-        double utilization = max > 0 ?
-                (double) active / max
+        double utilization = max > 0
+                ? (double) active / max
                 : 0.0;
 
         Health.Builder builder = Health.up()
@@ -45,13 +45,13 @@ public class HikariPoolSaturationHealthIndicator implements HealthIndicator {
                 .withDetail("maxPoolSize", max)
                 .withDetail("utilization", String.format(Locale.US, "%.2f%%", utilization * 100));
 
-        if (utilization >= SATURATION_THRESHOLD_PERCENT) {
-            return builder.outOfService()
-                    .withDetail("warning", "Hikari connection pool saturation is high")
-                    .build();
+        if (utilization < SATURATION_THRESHOLD_PERCENT) {
+            return builder.build();
         }
 
-        return builder.build();
+        return builder.outOfService()
+                .withDetail("warning", "Hikari connection pool saturation is high")
+                .build();
     }
 
 }
