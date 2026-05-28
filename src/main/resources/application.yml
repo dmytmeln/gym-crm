@@ -18,6 +18,15 @@ spring:
     hibernate:
       ddl-auto: validate
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info,metrics"
+  endpoint:
+    health:
+      show-details: always
+
 server:
   servlet:
     context-path: /gym-crm
