@@ -17,9 +17,8 @@
         </encoder>
     </appender>
 
-    <root level="INFO">
+    <root>
         <appender-ref ref="STDOUT"/>
         <appender-ref ref="FILE"/>
     </root>
-    <logger name="com.gym.crm" level="DEBUG"/>
 </configuration>
