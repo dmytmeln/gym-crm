@@ -16,7 +16,7 @@ public interface TraineeService {
 
     List<Trainer> getAvailableTrainers(String username);
 
-    List<Training> getTrainingsByCriteria(TraineeTrainingSearchFilter filter);
+    List<Training> getTraineeTrainings(TraineeTrainingSearchFilter filter);
 
     boolean doesUsernameAndPasswordMatch(String username, String password);
 

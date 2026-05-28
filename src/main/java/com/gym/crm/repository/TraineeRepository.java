@@ -43,4 +43,7 @@ public interface TraineeRepository extends JpaRepository<Trainee, Long> {
 
     boolean existsByUserUsername(String username);
 
+    @Query("SELECT COUNT(t) FROM Trainee t WHERE t.user.isActive = true")
+    long countActiveTrainees();
+
 }

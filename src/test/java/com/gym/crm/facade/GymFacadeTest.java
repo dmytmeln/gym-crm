@@ -187,7 +187,7 @@ class GymFacadeTest {
         List<GetTraineeTrainingResponse> expected = List.of(responseDto);
 
         doNothing().when(businessValidator).validate(filter);
-        when(traineeService.getTrainingsByCriteria(filter)).thenReturn(trainings);
+        when(traineeService.getTraineeTrainings(filter)).thenReturn(trainings);
         when(traineeMapper.toGetTraineeTrainingResponseList(trainings)).thenReturn(expected);
 
         List<GetTraineeTrainingResponse> actual = facade.getTraineeTrainings(USERNAME, filter);
@@ -195,7 +195,7 @@ class GymFacadeTest {
         assertNotNull(actual);
         assertEquals(expected, actual);
         verify(businessValidator).validate(filter);
-        verify(traineeService).getTrainingsByCriteria(filter);
+        verify(traineeService).getTraineeTrainings(filter);
         verify(traineeMapper).toGetTraineeTrainingResponseList(trainings);
     }
 
