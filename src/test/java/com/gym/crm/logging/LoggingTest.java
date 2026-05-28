@@ -4,20 +4,27 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
-import com.gym.crm.dao.TraineeDao;
-import com.gym.crm.dao.TrainerDao;
-import com.gym.crm.service.TraineeService;
+import com.gym.crm.entity.Trainee;
+import com.gym.crm.repository.TraineeRepository;
+import com.gym.crm.repository.TrainerRepository;
+import com.gym.crm.repository.TrainingRepository;
+import com.gym.crm.repository.specification.TraineeTrainingCriteriaBuilder;
 import com.gym.crm.service.common.ProfileCredentialGenerator;
 import com.gym.crm.service.impl.TraineeServiceImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.util.Optional;
 
 import static com.gym.crm.factory.TraineeTestFactory.DEFAULT_USERNAME;
+import static com.gym.crm.factory.TraineeTestFactory.buildTraineeWithUsername;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -25,15 +32,25 @@ import static org.mockito.Mockito.when;
 class LoggingTest {
 
     @Mock
-    private TraineeDao dao;
+    private TraineeRepository traineeRepository;
 
     @Mock
-    private TrainerDao trainerDao;
+    private TrainerRepository trainerRepository;
+
+    @Mock
+    private TrainingRepository trainingRepository;
 
     @Mock
     private ProfileCredentialGenerator generator;
 
-    private TraineeService service;
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private TraineeTrainingCriteriaBuilder trainingCriteriaBuilder;
+
+    @InjectMocks
+    private TraineeServiceImpl service;
 
     private ListAppender<ILoggingEvent> listAppender;
 
@@ -41,11 +58,6 @@ class LoggingTest {
 
     @BeforeEach
     void setUp() {
-        TraineeServiceImpl implementation = new TraineeServiceImpl();
-        implementation.setTraineeDao(dao);
-        implementation.setCredentialGenerator(generator);
-        service = implementation;
-
         logger = (Logger) LoggerFactory.getLogger(TraineeServiceImpl.class);
         listAppender = new ListAppender<>();
         listAppender.start();
@@ -59,7 +71,9 @@ class LoggingTest {
 
     @Test
     void shouldLogInfoWhenDeleteSucceeds() {
-        when(dao.deleteByUsername(DEFAULT_USERNAME)).thenReturn(true);
+        Trainee trainee = buildTraineeWithUsername(DEFAULT_USERNAME);
+
+        when(traineeRepository.findByUsername(DEFAULT_USERNAME)).thenReturn(Optional.of(trainee));
 
         service.deleteTraineeByUsername(DEFAULT_USERNAME);
 
@@ -70,7 +84,7 @@ class LoggingTest {
 
     @Test
     void shouldLogWarnWhenNotDeleted() {
-        when(dao.deleteByUsername(DEFAULT_USERNAME)).thenReturn(false);
+        when(traineeRepository.findByUsername(DEFAULT_USERNAME)).thenReturn(Optional.empty());
 
         service.deleteTraineeByUsername(DEFAULT_USERNAME);
 

@@ -45,7 +45,7 @@ public class Trainee {
     @Column(name = "address", nullable = true, length = 100)
     private String address;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE})
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 

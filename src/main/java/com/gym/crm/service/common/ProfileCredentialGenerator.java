@@ -1,22 +1,18 @@
 package com.gym.crm.service.common;
 
-import com.gym.crm.dao.TraineeDao;
-import com.gym.crm.dao.TrainerDao;
-import com.gym.crm.entity.Trainee;
-import com.gym.crm.entity.Trainer;
-import com.gym.crm.entity.User;
+import com.gym.crm.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.security.SecureRandom;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class ProfileCredentialGenerator {
 
     private static final String PASSWORD_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
@@ -24,19 +20,7 @@ public class ProfileCredentialGenerator {
     private static final String USERNAME_SEPARATOR = ".";
 
     private final SecureRandom secureRandom = new SecureRandom();
-
-    private TraineeDao traineeDao;
-    private TrainerDao trainerDao;
-
-    @Autowired
-    public void setTraineeDao(TraineeDao traineeDao) {
-        this.traineeDao = traineeDao;
-    }
-
-    @Autowired
-    public void setTrainerDao(TrainerDao trainerDao) {
-        this.trainerDao = trainerDao;
-    }
+    private final UserRepository userRepository;
 
     public String generateUsername(String firstName, String lastName) {
         Objects.requireNonNull(firstName, "First Name cannot be null");
@@ -73,15 +57,9 @@ public class ProfileCredentialGenerator {
     }
 
     private List<String> findUsernamesWithSameBase(String baseUsername) {
-        return findAllUsernames()
+        return userRepository.findUsernamesStartingWith(baseUsername).stream()
                 .filter(username -> matchesBaseUsername(username, baseUsername))
                 .toList();
-    }
-
-    private Stream<String> findAllUsernames() {
-        return Stream.concat(traineeDao.findAll().stream().map(Trainee::getUser),
-                        trainerDao.findAll().stream().map(Trainer::getUser))
-                .map(User::getUsername);
     }
 
     private boolean matchesBaseUsername(String username, String baseUsername) {

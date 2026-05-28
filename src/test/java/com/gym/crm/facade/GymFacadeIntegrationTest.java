@@ -36,7 +36,6 @@ import org.springframework.test.context.jdbc.Sql;
 import java.time.LocalDate;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -241,10 +240,9 @@ class GymFacadeIntegrationTest extends BaseDbIntegrationTest {
                 .username(TRAINER_USERNAME)
                 .build();
         List<GetTrainerTrainingResponse> trainings = facade.getTrainerTrainings(TRAINER_USERNAME, searchFilter);
-        assertThat(trainings)
-                .hasSize(2)
-                .extracting(GetTrainerTrainingResponse::getTrainingName)
-                .contains("Evening Yoga");
+        assertNotNull(trainings);
+        assertEquals(2, trainings.size());
+        assertTrue(trainings.stream().anyMatch(t -> "Evening Yoga".equals(t.getTrainingName())));
     }
 
     @Test

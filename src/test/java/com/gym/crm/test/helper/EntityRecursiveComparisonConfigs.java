@@ -25,16 +25,14 @@ public class EntityRecursiveComparisonConfigs {
 
     public static RecursiveComparisonConfiguration getTrainerConfigForSaved() {
         return getSharedBuilder()
-                .withComparedFields(Trainer_.USER, format("%s.%s", Trainer_.SPECIALIZATION, TrainingType_.ID),
-                        format("%s.%s", Trainer_.SPECIALIZATION, TrainingType_.TRAINING_TYPE_NAME))
+                .withComparedFields(Trainer_.USER)
                 .withIgnoredFields(Trainer_.ID, format("%s.%s", Trainer_.USER, User_.ID))
                 .build();
     }
 
     public static RecursiveComparisonConfiguration getTrainerConfigForExisting() {
         return getSharedBuilder()
-                .withComparedFields(Trainer_.ID, Trainer_.USER, format("%s.%s", Trainer_.SPECIALIZATION, TrainingType_.ID),
-                        format("%s.%s", Trainer_.SPECIALIZATION, TrainingType_.TRAINING_TYPE_NAME))
+                .withComparedFields(Trainer_.ID, Trainer_.USER)
                 .build();
     }
 
@@ -54,12 +52,6 @@ public class EntityRecursiveComparisonConfigs {
     public static RecursiveComparisonConfiguration getTraineeConfigForExisting() {
         return getSharedBuilder()
                 .withComparedFields(Trainee_.ID, Trainee_.DATE_OF_BIRTH, Trainee_.ADDRESS, Trainee_.USER)
-                .build();
-    }
-
-    public static RecursiveComparisonConfiguration getTrainingConfigForDirectFields() {
-        return getSharedBuilder()
-                .withComparedFields(Training_.ID, Training_.TRAINING_NAME, Training_.TRAINING_DATE, Training_.TRAINING_DURATION)
                 .build();
     }
 

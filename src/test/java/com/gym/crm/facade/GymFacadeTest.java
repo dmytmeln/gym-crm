@@ -37,9 +37,9 @@ import com.gym.crm.service.TraineeService;
 import com.gym.crm.service.TrainerService;
 import com.gym.crm.service.TrainingService;
 import com.gym.crm.service.common.BusinessValidator;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -106,16 +106,8 @@ class GymFacadeTest {
     @Mock
     private AuthMapper authMapper;
 
+    @InjectMocks
     private GymFacade facade;
-
-    @BeforeEach
-    void setUp() {
-        facade = new GymFacade(traineeService, trainerService, trainingService, authenticationService, businessValidator);
-        facade.setTraineeMapper(traineeMapper);
-        facade.setTrainerMapper(trainerMapper);
-        facade.setTrainingMapper(trainingMapper);
-        facade.setAuthMapper(authMapper);
-    }
 
     @Test
     void shouldCreateTraineeAndReturnResponse() {

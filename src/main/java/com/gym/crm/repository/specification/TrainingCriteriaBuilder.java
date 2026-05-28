@@ -1,4 +1,4 @@
-package com.gym.crm.dao.helper;
+package com.gym.crm.repository.specification;
 
 import com.gym.crm.dto.filter.TrainingSearchFilter;
 import com.gym.crm.entity.Training;
@@ -11,30 +11,29 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
-import org.hibernate.Session;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public abstract class TrainingCriteriaBuilder<C extends TrainingSearchFilter> {
 
-    public List<Training> findTrainings(Session session, C criteria) {
-        CriteriaBuilder cb = session.getCriteriaBuilder();
-        CriteriaQuery<Training> cq = cb.createQuery(Training.class);
+    public Specification<Training> build(C criteria) {
+        return (root, query, cb) -> {
+            if (query != null && !isCountQuery(query)) {
+                fetchRequiredAssociations(root);
+                query.distinct(true);
+            }
 
-        Root<Training> root = cq.from(Training.class);
-        fetchRequiredAssociations(root);
+            List<Predicate> predicates = new ArrayList<>();
+            addFromDateFilter(cb, root, criteria, predicates);
+            addToDateFilter(cb, root, criteria, predicates);
+            addUsernameFilter(cb, root, criteria, predicates);
+            addPartnerNameFilter(cb, root, criteria, predicates);
+            addSpecificFilters(cb, root, criteria, predicates);
 
-        List<Predicate> predicates = new ArrayList<>();
-        addFromDateFilter(cb, root, criteria, predicates);
-        addToDateFilter(cb, root, criteria, predicates);
-        addUsernameFilter(cb, root, criteria, predicates);
-        addPartnerNameFilter(cb, root, criteria, predicates);
-        addSpecificFilters(cb, root, criteria, predicates);
-
-        cq.select(root).distinct(true).where(predicates.toArray(new Predicate[0]));
-
-        return session.createQuery(cq).getResultList();
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
     }
 
     protected abstract void fetchRequiredAssociations(Root<Training> root);
@@ -46,6 +45,10 @@ public abstract class TrainingCriteriaBuilder<C extends TrainingSearchFilter> {
     protected abstract Join<?, User> getPartnerUserJoin(Root<Training> root);
 
     protected abstract void addSpecificFilters(CriteriaBuilder cb, Root<Training> root, C criteria, List<Predicate> predicates);
+
+    private boolean isCountQuery(CriteriaQuery<?> query) {
+        return query.getResultType() == Long.class || query.getResultType() == long.class;
+    }
 
     private void addFromDateFilter(CriteriaBuilder cb, Root<Training> root, C criteria, List<Predicate> predicates) {
         if (criteria.getFromDate() == null) {

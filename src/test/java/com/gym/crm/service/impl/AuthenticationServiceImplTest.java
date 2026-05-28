@@ -6,13 +6,12 @@ import com.gym.crm.security.AuthenticationException;
 import com.gym.crm.security.Role;
 import com.gym.crm.security.SecurityContext;
 import com.gym.crm.security.UserCredentials;
-import com.gym.crm.service.AuthenticationService;
 import com.gym.crm.service.TraineeService;
 import com.gym.crm.service.TrainerService;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -35,12 +34,8 @@ class AuthenticationServiceImplTest {
     @Mock
     private TraineeService traineeService;
 
-    private AuthenticationService service;
-
-    @BeforeEach
-    void setUp() {
-        service = new AuthenticationServiceImpl(trainerService, traineeService);
-    }
+    @InjectMocks
+    private AuthenticationServiceImpl service;
 
     @AfterEach
     void tearDown() {

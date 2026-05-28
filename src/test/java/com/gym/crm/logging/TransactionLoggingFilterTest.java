@@ -31,6 +31,7 @@ class TransactionLoggingFilterTest {
         filter = new TransactionLoggingFilter();
         request = new MockHttpServletRequest();
         response = new MockHttpServletResponse();
+
         MDC.clear();
     }
 

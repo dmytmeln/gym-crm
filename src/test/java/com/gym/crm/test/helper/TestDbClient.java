@@ -33,12 +33,6 @@ public class TestDbClient {
                 .single();
     }
 
-    public List<TrainingType> findAllTrainingTypes() {
-        return jdbcClient.sql("SELECT * FROM training_type")
-                .query(TrainingType.class)
-                .list();
-    }
-
     public Trainee findTrainee(Long id) {
         return jdbcClient.sql("SELECT * FROM trainee WHERE id = ?")
                 .params(id)
@@ -81,6 +75,13 @@ public class TestDbClient {
                 .single();
     }
 
+    public Training findTrainingSimple(Long id) {
+        return jdbcClient.sql("SELECT * FROM training WHERE id = ?")
+                .params(id)
+                .query(Training.class)
+                .single();
+    }
+
     public Trainee findTraineeSimple(Long id) {
         return jdbcClient.sql("SELECT * FROM trainee WHERE id = ?")
                 .params(id)
@@ -113,24 +114,6 @@ public class TestDbClient {
                 .list();
     }
 
-    public List<Trainee> findTrainerTrainees(Long trainerId) {
-        return jdbcClient.sql("""
-                        SELECT te.* FROM trainee te
-                        INNER JOIN trainee_trainer tt ON tt.trainee_id = te.id
-                        WHERE tt.trainer_id = ?
-                        """)
-                .params(trainerId)
-                .query(Trainee.class)
-                .list();
-    }
-
-    public List<Training> findTrainerTrainings(Long trainerId) {
-        return jdbcClient.sql("SELECT t.* FROM training t WHERE t.trainer_id = ?")
-                .params(trainerId)
-                .query(Training.class)
-                .list();
-    }
-
     public long countUsers() {
         return jdbcClient.sql("SELECT COUNT(*) FROM user")
                 .query(Long.class)
@@ -151,6 +134,12 @@ public class TestDbClient {
 
     public long countTrainings() {
         return jdbcClient.sql("SELECT COUNT(*) FROM training")
+                .query(Long.class)
+                .single();
+    }
+
+    public long countTrainingTypes() {
+        return jdbcClient.sql("SELECT COUNT(*) FROM training_type")
                 .query(Long.class)
                 .single();
     }
