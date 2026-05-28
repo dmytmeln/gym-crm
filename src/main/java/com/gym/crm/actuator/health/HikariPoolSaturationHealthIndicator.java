@@ -1,4 +1,4 @@
-package com.gym.crm.actoator.health;
+package com.gym.crm.actuator.health;
 
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.RequiredArgsConstructor;

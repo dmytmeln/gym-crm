@@ -1,6 +1,5 @@
-package com.gym.crm.health;
+package com.gym.crm.actuator.health;
 
-import com.gym.crm.actoator.health.DiskWriteHealthIndicator;
 import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;

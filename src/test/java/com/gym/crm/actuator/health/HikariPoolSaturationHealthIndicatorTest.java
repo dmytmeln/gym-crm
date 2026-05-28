@@ -1,6 +1,5 @@
-package com.gym.crm.health;
+package com.gym.crm.actuator.health;
 
-import com.gym.crm.actoator.health.HikariPoolSaturationHealthIndicator;
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.HikariPoolMXBean;
 import org.junit.jupiter.api.Test;

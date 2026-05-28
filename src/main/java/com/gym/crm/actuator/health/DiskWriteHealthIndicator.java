@@ -1,4 +1,4 @@
-package com.gym.crm.actoator.health;
+package com.gym.crm.actuator.health;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
