@@ -9,13 +9,13 @@ import com.gym.crm.repository.TraineeRepository;
 import com.gym.crm.repository.TrainerRepository;
 import com.gym.crm.repository.TrainingRepository;
 import com.gym.crm.repository.specification.TraineeTrainingCriteriaBuilder;
-import com.gym.crm.service.TraineeService;
 import com.gym.crm.service.common.ProfileCredentialGenerator;
 import com.gym.crm.service.impl.TraineeServiceImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.LoggerFactory;
@@ -49,7 +49,8 @@ class LoggingTest {
     @Mock
     private TraineeTrainingCriteriaBuilder trainingCriteriaBuilder;
 
-    private TraineeService service;
+    @InjectMocks
+    private TraineeServiceImpl service;
 
     private ListAppender<ILoggingEvent> listAppender;
 
@@ -57,13 +58,6 @@ class LoggingTest {
 
     @BeforeEach
     void setUp() {
-        service = new TraineeServiceImpl(traineeRepository,
-                trainerRepository,
-                trainingRepository,
-                generator,
-                passwordEncoder,
-                trainingCriteriaBuilder);
-
         logger = (Logger) LoggerFactory.getLogger(TraineeServiceImpl.class);
         listAppender = new ListAppender<>();
         listAppender.start();

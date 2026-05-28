@@ -15,10 +15,10 @@ import com.gym.crm.repository.specification.TraineeTrainingCriteriaBuilder;
 import com.gym.crm.security.AuthenticationException;
 import com.gym.crm.service.TraineeService;
 import com.gym.crm.service.common.ProfileCredentialGenerator;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.jpa.domain.Specification;
@@ -69,17 +69,8 @@ class TraineeServiceImplTest {
     @Mock
     private TraineeTrainingCriteriaBuilder trainingCriteriaBuilder;
 
-    private TraineeService service;
-
-    @BeforeEach
-    void setUp() {
-        service = new TraineeServiceImpl(repository,
-                trainerRepository,
-                trainingRepository,
-                generator,
-                passwordEncoder,
-                trainingCriteriaBuilder);
-    }
+    @InjectMocks
+    private TraineeServiceImpl service;
 
     @Test
     void shouldCreateTraineeWithGeneratedCredentials() {

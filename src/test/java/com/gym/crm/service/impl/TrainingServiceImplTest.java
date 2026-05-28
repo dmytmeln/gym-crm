@@ -14,6 +14,7 @@ import com.gym.crm.service.TrainingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -50,15 +51,8 @@ class TrainingServiceImplTest {
     @Mock
     private TrainingTypeRepository trainingTypeRepository;
 
-    private TrainingService service;
-
-    @BeforeEach
-    void setUp() {
-        service = new TrainingServiceImpl(trainingRepository,
-                traineeRepository,
-                trainerRepository,
-                trainingTypeRepository);
-    }
+    @InjectMocks
+    private TrainingServiceImpl service;
 
     @Test
     void shouldCreateTrainingWhenParticipantsExist() {
