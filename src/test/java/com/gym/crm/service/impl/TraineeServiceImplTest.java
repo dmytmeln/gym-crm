@@ -170,7 +170,7 @@ class TraineeServiceImplTest {
     }
 
     @Test
-    void shouldGetTrainingsByCriteriaSuccessfully() {
+    void shouldGetTraineeTrainingsSuccessfully() {
         TraineeTrainingSearchFilter filter = TraineeTrainingSearchFilter.builder().username(DEFAULT_USERNAME).build();
         List<Training> expected = List.of(Training.builder().id(1L).build());
         @SuppressWarnings("unchecked")
@@ -179,7 +179,7 @@ class TraineeServiceImplTest {
         when(trainingCriteriaBuilder.build(filter)).thenReturn(spec);
         when(trainingRepository.findAll(spec)).thenReturn(expected);
 
-        List<Training> actual = service.getTrainingsByCriteria(filter);
+        List<Training> actual = service.getTraineeTrainings(filter);
 
         verify(trainingCriteriaBuilder).build(filter);
         verify(trainingRepository).findAll(spec);
@@ -188,7 +188,7 @@ class TraineeServiceImplTest {
 
     @Test
     void shouldThrowNullPointerExceptionWhenGettingTrainingsByNullCriteria() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.getTrainingsByCriteria(null));
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.getTraineeTrainings(null));
 
         assertEquals("Filter cannot be null", exception.getMessage());
         verifyNoInteractions(trainingRepository);

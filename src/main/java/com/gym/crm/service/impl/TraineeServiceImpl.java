@@ -94,7 +94,7 @@ public class TraineeServiceImpl implements TraineeService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Training> getTrainingsByCriteria(TraineeTrainingSearchFilter filter) {
+    public List<Training> getTraineeTrainings(TraineeTrainingSearchFilter filter) {
         Objects.requireNonNull(filter, "Filter cannot be null");
         log.info("Getting trainings by criteria for trainee: {}", filter.getUsername());
 

@@ -112,7 +112,7 @@ public class GymFacade {
         Objects.requireNonNull(filter, "Filter cannot be null");
         validator.validate(filter);
 
-        List<Training> trainings = traineeService.getTrainingsByCriteria(filter);
+        List<Training> trainings = traineeService.getTraineeTrainings(filter);
         return traineeMapper.toGetTraineeTrainingResponseList(trainings);
     }
 
