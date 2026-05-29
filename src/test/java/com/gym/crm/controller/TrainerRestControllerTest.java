@@ -17,6 +17,7 @@ import com.gym.crm.facade.GymFacade;
 import com.gym.crm.security.AuthenticationException;
 import org.hibernate.HibernateException;
 import org.junit.jupiter.api.Test;
+import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -32,8 +33,7 @@ import static com.gym.crm.exception.ApiError.DATABASE_ERROR;
 import static com.gym.crm.exception.ApiError.NOT_FOUND_ERROR;
 import static com.gym.crm.exception.ApiError.SERVICE_ERROR;
 import static com.gym.crm.exception.ApiError.VALIDATION_ERROR;
-import static com.gym.crm.test.helper.JsonTestHelper.assertJsonEquals;
-import static com.gym.crm.test.helper.JsonTestHelper.readJson;
+import static com.gym.crm.test.helper.JsonUtil.readJson;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -84,7 +84,7 @@ class TrainerRestControllerTest {
                 .getResponse()
                 .getContentAsString();
 
-        assertJsonEquals(expectedResponseBody, actualResponseBody);
+        JSONAssert.assertEquals(expectedResponseBody, actualResponseBody, true);
         verify(facade).createTrainer(expectedRequest);
     }
 
@@ -155,7 +155,7 @@ class TrainerRestControllerTest {
                 .getResponse()
                 .getContentAsString();
 
-        assertJsonEquals(expectedResponseBody, actualResponseBody);
+        JSONAssert.assertEquals(expectedResponseBody, actualResponseBody, true);
         verify(facade).getTrainerByUsername(USERNAME);
     }
 
