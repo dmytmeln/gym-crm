@@ -2,22 +2,26 @@ package com.gym.crm.service.impl;
 
 import com.gym.crm.dto.LoginChangeDto;
 import com.gym.crm.dto.LoginRequestDto;
-import com.gym.crm.security.AuthenticationException;
-import com.gym.crm.security.Role;
-import com.gym.crm.security.SecurityContext;
-import com.gym.crm.security.UserCredentials;
-import com.gym.crm.service.TraineeService;
-import com.gym.crm.service.TrainerService;
-import org.junit.jupiter.api.AfterEach;
+import com.gym.crm.entity.User;
+import com.gym.crm.exception.AuthenticationException;
+import com.gym.crm.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -29,76 +33,87 @@ class AuthenticationServiceImplTest {
     private static final String NEW_PASSWORD = "newPassword123";
 
     @Mock
-    private TrainerService trainerService;
+    private UserRepository userRepository;
 
     @Mock
-    private TraineeService traineeService;
+    private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private AuthenticationManager authenticationManager;
 
     @InjectMocks
     private AuthenticationServiceImpl service;
 
-    @AfterEach
-    void tearDown() {
-        SecurityContext.clear();
-    }
-
     @Test
-    void shouldLoginWhenCredentialsMatchTrainer() {
+    void shouldLoginSuccessfullyWhenCredentialsMatch() {
         LoginRequestDto loginRequestDto = buildLoginRequestDto();
+        Authentication authentication = mock(Authentication.class);
+        UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(USERNAME, PASSWORD);
 
-        when(trainerService.doesUsernameAndPasswordMatch(USERNAME, PASSWORD)).thenReturn(true);
+        when(authenticationManager.authenticate(token)).thenReturn(authentication);
 
         service.login(loginRequestDto);
 
-        UserCredentials currentUser = SecurityContext.getCurrentUser();
-        assertNotNull(currentUser);
-        assertEquals(USERNAME, currentUser.username());
-        assertEquals(Role.TRAINER, currentUser.role());
-    }
-
-    @Test
-    void shouldLoginWhenCredentialsMatchTrainee() {
-        LoginRequestDto loginRequestDto = buildLoginRequestDto();
-
-        when(trainerService.doesUsernameAndPasswordMatch(USERNAME, PASSWORD)).thenReturn(false);
-        when(traineeService.doesUsernameAndPasswordMatch(USERNAME, PASSWORD)).thenReturn(true);
-
-        service.login(loginRequestDto);
-
-        UserCredentials currentUser = SecurityContext.getCurrentUser();
-        assertNotNull(currentUser);
-        assertEquals(USERNAME, currentUser.username());
-        assertEquals(Role.TRAINEE, currentUser.role());
+        verify(authenticationManager).authenticate(token);
     }
 
     @Test
     void shouldThrowExceptionWhenLoginCredentialsAreInvalid() {
         LoginRequestDto loginRequestDto = buildLoginRequestDto();
+        UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(USERNAME, PASSWORD);
 
-        when(trainerService.doesUsernameAndPasswordMatch(USERNAME, PASSWORD)).thenReturn(false);
-        when(traineeService.doesUsernameAndPasswordMatch(USERNAME, PASSWORD)).thenReturn(false);
+        when(authenticationManager.authenticate(token)).thenThrow(new BadCredentialsException("Bad credentials"));
 
-        assertThrows(AuthenticationException.class, () -> service.login(loginRequestDto));
+        assertThrows(BadCredentialsException.class, () -> service.login(loginRequestDto));
     }
 
     @Test
-    void shouldChangePasswordForTrainee() {
+    void shouldChangePasswordSuccessfully() {
         LoginChangeDto loginChangeDto = buildLoginChangeDto();
-        SecurityContext.setCurrentUser(new UserCredentials(USERNAME, Role.TRAINEE));
+        String oldPassword = "hashedPassword";
+        User user = User.builder()
+                .username(USERNAME)
+                .password(oldPassword)
+                .build();
+        String newPassword = "newHashedPassword";
+        User expectedUpdatedUser = user.toBuilder()
+                .password(newPassword)
+                .build();
+
+        when(userRepository.findByUsername(USERNAME)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches(PASSWORD, oldPassword)).thenReturn(true);
+        when(passwordEncoder.encode(NEW_PASSWORD)).thenReturn(newPassword);
 
         service.changePassword(loginChangeDto);
 
-        verify(traineeService).updateTraineePassword(loginChangeDto);
+        verify(userRepository).save(expectedUpdatedUser);
     }
 
     @Test
-    void shouldChangePasswordForTrainer() {
+    void shouldThrowExceptionWhenUserNotFoundOnChangePassword() {
         LoginChangeDto loginChangeDto = buildLoginChangeDto();
-        SecurityContext.setCurrentUser(new UserCredentials(USERNAME, Role.TRAINER));
 
-        service.changePassword(loginChangeDto);
+        when(userRepository.findByUsername(USERNAME)).thenReturn(Optional.empty());
 
-        verify(trainerService).updateTrainerPassword(loginChangeDto);
+        assertThrows(AuthenticationException.class, () -> service.changePassword(loginChangeDto));
+
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenOldPasswordMismatchOnChangePassword() {
+        LoginChangeDto loginChangeDto = buildLoginChangeDto();
+        User user = User.builder()
+                .username(USERNAME)
+                .password("hashedPassword")
+                .build();
+
+        when(userRepository.findByUsername(USERNAME)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches(PASSWORD, "hashedPassword")).thenReturn(false);
+
+        assertThrows(AuthenticationException.class, () -> service.changePassword(loginChangeDto));
+
+        verify(userRepository, never()).save(any(User.class));
     }
 
     private LoginRequestDto buildLoginRequestDto() {

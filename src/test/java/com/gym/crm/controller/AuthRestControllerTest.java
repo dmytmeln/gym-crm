@@ -5,14 +5,15 @@ import com.gia.openapi.model.ErrorResponse;
 import com.gia.openapi.model.LoginChangeRequest;
 import com.gia.openapi.model.LoginRequest;
 import com.gym.crm.exception.ApiError;
+import com.gym.crm.exception.AuthenticationException;
 import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.exception.ValidationException;
 import com.gym.crm.facade.GymFacade;
-import com.gym.crm.security.AuthenticationException;
 import org.hibernate.HibernateException;
 import org.junit.jupiter.api.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -26,7 +27,6 @@ import static com.gym.crm.exception.ApiError.VALIDATION_ERROR;
 import static com.gym.crm.test.helper.JsonUtil.readJson;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -36,6 +36,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AuthRestController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class AuthRestControllerTest {
 
     private static final String EXPECTED_ERROR_MESSAGE_TEMPLATE = "%s: %s";
@@ -168,7 +169,7 @@ class AuthRestControllerTest {
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isOk());
 
-        verify(facade).changePassword(eq(USERNAME), any(LoginChangeRequest.class));
+        verify(facade).changePassword(any(LoginChangeRequest.class));
     }
 
     @Test
@@ -229,7 +230,7 @@ class AuthRestControllerTest {
     void shouldReturn401WhenAuthenticationFailsDuringPasswordChange() throws Exception {
         LoginChangeRequest validRequest = buildLoginChangeRequest(USERNAME, PASSWORD, NEW_PASSWORD);
 
-        doThrow(new AuthenticationException("User is not authenticated")).when(facade).changePassword(eq(USERNAME), any(LoginChangeRequest.class));
+        doThrow(new AuthenticationException("User is not authenticated")).when(facade).changePassword(any(LoginChangeRequest.class));
 
         String actualResponseBody = mockMvc.perform(put(BASE_PATH + "/auth/password")
                         .contentType(APPLICATION_JSON)

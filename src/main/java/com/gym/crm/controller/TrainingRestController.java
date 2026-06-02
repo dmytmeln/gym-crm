@@ -5,7 +5,6 @@ import com.gia.openapi.model.TrainingCreateRequest;
 import com.gia.openapi.model.TrainingTypeResponse;
 import com.gym.crm.facade.GymFacade;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -17,7 +16,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -42,7 +40,8 @@ public class TrainingRestController {
             @ApiResponse(responseCode = "500", description = "Internal server error",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))})
     public ResponseEntity<Void> addTraining(@Valid @RequestBody TrainingCreateRequest trainingCreateRequest) {
-        facade.createTraining(trainingCreateRequest.getTrainerUsername(), trainingCreateRequest);
+        facade.createTraining(trainingCreateRequest);
+
         return ResponseEntity.ok().build();
     }
 
@@ -56,9 +55,8 @@ public class TrainingRestController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "500", description = "Internal server error",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))})
-    public ResponseEntity<List<TrainingTypeResponse>> getTrainingTypes(@Parameter(description = "The username of the user requesting the training types", required = true)
-                                                                       @RequestParam String username) {
-        return ResponseEntity.ok(facade.getAllTrainingTypes(username));
+    public ResponseEntity<List<TrainingTypeResponse>> getTrainingTypes() {
+        return ResponseEntity.ok(facade.getAllTrainingTypes());
     }
 
 }

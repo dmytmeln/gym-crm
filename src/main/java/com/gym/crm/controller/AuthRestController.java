@@ -38,7 +38,7 @@ public class AuthRestController {
             @ApiResponse(responseCode = "500", description = "Internal server error",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))})
     public ResponseEntity<Void> changePassword(@Valid @RequestBody LoginChangeRequest loginChangeRequest) {
-        facade.changePassword(loginChangeRequest.getUsername(), loginChangeRequest);
+        facade.changePassword(loginChangeRequest);
 
         return ResponseEntity.ok().build();
     }

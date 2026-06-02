@@ -12,6 +12,7 @@ import org.hibernate.HibernateException;
 import org.junit.jupiter.api.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -36,6 +37,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(TrainingRestController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class TrainingRestControllerTest {
 
     private static final String EXPECTED_ERROR_MESSAGE_TEMPLATE = "%s: %s";
@@ -65,7 +67,7 @@ class TrainingRestControllerTest {
                         .content(requestBody))
                 .andExpect(status().isOk());
 
-        verify(facade).createTraining(TRAINER_USERNAME, expectedRequest);
+        verify(facade).createTraining(expectedRequest);
     }
 
     @Test
@@ -180,7 +182,7 @@ class TrainingRestControllerTest {
         TrainingCreateRequest validRequest = buildTrainingCreateRequest(TRAINEE_USERNAME, TRAINER_USERNAME, TRAINING_DATE, TRAINING_DURATION);
         EntityNotFoundException exception = EntityNotFoundException.forUsername(TRAINEE, TRAINEE_USERNAME);
 
-        doThrow(exception).when(facade).createTraining(TRAINER_USERNAME, validRequest);
+        doThrow(exception).when(facade).createTraining(validRequest);
 
         String actualResponseBody = mockMvc.perform(post(BASE_PATH + "/trainings")
                         .contentType(APPLICATION_JSON)
@@ -199,7 +201,7 @@ class TrainingRestControllerTest {
     void shouldReturn500WhenUnexpectedErrorOccursOnAddTraining() throws Exception {
         TrainingCreateRequest validRequest = buildTrainingCreateRequest(TRAINEE_USERNAME, TRAINER_USERNAME, TRAINING_DATE, TRAINING_DURATION);
 
-        doThrow(new RuntimeException("Unexpected failure")).when(facade).createTraining(TRAINER_USERNAME, validRequest);
+        doThrow(new RuntimeException("Unexpected failure")).when(facade).createTraining(validRequest);
 
         String actualResponseBody = mockMvc.perform(post(BASE_PATH + "/trainings")
                         .contentType(APPLICATION_JSON)
@@ -218,7 +220,7 @@ class TrainingRestControllerTest {
     void shouldReturn500WhenHibernateExceptionOccursOnAddTraining() throws Exception {
         TrainingCreateRequest validRequest = buildTrainingCreateRequest(TRAINEE_USERNAME, TRAINER_USERNAME, TRAINING_DATE, TRAINING_DURATION);
 
-        doThrow(new HibernateException("Database connectivity failure")).when(facade).createTraining(TRAINER_USERNAME, validRequest);
+        doThrow(new HibernateException("Database connectivity failure")).when(facade).createTraining(validRequest);
 
         String actualResponseBody = mockMvc.perform(post(BASE_PATH + "/trainings")
                         .contentType(APPLICATION_JSON)
@@ -242,10 +244,9 @@ class TrainingRestControllerTest {
                 .id(2)
                 .name("Yoga");
 
-        when(facade.getAllTrainingTypes(TRAINER_USERNAME)).thenReturn(List.of(cardio, yoga));
+        when(facade.getAllTrainingTypes()).thenReturn(List.of(cardio, yoga));
 
-        String actualResponseBody = mockMvc.perform(get(BASE_PATH + "/trainings/types")
-                        .param("username", TRAINER_USERNAME))
+        String actualResponseBody = mockMvc.perform(get(BASE_PATH + "/trainings/types"))
                 .andExpect(status().isOk())
                 .andReturn()
                 .getResponse()
@@ -256,15 +257,14 @@ class TrainingRestControllerTest {
         assertThat(actualResponse).hasSize(2);
         assertThat(actualResponse.get(0).getName()).isEqualTo("Cardio");
         assertThat(actualResponse.get(1).getName()).isEqualTo("Yoga");
-        verify(facade).getAllTrainingTypes(TRAINER_USERNAME);
+        verify(facade).getAllTrainingTypes();
     }
 
     @Test
     void shouldGetEmptyTrainingTypesList() throws Exception {
-        when(facade.getAllTrainingTypes(TRAINER_USERNAME)).thenReturn(List.of());
+        when(facade.getAllTrainingTypes()).thenReturn(List.of());
 
-        String actualResponseBody = mockMvc.perform(get(BASE_PATH + "/trainings/types")
-                        .param("username", TRAINER_USERNAME))
+        String actualResponseBody = mockMvc.perform(get(BASE_PATH + "/trainings/types"))
                 .andExpect(status().isOk())
                 .andReturn()
                 .getResponse()
@@ -273,7 +273,7 @@ class TrainingRestControllerTest {
         List<TrainingTypeResponse> actualResponse = objectMapper.readValue(actualResponseBody,
                 objectMapper.getTypeFactory().constructCollectionType(List.class, TrainingTypeResponse.class));
         assertThat(actualResponse).isEmpty();
-        verify(facade).getAllTrainingTypes(TRAINER_USERNAME);
+        verify(facade).getAllTrainingTypes();
     }
 
     @Test
@@ -281,7 +281,7 @@ class TrainingRestControllerTest {
         TrainingCreateRequest validRequest = buildTrainingCreateRequest(TRAINEE_USERNAME, TRAINER_USERNAME, TRAINING_DATE, TRAINING_DURATION);
         ValidationException exception = new ValidationException("Custom validation failed");
 
-        doThrow(exception).when(facade).createTraining(TRAINER_USERNAME, validRequest);
+        doThrow(exception).when(facade).createTraining(validRequest);
 
         String actualResponseBody = mockMvc.perform(post(BASE_PATH + "/trainings")
                         .contentType(APPLICATION_JSON)

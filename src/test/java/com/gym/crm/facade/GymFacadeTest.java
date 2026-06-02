@@ -190,7 +190,7 @@ class GymFacadeTest {
         when(traineeService.getTraineeTrainings(filter)).thenReturn(trainings);
         when(traineeMapper.toGetTraineeTrainingResponseList(trainings)).thenReturn(expected);
 
-        List<GetTraineeTrainingResponse> actual = facade.getTraineeTrainings(USERNAME, filter);
+        List<GetTraineeTrainingResponse> actual = facade.getTraineeTrainings(filter);
 
         assertNotNull(actual);
         assertEquals(expected, actual);
@@ -200,20 +200,8 @@ class GymFacadeTest {
     }
 
     @Test
-    void shouldThrowNullPointerWhenGettingTraineeTrainingsWithNullUsername() {
-        TraineeTrainingSearchFilter filter = TraineeTrainingSearchFilter.builder().build();
-
-        NullPointerException exception = assertThrows(NullPointerException.class,
-                () -> facade.getTraineeTrainings(null, filter));
-
-        assertEquals("Username cannot be null", exception.getMessage());
-        verifyNoInteractions(businessValidator, traineeService, traineeMapper);
-    }
-
-    @Test
     void shouldThrowNullPointerWhenGettingTraineeTrainingsWithNullFilter() {
-        NullPointerException exception = assertThrows(NullPointerException.class,
-                () -> facade.getTraineeTrainings(USERNAME, null));
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.getTraineeTrainings(null));
 
         assertEquals("Filter cannot be null", exception.getMessage());
         verifyNoInteractions(businessValidator, traineeService, traineeMapper);
@@ -382,7 +370,7 @@ class GymFacadeTest {
         doNothing().when(businessValidator).validate(request);
         doNothing().when(businessValidator).validate(dto);
 
-        facade.changePassword(USERNAME, request);
+        facade.changePassword(request);
 
         verify(authMapper).toDto(request);
         verify(businessValidator).validate(request);
@@ -399,7 +387,8 @@ class GymFacadeTest {
         doNothing().when(businessValidator).validate(request);
         doThrow(new ValidationException("Validation error")).when(businessValidator).validate(dto);
 
-        assertThrows(ValidationException.class, () -> facade.changePassword(USERNAME, request));
+        assertThrows(ValidationException.class, () -> facade.changePassword(request));
+
         verify(businessValidator).validate(request);
         verify(businessValidator).validate(dto);
         verifyNoInteractions(authenticationService);
@@ -407,7 +396,7 @@ class GymFacadeTest {
 
     @Test
     void shouldThrowNullPointerWhenChangingPasswordWithNullRequest() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.changePassword(USERNAME, null));
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.changePassword(null));
 
         assertEquals("LoginChangeRequest cannot be null", exception.getMessage());
         verifyNoInteractions(authMapper, businessValidator, authenticationService);
@@ -600,7 +589,7 @@ class GymFacadeTest {
         when(trainerService.getTrainerTrainings(filter)).thenReturn(trainings);
         when(trainerMapper.toGetTrainerTrainingResponseList(trainings)).thenReturn(expected);
 
-        List<GetTrainerTrainingResponse> actual = facade.getTrainerTrainings(USERNAME, filter);
+        List<GetTrainerTrainingResponse> actual = facade.getTrainerTrainings(filter);
 
         assertNotNull(actual);
         assertEquals(expected, actual);
@@ -611,7 +600,7 @@ class GymFacadeTest {
 
     @Test
     void shouldThrowNullPointerWhenTrainerFilterIsNull() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.getTrainerTrainings(USERNAME, null));
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.getTrainerTrainings(null));
 
         assertEquals("Filter cannot be null", exception.getMessage());
         verifyNoInteractions(businessValidator, trainerService, trainerMapper);
@@ -626,7 +615,7 @@ class GymFacadeTest {
         when(trainingMapper.toEntity(request)).thenReturn(training);
         when(trainingService.createTraining(training)).thenReturn(training);
 
-        facade.createTraining(DEFAULT_USERNAME, request);
+        facade.createTraining(request);
 
         verify(businessValidator).validate(request);
         verify(trainingMapper).toEntity(request);
@@ -639,7 +628,7 @@ class GymFacadeTest {
 
         doThrow(new ValidationException("Validation error")).when(businessValidator).validate(request);
 
-        assertThrows(ValidationException.class, () -> facade.createTraining(DEFAULT_USERNAME, request));
+        assertThrows(ValidationException.class, () -> facade.createTraining(request));
 
         verify(businessValidator).validate(request);
         verifyNoInteractions(trainingMapper, trainingService);
@@ -647,7 +636,7 @@ class GymFacadeTest {
 
     @Test
     void shouldThrowNullPointerWhenCreatingNullTrainingRequest() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.createTraining(DEFAULT_USERNAME, null));
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.createTraining(null));
 
         assertEquals("TrainingCreateRequest cannot be null", exception.getMessage());
         verifyNoInteractions(trainingMapper, trainingService);
@@ -663,7 +652,7 @@ class GymFacadeTest {
         when(trainingService.getAllTrainingTypes()).thenReturn(trainingTypes);
         when(trainingMapper.toTrainingTypeResponseList(trainingTypes)).thenReturn(expectedList);
 
-        List<TrainingTypeResponse> actual = facade.getAllTrainingTypes(DEFAULT_USERNAME);
+        List<TrainingTypeResponse> actual = facade.getAllTrainingTypes();
 
         assertNotNull(actual);
         assertEquals(expectedList, actual);
@@ -676,7 +665,7 @@ class GymFacadeTest {
         when(trainingService.getAllTrainingTypes()).thenReturn(List.of());
         when(trainingMapper.toTrainingTypeResponseList(List.of())).thenReturn(List.of());
 
-        List<TrainingTypeResponse> actual = facade.getAllTrainingTypes(DEFAULT_USERNAME);
+        List<TrainingTypeResponse> actual = facade.getAllTrainingTypes();
 
         assertNotNull(actual);
         assertTrue(actual.isEmpty());

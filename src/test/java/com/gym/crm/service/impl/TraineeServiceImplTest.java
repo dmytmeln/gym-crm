@@ -1,6 +1,5 @@
 package com.gym.crm.service.impl;
 
-import com.gym.crm.dto.LoginChangeDto;
 import com.gym.crm.dto.filter.TraineeTrainingSearchFilter;
 import com.gym.crm.entity.Trainee;
 import com.gym.crm.entity.Trainer;
@@ -12,7 +11,6 @@ import com.gym.crm.repository.TraineeRepository;
 import com.gym.crm.repository.TrainerRepository;
 import com.gym.crm.repository.TrainingRepository;
 import com.gym.crm.repository.specification.TraineeTrainingCriteriaBuilder;
-import com.gym.crm.security.AuthenticationException;
 import com.gym.crm.service.common.ProfileCredentialGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -292,40 +290,6 @@ class TraineeServiceImplTest {
 
         assertEquals("Trainee not found with username: " + DEFAULT_USERNAME, exception.getMessage());
         verify(trainerRepository, never()).findTraineeTrainersByUsernames(any());
-        verify(repository, never()).save(any(Trainee.class));
-    }
-
-    @Test
-    void shouldUpdateTraineePasswordSuccessfully() {
-        Trainee trainee = buildTraineeWithUsername(DEFAULT_USERNAME);
-        LoginChangeDto dto = new LoginChangeDto(DEFAULT_USERNAME, "old-password", "new-password");
-
-        when(repository.findByUsernameWithUser(DEFAULT_USERNAME)).thenReturn(Optional.of(trainee));
-        when(passwordEncoder.matches("old-password", trainee.getUser().getPassword())).thenReturn(true);
-        when(passwordEncoder.encode("new-password")).thenReturn("encoded-new");
-
-        service.updateTraineePassword(dto);
-
-        verify(repository).findByUsernameWithUser(DEFAULT_USERNAME);
-        verify(repository, never()).findByUsernameWithUserAndTrainersDetails(any());
-        ArgumentCaptor<Trainee> captor = ArgumentCaptor.forClass(Trainee.class);
-        verify(repository).save(captor.capture());
-        assertEquals("encoded-new", captor.getValue().getUser().getPassword());
-    }
-
-    @Test
-    void shouldThrowAuthenticationExceptionWhenUpdatingPasswordWithWrongOldPassword() {
-        Trainee trainee = buildTraineeWithUsername(DEFAULT_USERNAME);
-        LoginChangeDto dto = new LoginChangeDto(DEFAULT_USERNAME, "wrong-password", "new-password");
-
-        when(repository.findByUsernameWithUser(DEFAULT_USERNAME)).thenReturn(Optional.of(trainee));
-        when(passwordEncoder.matches("wrong-password", trainee.getUser().getPassword())).thenReturn(false);
-
-        AuthenticationException exception = assertThrows(AuthenticationException.class, () -> service.updateTraineePassword(dto));
-
-        assertEquals("Invalid username or password", exception.getMessage());
-        verify(repository).findByUsernameWithUser(DEFAULT_USERNAME);
-        verify(repository, never()).findByUsernameWithUserAndTrainersDetails(any());
         verify(repository, never()).save(any(Trainee.class));
     }
 

@@ -10,15 +10,16 @@ import com.gia.openapi.model.TrainerGetResponse;
 import com.gia.openapi.model.TrainerUpdateRequest;
 import com.gia.openapi.model.TrainerUpdateResponse;
 import com.gym.crm.exception.ApiError;
+import com.gym.crm.exception.AuthenticationException;
 import com.gym.crm.exception.ConflictException;
 import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.exception.ValidationException;
 import com.gym.crm.facade.GymFacade;
-import com.gym.crm.security.AuthenticationException;
 import org.hibernate.HibernateException;
 import org.junit.jupiter.api.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -49,6 +50,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(TrainerRestController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class TrainerRestControllerTest {
 
     private static final String EXPECTED_ERROR_MESSAGE_TEMPLATE = "%s: %s";
@@ -230,7 +232,7 @@ class TrainerRestControllerTest {
                 .trainingDate(LocalDate.of(2025, 7, 20))
                 .trainingDuration(55);
 
-        when(facade.getTrainerTrainings(eq(USERNAME), any())).thenReturn(List.of(trainingResponse));
+        when(facade.getTrainerTrainings(any())).thenReturn(List.of(trainingResponse));
 
         String actualResponseBody = mockMvc.perform(get(BASE_PATH + "/trainers/{username}/trainings", USERNAME)
                         .param("fromDate", "2025-07-01")
@@ -247,17 +249,17 @@ class TrainerRestControllerTest {
         assertThat(actualResponse.get(0).getTrainingName()).isEqualTo("Morning Yoga");
         assertThat(actualResponse.get(0).getTrainingType()).isEqualTo("Yoga");
         assertThat(actualResponse.get(0).getTraineeName()).isEqualTo("billy.herrington");
-        verify(facade).getTrainerTrainings(eq(USERNAME), any());
+        verify(facade).getTrainerTrainings(any());
     }
 
     @Test
     void shouldGetTrainerTrainingsWithNoOptionalFilters() throws Exception {
-        when(facade.getTrainerTrainings(eq(USERNAME), any())).thenReturn(List.of());
+        when(facade.getTrainerTrainings(any())).thenReturn(List.of());
 
         mockMvc.perform(get(BASE_PATH + "/trainers/{username}/trainings", USERNAME))
                 .andExpect(status().isOk());
 
-        verify(facade).getTrainerTrainings(eq(USERNAME), any());
+        verify(facade).getTrainerTrainings(any());
     }
 
     @Test

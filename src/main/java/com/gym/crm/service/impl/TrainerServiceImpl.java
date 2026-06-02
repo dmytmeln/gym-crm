@@ -1,6 +1,5 @@
 package com.gym.crm.service.impl;
 
-import com.gym.crm.dto.LoginChangeDto;
 import com.gym.crm.dto.filter.TrainerTrainingSearchFilter;
 import com.gym.crm.entity.Trainer;
 import com.gym.crm.entity.Training;
@@ -12,7 +11,6 @@ import com.gym.crm.repository.TrainerRepository;
 import com.gym.crm.repository.TrainingRepository;
 import com.gym.crm.repository.TrainingTypeRepository;
 import com.gym.crm.repository.specification.TrainerTrainingCriteriaBuilder;
-import com.gym.crm.security.AuthenticationException;
 import com.gym.crm.service.TrainerService;
 import com.gym.crm.service.common.ProfileCredentialGenerator;
 import lombok.RequiredArgsConstructor;
@@ -144,30 +142,6 @@ public class TrainerServiceImpl implements TrainerService {
                 updatedTrainer.getId(), updatedTrainer.getUser().getUsername());
 
         return updatedTrainer;
-    }
-
-    @Override
-    @Transactional
-    public void updateTrainerPassword(LoginChangeDto loginChangeDto) {
-        Objects.requireNonNull(loginChangeDto, "LoginChangeDto cannot be null");
-        log.info("Updating password for trainer with username: {}", loginChangeDto.username());
-
-        Trainer trainer = trainerRepository.findByUsernameWithUser(loginChangeDto.username())
-                .orElseThrow(() -> new AuthenticationException("Invalid username or password"));
-
-        if (!passwordEncoder.matches(loginChangeDto.oldPassword(), trainer.getUser().getPassword())) {
-            throw new AuthenticationException("Invalid username or password");
-        }
-
-        User updatedUser = trainer.getUser().toBuilder()
-                .password(passwordEncoder.encode(loginChangeDto.newPassword()))
-                .build();
-        Trainer updatedTrainer = trainer.toBuilder()
-                .user(updatedUser)
-                .build();
-
-        trainerRepository.save(updatedTrainer);
-        log.info("Password for trainer with username: {} updated successfully", loginChangeDto.username());
     }
 
     @Override
