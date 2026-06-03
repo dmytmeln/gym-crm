@@ -35,7 +35,7 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 @ActiveProfiles("test")
 @Sql(scripts = {"classpath:datasets/cleanup-all.sql", "classpath:datasets/seed-data.sql"})
 @TestMethodOrder(OrderAnnotation.class)
-public class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
+class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
 
     private static final String BASE_PATH = "/api/v1";
     private static final String EXISTING_TRAINEE_USERNAME = "liam.miller";
@@ -43,14 +43,14 @@ public class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
     private static final String EXISTING_TRAINER_USERNAME = "marcus.stone";
     private static final String EXISTING_TRAINER_PASSWORD = "password123";
 
-    private static ErrorResponse AUTHENTICATION_ERROR_RESPONSE ;
+    private static ErrorResponse authenticationErrorResponse;
 
     @Autowired
     private TestRestTemplate restTemplate;
 
     @BeforeAll
     static void setUp() {
-        AUTHENTICATION_ERROR_RESPONSE = new ErrorResponse(AUTHENTICATION_ERROR.getCode(), AUTHENTICATION_ERROR.getMessage());
+        authenticationErrorResponse = new ErrorResponse(AUTHENTICATION_ERROR.getCode(), AUTHENTICATION_ERROR.getMessage());
     }
 
     @Test
@@ -82,7 +82,7 @@ public class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
         ResponseEntity<ErrorResponse> actual = restTemplate.exchange(request, ErrorResponse.class);
 
         assertThat(actual.getStatusCode()).isEqualTo(AUTHENTICATION_ERROR.getStatus());
-        assertThat(actual.getBody()).isEqualTo(AUTHENTICATION_ERROR_RESPONSE);
+        assertThat(actual.getBody()).isEqualTo(authenticationErrorResponse);
     }
 
     @Test
@@ -94,7 +94,7 @@ public class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
         ResponseEntity<ErrorResponse> actual = restTemplate.exchange(request, ErrorResponse.class);
 
         assertThat(actual.getStatusCode()).isEqualTo(AUTHENTICATION_ERROR.getStatus());
-        assertThat(actual.getBody()).isEqualTo(AUTHENTICATION_ERROR_RESPONSE);
+        assertThat(actual.getBody()).isEqualTo(authenticationErrorResponse);
     }
 
     @Test
@@ -106,7 +106,7 @@ public class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
         ResponseEntity<ErrorResponse> actual = restTemplate.exchange(request, ErrorResponse.class);
 
         assertThat(actual.getStatusCode()).isEqualTo(AUTHENTICATION_ERROR.getStatus());
-        assertThat(actual.getBody()).isEqualTo(AUTHENTICATION_ERROR_RESPONSE);
+        assertThat(actual.getBody()).isEqualTo(authenticationErrorResponse);
     }
 
     @Test

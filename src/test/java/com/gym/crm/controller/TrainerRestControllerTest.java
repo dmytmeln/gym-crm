@@ -52,6 +52,7 @@ class TrainerRestControllerTest extends AbstractRestControllerTest {
     private static final String SPECIALIZATION = "Yoga";
 
     @Test
+    @WithAnonymousUser
     void shouldRegisterTrainerWhenRequestIsValid() throws Exception {
         String requestBody = readJson("json/trainer/register_request.json");
         String expectedResponseBody = readJson("json/trainer/register_response.json");
@@ -228,9 +229,9 @@ class TrainerRestControllerTest extends AbstractRestControllerTest {
         List<GetTrainerTrainingResponse> actualResponse = objectMapper.readValue(actualResponseBody,
                 objectMapper.getTypeFactory().constructCollectionType(List.class, GetTrainerTrainingResponse.class));
         assertThat(actualResponse).hasSize(1);
-        assertThat(actualResponse.get(0).getTrainingName()).isEqualTo("Morning Yoga");
-        assertThat(actualResponse.get(0).getTrainingType()).isEqualTo("Yoga");
-        assertThat(actualResponse.get(0).getTraineeName()).isEqualTo("billy.herrington");
+        assertThat(actualResponse.getFirst().getTrainingName()).isEqualTo("Morning Yoga");
+        assertThat(actualResponse.getFirst().getTrainingType()).isEqualTo("Yoga");
+        assertThat(actualResponse.getFirst().getTraineeName()).isEqualTo("billy.herrington");
         verify(facade).getTrainerTrainings(any());
     }
 
@@ -396,28 +397,6 @@ class TrainerRestControllerTest extends AbstractRestControllerTest {
         ErrorResponse actualErrorResponse = objectMapper.readValue(actualResponseBody, ErrorResponse.class);
         assertThat(actualErrorResponse.getErrorCode()).isEqualTo(VALIDATION_ERROR.getCode());
         assertThat(actualErrorResponse.getErrorMessage()).isEqualTo(buildExpectedErrorMessage(VALIDATION_ERROR, exception));
-    }
-
-    @Test
-    @WithAnonymousUser
-    void shouldRegisterTrainerWhenAnonymous() throws Exception {
-        String requestBody = readJson("json/trainer/register_request.json");
-        String expectedResponseBody = readJson("json/trainer/register_response.json");
-        TrainerCreateRequest expectedRequest = objectMapper.readValue(requestBody, TrainerCreateRequest.class);
-        TrainerCreateResponse mockResponse = objectMapper.readValue(expectedResponseBody, TrainerCreateResponse.class);
-
-        when(facade.createTrainer(any(TrainerCreateRequest.class))).thenReturn(mockResponse);
-
-        String actualResponseBody = mockMvc.perform(post(BASE_URI + "/register")
-                        .contentType(APPLICATION_JSON)
-                        .content(requestBody))
-                .andExpect(status().isOk())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-
-        JSONAssert.assertEquals(expectedResponseBody, actualResponseBody, true);
-        verify(facade).createTrainer(expectedRequest);
     }
 
     @Test
