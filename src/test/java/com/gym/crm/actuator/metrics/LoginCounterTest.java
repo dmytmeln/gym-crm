@@ -22,16 +22,16 @@ class LoginCounterTest {
     void shouldIncrementSuccess() {
         counter.increment(true);
 
-        double count = registry.counter("gym_crm_login_attempts_total", "status", "success").count();
-        assertEquals(1.0, count);
+        double actual = registry.counter("gym_crm_login_attempts_total", "status", "success").count();
+        assertEquals(1.0, actual);
     }
 
     @Test
     void shouldIncrementFailure() {
         counter.increment(false);
 
-        double count = registry.counter("gym_crm_login_attempts_total", "status", "failure").count();
-        assertEquals(1.0, count);
+        double actual = registry.counter("gym_crm_login_attempts_total", "status", "failure").count();
+        assertEquals(1.0, actual);
     }
 
 }

@@ -5,6 +5,7 @@ import com.gym.crm.dto.LoginRequestDto;
 import com.gym.crm.entity.User;
 import com.gym.crm.exception.AuthenticationException;
 import com.gym.crm.repository.UserRepository;
+import com.gym.crm.security.JwtService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -15,7 +16,6 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import com.gym.crm.security.JwtService;
 
 import java.util.Optional;
 
@@ -59,9 +59,9 @@ class AuthenticationServiceImplTest {
         when(authenticationManager.authenticate(token)).thenReturn(authentication);
         when(jwtService.generateAccessToken(USERNAME)).thenReturn(expectedToken);
 
-        String actualToken = service.login(loginRequestDto);
+        String actual = service.login(loginRequestDto);
 
-        assertThat(actualToken).isEqualTo(expectedToken);
+        assertThat(actual).isEqualTo(expectedToken);
         verify(authenticationManager).authenticate(token);
         verify(jwtService).generateAccessToken(USERNAME);
     }

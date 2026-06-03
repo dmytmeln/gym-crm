@@ -8,10 +8,7 @@ import com.gia.openapi.model.TrainerGetResponse;
 import com.gia.openapi.model.TrainingTypeResponse;
 import com.gym.crm.config.BaseDbIntegrationTest;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -26,7 +23,6 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static com.gym.crm.exception.ApiError.AUTHENTICATION_ERROR;
-import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
@@ -34,19 +30,20 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @ActiveProfiles("test")
 @Sql(scripts = {"classpath:datasets/cleanup-all.sql", "classpath:datasets/seed-data.sql"})
-@TestMethodOrder(OrderAnnotation.class)
 class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
 
     private static final String BASE_PATH = "/api/v1";
     private static final String EXISTING_TRAINEE_USERNAME = "liam.miller";
     private static final String EXISTING_TRAINEE_PASSWORD = "password123";
     private static final String EXISTING_TRAINER_USERNAME = "marcus.stone";
-    private static final String EXISTING_TRAINER_PASSWORD = "password123";
 
     private static ErrorResponse authenticationErrorResponse;
 
     @Autowired
     private TestRestTemplate restTemplate;
+
+    @Autowired
+    private JwtService jwtService;
 
     @BeforeAll
     static void setUp() {
@@ -54,7 +51,6 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
     }
 
     @Test
-    @Order(1)
     void shouldAuthenticateUserWhenCredentialsAreValid() {
         RequestEntity<LoginRequest> request = RequestEntity
                 .post(BASE_PATH + "/auth/login")
@@ -111,7 +107,7 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
 
     @Test
     void shouldAccessTraineeProtectedEndpointWithValidToken() {
-        HttpHeaders headers = loginAsTrainee();
+        HttpHeaders headers = createBearerAuthHeadersForTrainee();
         RequestEntity<Void> request = RequestEntity
                 .get(BASE_PATH + "/trainees/{username}", EXISTING_TRAINEE_USERNAME)
                 .headers(headers)
@@ -134,7 +130,7 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
 
     @Test
     void shouldAccessTrainerProtectedEndpointWithValidToken() {
-        HttpHeaders headers = loginAsTrainer();
+        HttpHeaders headers = createBearerAuthHeadersForTrainer();
         RequestEntity<Void> request = RequestEntity
                 .get(BASE_PATH + "/trainers/{username}", EXISTING_TRAINER_USERNAME)
                 .headers(headers)
@@ -156,7 +152,7 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
 
     @Test
     void shouldAccessTrainingProtectedEndpointWithValidToken() {
-        HttpHeaders headers = loginAsTrainer();
+        HttpHeaders headers = createBearerAuthHeadersForTrainer();
         RequestEntity<Void> request = RequestEntity
                 .get(BASE_PATH + "/trainings/types")
                 .headers(headers)
@@ -175,7 +171,7 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
 
     @Test
     void shouldChangePasswordAndReturn401ForLoginWithOldPassword() {
-        HttpHeaders headers = loginAsTrainee();
+        HttpHeaders headers = createBearerAuthHeadersForTrainee();
         RequestEntity<LoginChangeRequest> request = RequestEntity
                 .put(BASE_PATH + "/auth/password")
                 .headers(headers)
@@ -193,7 +189,7 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
 
     @Test
     void shouldChangePasswordAndReturn200ForLoginWithNewPassword() {
-        HttpHeaders headers = loginAsTrainee();
+        HttpHeaders headers = createBearerAuthHeadersForTrainee();
         String newPassword = "newPassword";
         RequestEntity<LoginChangeRequest> request = RequestEntity
                 .put(BASE_PATH + "/auth/password")
@@ -218,8 +214,8 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
         assertThat(bearerAuthToken.substring(7)).isNotEmpty();
     }
 
-    private HttpHeaders loginAsTrainee() {
-        String token = login(EXISTING_TRAINEE_USERNAME, EXISTING_TRAINEE_PASSWORD);
+    private HttpHeaders createBearerAuthHeadersForTrainee() {
+        String token = jwtService.generateAccessToken(EXISTING_TRAINEE_USERNAME);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
@@ -227,23 +223,13 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
         return headers;
     }
 
-    private HttpHeaders loginAsTrainer() {
-        String token = login(EXISTING_TRAINER_USERNAME, EXISTING_TRAINER_PASSWORD);
+    private HttpHeaders createBearerAuthHeadersForTrainer() {
+        String token = jwtService.generateAccessToken(EXISTING_TRAINER_USERNAME);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
 
         return headers;
-    }
-
-    private String login(String username, String password) {
-        RequestEntity<LoginRequest> request = RequestEntity
-                .post(BASE_PATH + "/auth/login")
-                .body(new LoginRequest(username, password));
-
-        ResponseEntity<Void> response = restTemplate.exchange(request, Void.class);
-
-        return requireNonNull(response.getHeaders().get(AUTHORIZATION)).getFirst().substring(7);
     }
 
 }

@@ -368,9 +368,9 @@ class GymFacadeTest {
         LoginChangeRequest request = new LoginChangeRequest(USERNAME, "oldPassword123", "newPassword123");
         LoginChangeDto dto = new LoginChangeDto(USERNAME, "oldPassword123", "newPassword123");
 
-        when(authMapper.toDto(request)).thenReturn(dto);
         doNothing().when(businessValidator).validate(request);
         doNothing().when(businessValidator).validate(dto);
+        when(authMapper.toDto(request)).thenReturn(dto);
 
         facade.changePassword(request);
 
@@ -385,8 +385,8 @@ class GymFacadeTest {
         LoginChangeRequest request = new LoginChangeRequest(USERNAME, "oldPassword", "newPassword");
         LoginChangeDto dto = new LoginChangeDto(USERNAME, "oldPassword", "newPassword");
 
-        when(authMapper.toDto(request)).thenReturn(dto);
         doNothing().when(businessValidator).validate(request);
+        when(authMapper.toDto(request)).thenReturn(dto);
         doThrow(new ValidationException("Validation error")).when(businessValidator).validate(dto);
 
         assertThrows(ValidationException.class, () -> facade.changePassword(request));
@@ -411,13 +411,13 @@ class GymFacadeTest {
         String expectedToken = "mocked-jwt-token";
 
         doNothing().when(businessValidator).validate(request);
-        when(authMapper.toDto(request)).thenReturn(dto);
         doNothing().when(businessValidator).validate(dto);
+        when(authMapper.toDto(request)).thenReturn(dto);
         when(authenticationService.login(dto)).thenReturn(expectedToken);
 
-        String actualToken = facade.login(request);
+        String actual = facade.login(request);
 
-        assertEquals(expectedToken, actualToken);
+        assertEquals(expectedToken, actual);
         verify(businessValidator).validate(request);
         verify(authMapper).toDto(request);
         verify(businessValidator).validate(dto);

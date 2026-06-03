@@ -19,22 +19,29 @@ class JwtServiceTest {
     private final JwtService service = new JwtService(SECRET_KEY, EXPIRATION_MS);
 
     @Test
+    void shouldGenerateAccessToken() {
+        String actual = service.generateAccessToken(USERNAME);
+
+        assertNotNull(actual);
+        assertFalse(actual.isBlank());
+    }
+
+    @Test
     void shouldGenerateAccessTokenAndExtractUsername() {
         String token = service.generateAccessToken(USERNAME);
 
-        String username = service.extractUsername(token);
+        String actual = service.extractUsername(token);
 
-        assertNotNull(token);
-        assertEquals(USERNAME, username);
+        assertEquals(USERNAME, actual);
     }
 
     @Test
     void shouldReturnTrueWhenTokenIsValid() {
         String token = service.generateAccessToken(USERNAME);
 
-        boolean isValid = service.isTokenValid(token);
+        boolean actual = service.isTokenValid(token);
 
-        assertTrue(isValid);
+        assertTrue(actual);
     }
 
     @Test
@@ -42,18 +49,18 @@ class JwtServiceTest {
         JwtService expiredService = new JwtService(SECRET_KEY, -1000);
         String token = expiredService.generateAccessToken(USERNAME);
 
-        boolean isValid = service.isTokenValid(token);
+        boolean actual = service.isTokenValid(token);
 
-        assertFalse(isValid);
+        assertFalse(actual);
     }
 
     @ParameterizedTest
     @NullAndEmptySource
     @ValueSource(strings = {"invalid.jwt.token", "another.bad.token", "  "})
     void shouldReturnFalseWhenTokenIsInvalid(String invalidToken) {
-        boolean isValid = service.isTokenValid(invalidToken);
+        boolean actual = service.isTokenValid(invalidToken);
 
-        assertFalse(isValid);
+        assertFalse(actual);
     }
 
 }

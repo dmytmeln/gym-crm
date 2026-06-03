@@ -3,9 +3,12 @@ package com.gym.crm.security;
 import com.gym.crm.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -86,11 +89,17 @@ class JwtAuthenticationProviderTest {
 
     @Test
     void shouldSupportJwtTokenAuthentication() {
-        boolean supportsJwt = tokenProvider.supports(JwtTokenAuthentication.class);
-        boolean supportsOther = tokenProvider.supports(UsernamePasswordAuthenticationToken.class);
+        boolean result = tokenProvider.supports(JwtTokenAuthentication.class);
 
-        assertTrue(supportsJwt);
-        assertFalse(supportsOther);
+        assertTrue(result);
+    }
+
+    @ParameterizedTest
+    @ValueSource(classes = {Authentication.class, UsernamePasswordAuthenticationToken.class, AnonymousAuthenticationToken.class})
+    void shouldNotSupportOtherAuthenticationTypes(Class<? extends Authentication> authentication) {
+        boolean result = tokenProvider.supports(authentication);
+
+        assertFalse(result);
     }
 
 }
