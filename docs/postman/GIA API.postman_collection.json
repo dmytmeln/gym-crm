@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "0b2f331c-2f6c-45ed-9174-489a54af3eec",
+    "_postman_id": "7bad9a39-186b-4d07-98a4-16f860bf49ce",
     "name": "GIA API",
     "description": "```\nAPI for managing trainees, their profiles, trainers, and training schedules\n\n ```",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
@@ -11,13 +11,46 @@
       "name": "Auth",
       "item": [
         {
-          "name": "Login",
+          "name": "Login as Trainee",
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
             "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n    \"username\": \"{{username}}\",\r\n    \"password\": \"{{password}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}{{basePath}}/auth/login",
+              "host": [
+                "{{baseUrl}}{{basePath}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login as Trainer",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"username\": \"{{trainerUsername}}\",\r\n    \"password\": \"{{password}}\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -278,6 +311,30 @@
           },
           "response": []
         }
+      ],
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              ""
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              ""
+            ]
+          }
+        }
       ]
     },
     {
@@ -422,6 +479,30 @@
           },
           "response": []
         }
+      ],
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              ""
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              ""
+            ]
+          }
+        }
       ]
     },
     {
@@ -459,25 +540,53 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}{{basePath}}/trainings/types?username={{trainerUsername}}",
+              "raw": "{{baseUrl}}{{basePath}}/trainings/types",
               "host": [
                 "{{baseUrl}}{{basePath}}"
               ],
               "path": [
                 "trainings",
                 "types"
-              ],
-              "query": [
-                {
-                  "key": "username",
-                  "value": "{{trainerUsername}}"
-                }
               ]
             }
           },
           "response": []
         }
       ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
     }
   ]
 }
