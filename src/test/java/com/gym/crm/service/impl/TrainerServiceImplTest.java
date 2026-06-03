@@ -1,6 +1,5 @@
 package com.gym.crm.service.impl;
 
-import com.gym.crm.dto.LoginChangeDto;
 import com.gym.crm.dto.filter.TrainerTrainingSearchFilter;
 import com.gym.crm.entity.Trainer;
 import com.gym.crm.entity.Training;
@@ -11,7 +10,6 @@ import com.gym.crm.repository.TrainerRepository;
 import com.gym.crm.repository.TrainingRepository;
 import com.gym.crm.repository.TrainingTypeRepository;
 import com.gym.crm.repository.specification.TrainerTrainingCriteriaBuilder;
-import com.gym.crm.security.AuthenticationException;
 import com.gym.crm.service.common.ProfileCredentialGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -318,45 +316,6 @@ class TrainerServiceImplTest {
                 () -> service.updateTrainer(trainer));
 
         assertEquals("Trainer username cannot be null", exception.getMessage());
-    }
-
-    @Test
-    void shouldUpdateTrainerPassword() {
-        Trainer trainer = buildTrainerWithId(DEFAULT_TRAINER_ID);
-        String newPassword = "newPassword";
-        String encodedNewPassword = "encoded-" + newPassword;
-        LoginChangeDto dto = new LoginChangeDto(trainer.getUser().getUsername(), "oldPassword", newPassword);
-
-        when(trainerRepository.findByUsernameWithUser(trainer.getUser().getUsername())).thenReturn(Optional.of(trainer));
-        when(passwordEncoder.matches("oldPassword", trainer.getUser().getPassword())).thenReturn(true);
-        when(passwordEncoder.encode(newPassword)).thenReturn(encodedNewPassword);
-
-        service.updateTrainerPassword(dto);
-
-        verify(trainerRepository).findByUsernameWithUser(trainer.getUser().getUsername());
-        verify(trainerRepository, never()).findByUsernameWithUserAndTraineesDetails(any());
-        ArgumentCaptor<Trainer> trainerCaptor = ArgumentCaptor.forClass(Trainer.class);
-        verify(trainerRepository).save(trainerCaptor.capture());
-        assertEquals(encodedNewPassword, trainerCaptor.getValue().getUser().getPassword());
-    }
-
-    @Test
-    void shouldThrowExceptionWhenUpdatingPasswordForUnknownTrainer() {
-        LoginChangeDto dto = new LoginChangeDto("nonexistent", "oldPassword", "newPassword");
-        when(trainerRepository.findByUsernameWithUser("nonexistent")).thenReturn(Optional.empty());
-
-        AuthenticationException exception = assertThrows(AuthenticationException.class, () -> service.updateTrainerPassword(dto));
-
-        assertEquals("Invalid username or password", exception.getMessage());
-        verify(trainerRepository).findByUsernameWithUser("nonexistent");
-        verify(trainerRepository, never()).findByUsernameWithUserAndTraineesDetails(any());
-    }
-
-    @Test
-    void shouldThrowNullPointerWhenUpdatingPasswordWithNullDto() {
-        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.updateTrainerPassword(null));
-
-        assertEquals("LoginChangeDto cannot be null", exception.getMessage());
     }
 
     @Test

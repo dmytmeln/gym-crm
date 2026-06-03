@@ -1,6 +1,5 @@
 package com.gym.crm.service;
 
-import com.gym.crm.dto.LoginChangeDto;
 import com.gym.crm.dto.filter.TraineeTrainingSearchFilter;
 import com.gym.crm.entity.Trainee;
 import com.gym.crm.entity.Trainer;
@@ -23,8 +22,6 @@ public interface TraineeService {
     Trainee updateTrainee(Trainee trainee);
 
     Trainee updateTraineeTrainers(String username, List<String> trainerUsernames);
-
-    void updateTraineePassword(LoginChangeDto loginChangeDto);
 
     void updateActivationStatus(String username, boolean isActive);
 

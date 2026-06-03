@@ -9,6 +9,7 @@ public enum ApiError {
     VALIDATION_ERROR(2760, "Validation error", HttpStatus.BAD_REQUEST),
     AUTHENTICATION_ERROR(2805, "Authentication fails", HttpStatus.UNAUTHORIZED),
     AUTHORIZATION_ERROR(2806, "User is not authorized for request operation", HttpStatus.FORBIDDEN),
+    USER_DEACTIVATED_ERROR(2807, "User account is deactivated", HttpStatus.FORBIDDEN),
     NOT_FOUND_ERROR(2835, "Requested data was not found", HttpStatus.NOT_FOUND),
     CONFLICT_ERROR(2809, "Conflict error", HttpStatus.CONFLICT),
     SERVICE_ERROR(3200, "Internal processing error", HttpStatus.INTERNAL_SERVER_ERROR),

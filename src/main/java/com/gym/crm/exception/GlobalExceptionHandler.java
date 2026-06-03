@@ -1,7 +1,6 @@
 package com.gym.crm.exception;
 
 import com.gia.openapi.model.ErrorResponse;
-import com.gym.crm.security.AuthenticationException;
 import jakarta.persistence.PersistenceException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -24,6 +23,7 @@ import static com.gym.crm.exception.ApiError.CONFLICT_ERROR;
 import static com.gym.crm.exception.ApiError.DATABASE_ERROR;
 import static com.gym.crm.exception.ApiError.NOT_FOUND_ERROR;
 import static com.gym.crm.exception.ApiError.SERVICE_ERROR;
+import static com.gym.crm.exception.ApiError.USER_DEACTIVATED_ERROR;
 import static com.gym.crm.exception.ApiError.VALIDATION_ERROR;
 
 @Slf4j
@@ -60,6 +60,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<ErrorResponse> handleAuthenticationException(AuthenticationException ex) {
         log.warn("Authentication error: {}", ex.getMessage());
         return buildResponse(AUTHENTICATION_ERROR);
+    }
+
+    @ExceptionHandler(UserDeactivatedException.class)
+    public ResponseEntity<ErrorResponse> handleUserDeactivatedException(UserDeactivatedException ex) {
+        log.warn("Deactivated user login attempt: {}", ex.getMessage());
+        return buildResponse(USER_DEACTIVATED_ERROR);
     }
 
     @ExceptionHandler(PersistenceException.class)

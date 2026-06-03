@@ -55,7 +55,7 @@ public class TrainerRestController {
                 .traineeName(traineeName)
                 .build();
 
-        return ResponseEntity.ok(facade.getTrainerTrainings(username, filter));
+        return ResponseEntity.ok(facade.getTrainerTrainings(filter));
     }
 
     @PutMapping("/{username}")

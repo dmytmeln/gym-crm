@@ -32,8 +32,6 @@ import com.gym.crm.mapper.AuthMapper;
 import com.gym.crm.mapper.TraineeMapper;
 import com.gym.crm.mapper.TrainerMapper;
 import com.gym.crm.mapper.TrainingMapper;
-import com.gym.crm.security.Authenticated;
-import com.gym.crm.security.Role;
 import com.gym.crm.service.AuthenticationService;
 import com.gym.crm.service.TraineeService;
 import com.gym.crm.service.TrainerService;
@@ -70,8 +68,7 @@ public class GymFacade {
         authenticationService.login(dto);
     }
 
-    @Authenticated({Role.TRAINEE, Role.TRAINER})
-    public void changePassword(String username, LoginChangeRequest loginChangeRequest) {
+    public void changePassword(LoginChangeRequest loginChangeRequest) {
         Objects.requireNonNull(loginChangeRequest, "LoginChangeRequest cannot be null");
         validator.validate(loginChangeRequest);
         LoginChangeDto loginChangeDto = authMapper.toDto(loginChangeRequest);
@@ -90,7 +87,6 @@ public class GymFacade {
         return traineeMapper.toCreateResponse(createdTrainee);
     }
 
-    @Authenticated(Role.TRAINEE)
     public TraineeGetResponse getTraineeByUsername(String username) {
         Objects.requireNonNull(username, USERNAME_NULL_MSG);
 
@@ -98,7 +94,6 @@ public class GymFacade {
         return traineeMapper.toGetResponse(trainee);
     }
 
-    @Authenticated(Role.TRAINEE)
     public List<AssignedTrainerResponse> getAvailableTrainersForTrainee(String username) {
         Objects.requireNonNull(username, USERNAME_NULL_MSG);
 
@@ -106,9 +101,7 @@ public class GymFacade {
         return traineeMapper.toAssignedTrainerResponseListFromList(trainers);
     }
 
-    @Authenticated(Role.TRAINEE)
-    public List<GetTraineeTrainingResponse> getTraineeTrainings(String username, TraineeTrainingSearchFilter filter) {
-        Objects.requireNonNull(username, USERNAME_NULL_MSG);
+    public List<GetTraineeTrainingResponse> getTraineeTrainings(TraineeTrainingSearchFilter filter) {
         Objects.requireNonNull(filter, "Filter cannot be null");
         validator.validate(filter);
 
@@ -116,7 +109,6 @@ public class GymFacade {
         return traineeMapper.toGetTraineeTrainingResponseList(trainings);
     }
 
-    @Authenticated(Role.TRAINEE)
     public TraineeUpdateResponse updateTrainee(String username, TraineeUpdateRequest request) {
         Objects.requireNonNull(username, USERNAME_NULL_MSG);
         Objects.requireNonNull(request, "TraineeUpdateRequest cannot be null");
@@ -128,7 +120,6 @@ public class GymFacade {
         return traineeMapper.toUpdateResponse(updatedTrainee);
     }
 
-    @Authenticated(Role.TRAINEE)
     public TraineeAssignedTrainersUpdateResponse updateTraineeTrainers(String username, TraineeAssignedTrainersUpdateRequest request) {
         Objects.requireNonNull(username, USERNAME_NULL_MSG);
         Objects.requireNonNull(request, "TraineeAssignedTrainersUpdateRequest cannot be null");
@@ -137,7 +128,6 @@ public class GymFacade {
         return traineeMapper.toAssignedTrainersUpdateResponse(updatedTrainee.getTrainers());
     }
 
-    @Authenticated(Role.TRAINEE)
     public void updateTraineeActivationStatus(String username, ActivationStatusRequest request) {
         Objects.requireNonNull(username, USERNAME_NULL_MSG);
         Objects.requireNonNull(request, "ActivationStatusRequest cannot be null");
@@ -145,7 +135,6 @@ public class GymFacade {
         traineeService.updateActivationStatus(username, request.getIsActive());
     }
 
-    @Authenticated(Role.TRAINEE)
     public boolean deleteTraineeByUsername(String username) {
         Objects.requireNonNull(username, USERNAME_NULL_MSG);
 
@@ -162,7 +151,6 @@ public class GymFacade {
         return trainerMapper.toCreateResponse(createdTrainer);
     }
 
-    @Authenticated(Role.TRAINER)
     public TrainerGetResponse getTrainerByUsername(String username) {
         Objects.requireNonNull(username, USERNAME_NULL_MSG);
 
@@ -170,7 +158,6 @@ public class GymFacade {
         return trainerMapper.toGetResponse(trainer);
     }
 
-    @Authenticated(Role.TRAINER)
     public TrainerUpdateResponse updateTrainer(String username, TrainerUpdateRequest request) {
         Objects.requireNonNull(username, USERNAME_NULL_MSG);
         Objects.requireNonNull(request, "TrainerUpdateRequest cannot be null");
@@ -182,16 +169,13 @@ public class GymFacade {
         return trainerMapper.toUpdateResponse(updatedTrainer);
     }
 
-    @Authenticated(Role.TRAINER)
     public void updateTrainerActivationStatus(String username, boolean isActive) {
         Objects.requireNonNull(username, USERNAME_NULL_MSG);
 
         trainerService.updateActivationStatus(username, isActive);
     }
 
-    @Authenticated(Role.TRAINER)
-    public List<GetTrainerTrainingResponse> getTrainerTrainings(String username, TrainerTrainingSearchFilter filter) {
-        Objects.requireNonNull(username, USERNAME_NULL_MSG);
+    public List<GetTrainerTrainingResponse> getTrainerTrainings(TrainerTrainingSearchFilter filter) {
         Objects.requireNonNull(filter, "Filter cannot be null");
         validator.validate(filter);
 
@@ -199,9 +183,7 @@ public class GymFacade {
         return trainerMapper.toGetTrainerTrainingResponseList(trainings);
     }
 
-    @Authenticated(Role.TRAINER)
-    public void createTraining(String username, TrainingCreateRequest request) {
-        Objects.requireNonNull(username, USERNAME_NULL_MSG);
+    public void createTraining(TrainingCreateRequest request) {
         Objects.requireNonNull(request, "TrainingCreateRequest cannot be null");
         validator.validate(request);
 
@@ -209,10 +191,7 @@ public class GymFacade {
         trainingService.createTraining(training);
     }
 
-    @Authenticated({Role.TRAINER, Role.TRAINEE})
-    public List<TrainingTypeResponse> getAllTrainingTypes(String username) {
-        Objects.requireNonNull(username, USERNAME_NULL_MSG);
-
+    public List<TrainingTypeResponse> getAllTrainingTypes() {
         List<TrainingType> trainingTypes = trainingService.getAllTrainingTypes();
         return trainingMapper.toTrainingTypeResponseList(trainingTypes);
     }

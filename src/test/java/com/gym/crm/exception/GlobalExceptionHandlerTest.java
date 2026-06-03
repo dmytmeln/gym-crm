@@ -1,7 +1,6 @@
 package com.gym.crm.exception;
 
 import com.gia.openapi.model.ErrorResponse;
-import com.gym.crm.security.AuthenticationException;
 import jakarta.persistence.PersistenceException;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
@@ -20,6 +19,7 @@ import static com.gym.crm.exception.ApiError.CONFLICT_ERROR;
 import static com.gym.crm.exception.ApiError.DATABASE_ERROR;
 import static com.gym.crm.exception.ApiError.NOT_FOUND_ERROR;
 import static com.gym.crm.exception.ApiError.SERVICE_ERROR;
+import static com.gym.crm.exception.ApiError.USER_DEACTIVATED_ERROR;
 import static com.gym.crm.exception.ApiError.VALIDATION_ERROR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -40,12 +40,12 @@ class GlobalExceptionHandlerTest {
     void shouldHandleExceptionInternalWithBadRequestStatus() {
         Exception exception = new Exception("Bad request message");
 
-        ResponseEntity<Object> response = handler.handleExceptionInternal(exception, null, new HttpHeaders(), BAD_REQUEST, mock(WebRequest.class));
+        ResponseEntity<Object> result = handler.handleExceptionInternal(exception, null, new HttpHeaders(), BAD_REQUEST, mock(WebRequest.class));
 
-        assertThat(response).isNotNull();
-        assertThat(response.getStatusCode()).isEqualTo(BAD_REQUEST);
-        assertThat(response.getBody()).isInstanceOf(ErrorResponse.class);
-        ErrorResponse body = (ErrorResponse) response.getBody();
+        assertThat(result).isNotNull();
+        assertThat(result.getStatusCode()).isEqualTo(BAD_REQUEST);
+        assertThat(result.getBody()).isInstanceOf(ErrorResponse.class);
+        ErrorResponse body = (ErrorResponse) result.getBody();
         assertThat(body).isNotNull();
         assertThat(body.getErrorCode()).isEqualTo(VALIDATION_ERROR.getCode());
         assertThat(body.getErrorMessage()).isEqualTo("Bad request message");
@@ -55,12 +55,12 @@ class GlobalExceptionHandlerTest {
     void shouldHandleExceptionInternalWithUnauthorizedStatus() {
         Exception exception = new Exception("Unauthorized message");
 
-        ResponseEntity<Object> response = handler.handleExceptionInternal(exception, null, new HttpHeaders(), UNAUTHORIZED, mock(WebRequest.class));
+        ResponseEntity<Object> result = handler.handleExceptionInternal(exception, null, new HttpHeaders(), UNAUTHORIZED, mock(WebRequest.class));
 
-        assertThat(response).isNotNull();
-        assertThat(response.getStatusCode()).isEqualTo(UNAUTHORIZED);
-        assertThat(response.getBody()).isInstanceOf(ErrorResponse.class);
-        ErrorResponse body = (ErrorResponse) response.getBody();
+        assertThat(result).isNotNull();
+        assertThat(result.getStatusCode()).isEqualTo(UNAUTHORIZED);
+        assertThat(result.getBody()).isInstanceOf(ErrorResponse.class);
+        ErrorResponse body = (ErrorResponse) result.getBody();
         assertThat(body).isNotNull();
         assertThat(body.getErrorCode()).isEqualTo(AUTHENTICATION_ERROR.getCode());
         assertThat(body.getErrorMessage()).isEqualTo("Unauthorized message");
@@ -70,12 +70,12 @@ class GlobalExceptionHandlerTest {
     void shouldHandleExceptionInternalWithForbiddenStatus() {
         Exception exception = new Exception("Forbidden message");
 
-        ResponseEntity<Object> response = handler.handleExceptionInternal(exception, null, new HttpHeaders(), FORBIDDEN, mock(WebRequest.class));
+        ResponseEntity<Object> result = handler.handleExceptionInternal(exception, null, new HttpHeaders(), FORBIDDEN, mock(WebRequest.class));
 
-        assertThat(response).isNotNull();
-        assertThat(response.getStatusCode()).isEqualTo(FORBIDDEN);
-        assertThat(response.getBody()).isInstanceOf(ErrorResponse.class);
-        ErrorResponse body = (ErrorResponse) response.getBody();
+        assertThat(result).isNotNull();
+        assertThat(result.getStatusCode()).isEqualTo(FORBIDDEN);
+        assertThat(result.getBody()).isInstanceOf(ErrorResponse.class);
+        ErrorResponse body = (ErrorResponse) result.getBody();
         assertThat(body).isNotNull();
         assertThat(body.getErrorCode()).isEqualTo(AUTHORIZATION_ERROR.getCode());
         assertThat(body.getErrorMessage()).isEqualTo("Forbidden message");
@@ -85,12 +85,12 @@ class GlobalExceptionHandlerTest {
     void shouldHandleExceptionInternalWithNotFoundStatus() {
         Exception exception = new Exception("Not found message");
 
-        ResponseEntity<Object> response = handler.handleExceptionInternal(exception, null, new HttpHeaders(), NOT_FOUND, mock(WebRequest.class));
+        ResponseEntity<Object> result = handler.handleExceptionInternal(exception, null, new HttpHeaders(), NOT_FOUND, mock(WebRequest.class));
 
-        assertThat(response).isNotNull();
-        assertThat(response.getStatusCode()).isEqualTo(NOT_FOUND);
-        assertThat(response.getBody()).isInstanceOf(ErrorResponse.class);
-        ErrorResponse body = (ErrorResponse) response.getBody();
+        assertThat(result).isNotNull();
+        assertThat(result.getStatusCode()).isEqualTo(NOT_FOUND);
+        assertThat(result.getBody()).isInstanceOf(ErrorResponse.class);
+        ErrorResponse body = (ErrorResponse) result.getBody();
         assertThat(body).isNotNull();
         assertThat(body.getErrorCode()).isEqualTo(NOT_FOUND_ERROR.getCode());
         assertThat(body.getErrorMessage()).isEqualTo("Not found message");
@@ -100,12 +100,12 @@ class GlobalExceptionHandlerTest {
     void shouldHandleExceptionInternalWithOtherStatus() {
         Exception exception = new Exception("Internal server error message");
 
-        ResponseEntity<Object> response = handler.handleExceptionInternal(exception, null, new HttpHeaders(), INTERNAL_SERVER_ERROR, mock(WebRequest.class));
+        ResponseEntity<Object> result = handler.handleExceptionInternal(exception, null, new HttpHeaders(), INTERNAL_SERVER_ERROR, mock(WebRequest.class));
 
-        assertThat(response).isNotNull();
-        assertThat(response.getStatusCode()).isEqualTo(INTERNAL_SERVER_ERROR);
-        assertThat(response.getBody()).isInstanceOf(ErrorResponse.class);
-        ErrorResponse body = (ErrorResponse) response.getBody();
+        assertThat(result).isNotNull();
+        assertThat(result.getStatusCode()).isEqualTo(INTERNAL_SERVER_ERROR);
+        assertThat(result.getBody()).isInstanceOf(ErrorResponse.class);
+        ErrorResponse body = (ErrorResponse) result.getBody();
         assertThat(body).isNotNull();
         assertThat(body.getErrorCode()).isEqualTo(SERVICE_ERROR.getCode());
         assertThat(body.getErrorMessage()).isEqualTo("Internal server error message");
@@ -115,60 +115,72 @@ class GlobalExceptionHandlerTest {
     void shouldHandleEntityNotFoundException() {
         EntityNotFoundException exception = EntityNotFoundException.forUsername(USER, "username");
 
-        ResponseEntity<ErrorResponse> response = handler.handleEntityNotFoundException(exception);
+        ResponseEntity<ErrorResponse> result = handler.handleEntityNotFoundException(exception);
 
-        assertThat(response.getStatusCode()).isEqualTo(NOT_FOUND_ERROR.getStatus());
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getErrorCode()).isEqualTo(NOT_FOUND_ERROR.getCode());
-        assertThat(response.getBody().getErrorMessage()).isEqualTo(buildExpectedErrorMessage(NOT_FOUND_ERROR, exception));
+        assertThat(result.getStatusCode()).isEqualTo(NOT_FOUND_ERROR.getStatus());
+        assertThat(result.getBody()).isNotNull();
+        assertThat(result.getBody().getErrorCode()).isEqualTo(NOT_FOUND_ERROR.getCode());
+        assertThat(result.getBody().getErrorMessage()).isEqualTo(buildExpectedErrorMessage(NOT_FOUND_ERROR, exception));
     }
 
     @Test
     void shouldHandleValidationException() {
         ValidationException exception = new ValidationException("Test validation message");
 
-        ResponseEntity<ErrorResponse> response = handler.handleValidationException(exception);
+        ResponseEntity<ErrorResponse> result = handler.handleValidationException(exception);
 
-        assertThat(response.getStatusCode()).isEqualTo(VALIDATION_ERROR.getStatus());
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getErrorCode()).isEqualTo(VALIDATION_ERROR.getCode());
-        assertThat(response.getBody().getErrorMessage()).isEqualTo(buildExpectedErrorMessage(VALIDATION_ERROR, exception));
+        assertThat(result.getStatusCode()).isEqualTo(VALIDATION_ERROR.getStatus());
+        assertThat(result.getBody()).isNotNull();
+        assertThat(result.getBody().getErrorCode()).isEqualTo(VALIDATION_ERROR.getCode());
+        assertThat(result.getBody().getErrorMessage()).isEqualTo(buildExpectedErrorMessage(VALIDATION_ERROR, exception));
     }
 
     @Test
     void shouldHandleAuthenticationException() {
         AuthenticationException exception = new AuthenticationException("Test auth message");
 
-        ResponseEntity<ErrorResponse> response = handler.handleAuthenticationException(exception);
+        ResponseEntity<ErrorResponse> result = handler.handleAuthenticationException(exception);
 
-        assertThat(response.getStatusCode()).isEqualTo(AUTHENTICATION_ERROR.getStatus());
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getErrorCode()).isEqualTo(AUTHENTICATION_ERROR.getCode());
-        assertThat(response.getBody().getErrorMessage()).isEqualTo(AUTHENTICATION_ERROR.getMessage());
+        assertThat(result.getStatusCode()).isEqualTo(AUTHENTICATION_ERROR.getStatus());
+        assertThat(result.getBody()).isNotNull();
+        assertThat(result.getBody().getErrorCode()).isEqualTo(AUTHENTICATION_ERROR.getCode());
+        assertThat(result.getBody().getErrorMessage()).isEqualTo(AUTHENTICATION_ERROR.getMessage());
+    }
+
+    @Test
+    void shouldHandleUserDeactivatedException() {
+        UserDeactivatedException exception = new UserDeactivatedException("Test deactivated message");
+
+        ResponseEntity<ErrorResponse> result = handler.handleUserDeactivatedException(exception);
+
+        assertThat(result.getStatusCode()).isEqualTo(USER_DEACTIVATED_ERROR.getStatus());
+        assertThat(result.getBody()).isNotNull();
+        assertThat(result.getBody().getErrorCode()).isEqualTo(USER_DEACTIVATED_ERROR.getCode());
+        assertThat(result.getBody().getErrorMessage()).isEqualTo(USER_DEACTIVATED_ERROR.getMessage());
     }
 
     @Test
     void shouldHandleHibernateException() {
         PersistenceException exception = new PersistenceException("Test database message");
 
-        ResponseEntity<ErrorResponse> response = handler.handleHibernateException(exception);
+        ResponseEntity<ErrorResponse> result = handler.handleHibernateException(exception);
 
-        assertThat(response.getStatusCode()).isEqualTo(DATABASE_ERROR.getStatus());
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getErrorCode()).isEqualTo(DATABASE_ERROR.getCode());
-        assertThat(response.getBody().getErrorMessage()).isEqualTo(DATABASE_ERROR.getMessage());
+        assertThat(result.getStatusCode()).isEqualTo(DATABASE_ERROR.getStatus());
+        assertThat(result.getBody()).isNotNull();
+        assertThat(result.getBody().getErrorCode()).isEqualTo(DATABASE_ERROR.getCode());
+        assertThat(result.getBody().getErrorMessage()).isEqualTo(DATABASE_ERROR.getMessage());
     }
 
     @Test
     void shouldHandleUnexpectedException() {
         Exception exception = new Exception("Test unexpected message");
 
-        ResponseEntity<ErrorResponse> response = handler.handleUnexpectedException(exception);
+        ResponseEntity<ErrorResponse> result = handler.handleUnexpectedException(exception);
 
-        assertThat(response.getStatusCode()).isEqualTo(SERVICE_ERROR.getStatus());
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getErrorCode()).isEqualTo(SERVICE_ERROR.getCode());
-        assertThat(response.getBody().getErrorMessage()).isEqualTo(SERVICE_ERROR.getMessage());
+        assertThat(result.getStatusCode()).isEqualTo(SERVICE_ERROR.getStatus());
+        assertThat(result.getBody()).isNotNull();
+        assertThat(result.getBody().getErrorCode()).isEqualTo(SERVICE_ERROR.getCode());
+        assertThat(result.getBody().getErrorMessage()).isEqualTo(SERVICE_ERROR.getMessage());
     }
 
     @Test
@@ -180,12 +192,12 @@ class GlobalExceptionHandlerTest {
         when(exception.getBindingResult()).thenReturn(bindingResult);
         when(bindingResult.getFieldErrors()).thenReturn(List.of(fieldError));
 
-        ResponseEntity<Object> response = handler.handleMethodArgumentNotValid(exception, new HttpHeaders(), BAD_REQUEST, mock(WebRequest.class));
+        ResponseEntity<Object> result = handler.handleMethodArgumentNotValid(exception, new HttpHeaders(), BAD_REQUEST, mock(WebRequest.class));
 
-        assertThat(response).isNotNull();
-        assertThat(response.getStatusCode()).isEqualTo(VALIDATION_ERROR.getStatus());
-        assertThat(response.getBody()).isInstanceOf(ErrorResponse.class);
-        ErrorResponse body = (ErrorResponse) response.getBody();
+        assertThat(result).isNotNull();
+        assertThat(result.getStatusCode()).isEqualTo(VALIDATION_ERROR.getStatus());
+        assertThat(result.getBody()).isInstanceOf(ErrorResponse.class);
+        ErrorResponse body = (ErrorResponse) result.getBody();
         assertThat(body).isNotNull();
         assertThat(body.getErrorCode()).isEqualTo(VALIDATION_ERROR.getCode());
         assertThat(body.getErrorMessage()).isEqualTo(String.format("%s: fieldName: defaultMessage", VALIDATION_ERROR.getMessage()));
@@ -195,12 +207,12 @@ class GlobalExceptionHandlerTest {
     void shouldHandleConflictException() {
         ConflictException exception = new ConflictException("Test conflict message");
 
-        ResponseEntity<ErrorResponse> response = handler.handleConflictException(exception);
+        ResponseEntity<ErrorResponse> result = handler.handleConflictException(exception);
 
-        assertThat(response.getStatusCode()).isEqualTo(CONFLICT_ERROR.getStatus());
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getErrorCode()).isEqualTo(CONFLICT_ERROR.getCode());
-        assertThat(response.getBody().getErrorMessage()).isEqualTo(buildExpectedErrorMessage(CONFLICT_ERROR, exception));
+        assertThat(result.getStatusCode()).isEqualTo(CONFLICT_ERROR.getStatus());
+        assertThat(result.getBody()).isNotNull();
+        assertThat(result.getBody().getErrorCode()).isEqualTo(CONFLICT_ERROR.getCode());
+        assertThat(result.getBody().getErrorMessage()).isEqualTo(buildExpectedErrorMessage(CONFLICT_ERROR, exception));
     }
 
     private String buildExpectedErrorMessage(ApiError apiError, Exception exception) {

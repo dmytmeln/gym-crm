@@ -1,6 +1,5 @@
 package com.gym.crm.service;
 
-import com.gym.crm.dto.LoginChangeDto;
 import com.gym.crm.dto.filter.TrainerTrainingSearchFilter;
 import com.gym.crm.entity.Trainer;
 import com.gym.crm.entity.Training;
@@ -18,8 +17,6 @@ public interface TrainerService {
     boolean doesUsernameAndPasswordMatch(String username, String password);
 
     Trainer updateTrainer(Trainer trainer);
-
-    void updateTrainerPassword(LoginChangeDto loginChangeDto);
 
     void updateActivationStatus(String username, boolean isActive);
 
