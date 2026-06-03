@@ -29,9 +29,9 @@ class SecurityExceptionTranslationAspectTest {
 
         when(joinPoint.proceed()).thenReturn(expectedResult);
 
-        Object actualResult = aspect.translateSecurityExceptions(joinPoint);
+        Object actual = aspect.translateSecurityExceptions(joinPoint);
 
-        assertEquals(expectedResult, actualResult);
+        assertEquals(expectedResult, actual);
         verify(joinPoint).proceed();
     }
 
