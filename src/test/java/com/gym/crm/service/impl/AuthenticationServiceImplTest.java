@@ -15,9 +15,11 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import com.gym.crm.security.JwtService;
 
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -41,6 +43,9 @@ class AuthenticationServiceImplTest {
     @Mock
     private AuthenticationManager authenticationManager;
 
+    @Mock
+    private JwtService jwtService;
+
     @InjectMocks
     private AuthenticationServiceImpl service;
 
@@ -49,12 +54,16 @@ class AuthenticationServiceImplTest {
         LoginRequestDto loginRequestDto = buildLoginRequestDto();
         Authentication authentication = mock(Authentication.class);
         UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(USERNAME, PASSWORD);
+        String expectedToken = "mocked-jwt-token";
 
         when(authenticationManager.authenticate(token)).thenReturn(authentication);
+        when(jwtService.generateAccessToken(USERNAME)).thenReturn(expectedToken);
 
-        service.login(loginRequestDto);
+        String actualToken = service.login(loginRequestDto);
 
+        assertThat(actualToken).isEqualTo(expectedToken);
         verify(authenticationManager).authenticate(token);
+        verify(jwtService).generateAccessToken(USERNAME);
     }
 
     @Test

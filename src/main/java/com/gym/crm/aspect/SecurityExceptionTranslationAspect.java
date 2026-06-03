@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 public class SecurityExceptionTranslationAspect {
 
     @Pointcut("execution(* com.gym.crm.service.AuthenticationService.login(..))")
-    public void authenticationLogin() {
+    private void authenticationLogin() {
     }
 
     @Around("authenticationLogin()")

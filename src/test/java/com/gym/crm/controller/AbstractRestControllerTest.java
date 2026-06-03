@@ -1,0 +1,30 @@
+package com.gym.crm.controller;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gym.crm.exception.ApiError;
+import com.gym.crm.facade.GymFacade;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+
+import static java.lang.String.format;
+
+public abstract class AbstractRestControllerTest {
+
+    protected static final String EXPECTED_ERROR_MESSAGE_TEMPLATE = "%s: %s";
+    protected static final String BASE_PATH = "/api/v1";
+
+    @MockitoBean
+    protected GymFacade facade;
+
+    @Autowired
+    protected ObjectMapper objectMapper;
+
+    @Autowired
+    protected MockMvc mockMvc;
+
+    protected String buildExpectedErrorMessage(ApiError apiError, Exception exception) {
+        return format(EXPECTED_ERROR_MESSAGE_TEMPLATE, apiError.getMessage(), exception.getMessage());
+    }
+
+}
