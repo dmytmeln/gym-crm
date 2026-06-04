@@ -26,6 +26,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @ExtendWith(MockitoExtension.class)
 class JwtAuthenticationEntryPointTest {
@@ -49,7 +50,7 @@ class JwtAuthenticationEntryPointTest {
         entryPoint.commence(request, response, authException);
 
         verify(response).setStatus(401);
-        verify(response).setContentType("application/json");
+        verify(response).setContentType(APPLICATION_JSON_VALUE);
         verify(response).setHeader("WWW-Authenticate", "Bearer");
         verify(objectMapper).writeValue(eq(outputStream), errorCaptor.capture());
         ErrorResponse actualError = errorCaptor.getValue();
@@ -71,7 +72,7 @@ class JwtAuthenticationEntryPointTest {
         entryPoint.commence(request, response, authException);
 
         verify(response).setStatus(403);
-        verify(response).setContentType("application/json");
+        verify(response).setContentType(APPLICATION_JSON_VALUE);
         verify(objectMapper).writeValue(eq(outputStream), errorCaptor.capture());
         ErrorResponse actualError = errorCaptor.getValue();
         assertNotNull(actualError, "Error response should not be null");
@@ -92,7 +93,7 @@ class JwtAuthenticationEntryPointTest {
         entryPoint.commence(request, response, authException);
 
         verify(response).setStatus(401);
-        verify(response).setContentType("application/json");
+        verify(response).setContentType(APPLICATION_JSON_VALUE);
         verify(objectMapper).writeValue(eq(outputStream), errorCaptor.capture());
         ErrorResponse actualError = errorCaptor.getValue();
         assertNotNull(actualError, "Error response should not be null");
@@ -113,7 +114,7 @@ class JwtAuthenticationEntryPointTest {
         entryPoint.commence(request, response, authException);
 
         verify(response).setStatus(401);
-        verify(response).setContentType("application/json");
+        verify(response).setContentType(APPLICATION_JSON_VALUE);
         verify(objectMapper).writeValue(eq(outputStream), errorCaptor.capture());
         ErrorResponse actualError = errorCaptor.getValue();
         assertNotNull(actualError, "Error response should not be null");

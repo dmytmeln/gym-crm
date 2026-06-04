@@ -80,6 +80,7 @@ import static org.mockito.Mockito.when;
 class GymFacadeTest {
 
     private static final String USERNAME = "username";
+    private static final String USERNAME_NULL_MSG = "Username cannot be null";
 
     @Mock
     private TraineeService traineeService;
@@ -176,7 +177,7 @@ class GymFacadeTest {
     void shouldThrowNullPointerWhenGettingTraineeByNullUsername() {
         NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.getTraineeByUsername(null));
 
-        assertEquals("Username cannot be null", exception.getMessage());
+        assertEquals(USERNAME_NULL_MSG, exception.getMessage());
         verifyNoInteractions(traineeService, traineeMapper);
     }
 
@@ -232,7 +233,7 @@ class GymFacadeTest {
         NullPointerException exception = assertThrows(NullPointerException.class,
                 () -> facade.getAvailableTrainersForTrainee(null));
 
-        assertEquals("Username cannot be null", exception.getMessage());
+        assertEquals(USERNAME_NULL_MSG, exception.getMessage());
         verifyNoInteractions(traineeService, traineeMapper);
     }
 
@@ -300,7 +301,7 @@ class GymFacadeTest {
         NullPointerException exception = assertThrows(NullPointerException.class,
                 () -> facade.updateTraineeTrainers(null, request));
 
-        assertEquals("Username cannot be null", exception.getMessage());
+        assertEquals(USERNAME_NULL_MSG, exception.getMessage());
         verifyNoInteractions(traineeService, traineeMapper);
     }
 
@@ -329,7 +330,7 @@ class GymFacadeTest {
         NullPointerException exception = assertThrows(NullPointerException.class,
                 () -> facade.updateTraineeActivationStatus(null, request));
 
-        assertEquals("Username cannot be null", exception.getMessage());
+        assertEquals(USERNAME_NULL_MSG, exception.getMessage());
         verifyNoInteractions(traineeService);
     }
 
@@ -359,7 +360,7 @@ class GymFacadeTest {
     void shouldThrowNullPointerWhenDeletingNullTraineeUsername() {
         NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.deleteTraineeByUsername(null));
 
-        assertEquals("Username cannot be null", exception.getMessage());
+        assertEquals(USERNAME_NULL_MSG, exception.getMessage());
         verifyNoInteractions(traineeService);
     }
 
@@ -510,7 +511,7 @@ class GymFacadeTest {
     void shouldThrowNullPointerWhenGettingTrainerProfileByNullUsername() {
         NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.getTrainerByUsername(null));
 
-        assertEquals("Username cannot be null", exception.getMessage());
+        assertEquals(USERNAME_NULL_MSG, exception.getMessage());
         verifyNoInteractions(trainerService, trainerMapper);
     }
 
@@ -585,7 +586,7 @@ class GymFacadeTest {
     void shouldThrowNullPointerWhenChangingTrainerActivationStatusWithNullUsername() {
         NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.updateTrainerActivationStatus(null, true));
 
-        assertEquals("Username cannot be null", exception.getMessage());
+        assertEquals(USERNAME_NULL_MSG, exception.getMessage());
         verifyNoInteractions(trainerService);
     }
 

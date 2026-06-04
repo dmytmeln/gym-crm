@@ -33,7 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RestControllerUnitTest(TrainingRestController.class)
 class TrainingRestControllerTest extends AbstractRestControllerTest {
 
-    private static final String BASE_URI = BASE_PATH + "/trainings";
+    private static final String TRAININGS_TYPES_ENDPOINT = TRAININGS_ENDPOINT + "/types";
     private static final String TRAINEE_USERNAME = "billy.herrington";
     private static final String TRAINER_USERNAME = "ricardo.milos";
     private static final String TRAINING_NAME = "Morning Cardio";
@@ -45,7 +45,7 @@ class TrainingRestControllerTest extends AbstractRestControllerTest {
         String requestBody = readJson("json/training/add_training_request.json");
         TrainingCreateRequest expectedRequest = objectMapper.readValue(requestBody, TrainingCreateRequest.class);
 
-        mockMvc.perform(post(BASE_URI)
+        mockMvc.perform(post(TRAININGS_ENDPOINT)
                         .contentType(APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk());
@@ -58,7 +58,7 @@ class TrainingRestControllerTest extends AbstractRestControllerTest {
         String requestBody = readJson("json/training/add_invalid_request.json");
         String expectedResponseBody = readJson("json/training/add_training_name_null_error.json");
 
-        String actualResponseBody = mockMvc.perform(post(BASE_URI)
+        String actualResponseBody = mockMvc.perform(post(TRAININGS_ENDPOINT)
                         .contentType(APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isBadRequest())
@@ -74,7 +74,7 @@ class TrainingRestControllerTest extends AbstractRestControllerTest {
     void shouldFailAddTrainingWhenTrainingDateIsNull() throws Exception {
         TrainingCreateRequest invalidRequest = buildTrainingCreateRequest(TRAINEE_USERNAME, TRAINER_USERNAME, null, TRAINING_DURATION);
 
-        String actualResponseBody = mockMvc.perform(post(BASE_URI)
+        String actualResponseBody = mockMvc.perform(post(TRAININGS_ENDPOINT)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest())
@@ -92,7 +92,7 @@ class TrainingRestControllerTest extends AbstractRestControllerTest {
     void shouldFailAddTrainingWhenTrainingDurationIsNull() throws Exception {
         TrainingCreateRequest invalidRequest = buildTrainingCreateRequest(TRAINEE_USERNAME, TRAINER_USERNAME, TRAINING_DATE, null);
 
-        String actualResponseBody = mockMvc.perform(post(BASE_URI)
+        String actualResponseBody = mockMvc.perform(post(TRAININGS_ENDPOINT)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest())
@@ -110,7 +110,7 @@ class TrainingRestControllerTest extends AbstractRestControllerTest {
     void shouldFailAddTrainingWhenTraineeUsernameIsNull() throws Exception {
         TrainingCreateRequest invalidRequest = buildTrainingCreateRequest(null, TRAINER_USERNAME, TRAINING_DATE, TRAINING_DURATION);
 
-        String actualResponseBody = mockMvc.perform(post(BASE_URI)
+        String actualResponseBody = mockMvc.perform(post(TRAININGS_ENDPOINT)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest())
@@ -128,7 +128,7 @@ class TrainingRestControllerTest extends AbstractRestControllerTest {
     void shouldFailAddTrainingWhenTrainerUsernameIsNull() throws Exception {
         TrainingCreateRequest invalidRequest = buildTrainingCreateRequest(TRAINEE_USERNAME, null, TRAINING_DATE, TRAINING_DURATION);
 
-        String actualResponseBody = mockMvc.perform(post(BASE_URI)
+        String actualResponseBody = mockMvc.perform(post(TRAININGS_ENDPOINT)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest())
@@ -146,7 +146,7 @@ class TrainingRestControllerTest extends AbstractRestControllerTest {
     void shouldFailAddTrainingWhenTrainingDurationIsZero() throws Exception {
         TrainingCreateRequest invalidRequest = buildTrainingCreateRequest(TRAINEE_USERNAME, TRAINER_USERNAME, TRAINING_DATE, 0);
 
-        String actualResponseBody = mockMvc.perform(post(BASE_URI)
+        String actualResponseBody = mockMvc.perform(post(TRAININGS_ENDPOINT)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest())
@@ -167,7 +167,7 @@ class TrainingRestControllerTest extends AbstractRestControllerTest {
 
         doThrow(exception).when(facade).createTraining(validRequest);
 
-        String actualResponseBody = mockMvc.perform(post(BASE_URI)
+        String actualResponseBody = mockMvc.perform(post(TRAININGS_ENDPOINT)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isNotFound())
@@ -186,7 +186,7 @@ class TrainingRestControllerTest extends AbstractRestControllerTest {
 
         doThrow(new RuntimeException("Unexpected failure")).when(facade).createTraining(validRequest);
 
-        String actualResponseBody = mockMvc.perform(post(BASE_URI)
+        String actualResponseBody = mockMvc.perform(post(TRAININGS_ENDPOINT)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isInternalServerError())
@@ -205,7 +205,7 @@ class TrainingRestControllerTest extends AbstractRestControllerTest {
 
         doThrow(new HibernateException("Database connectivity failure")).when(facade).createTraining(validRequest);
 
-        String actualResponseBody = mockMvc.perform(post(BASE_URI)
+        String actualResponseBody = mockMvc.perform(post(TRAININGS_ENDPOINT)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isInternalServerError())
@@ -229,7 +229,7 @@ class TrainingRestControllerTest extends AbstractRestControllerTest {
 
         when(facade.getAllTrainingTypes()).thenReturn(List.of(cardio, yoga));
 
-        String actualResponseBody = mockMvc.perform(get(BASE_URI + "/types"))
+        String actualResponseBody = mockMvc.perform(get(TRAININGS_TYPES_ENDPOINT))
                 .andExpect(status().isOk())
                 .andReturn()
                 .getResponse()
@@ -247,7 +247,7 @@ class TrainingRestControllerTest extends AbstractRestControllerTest {
     void shouldGetEmptyTrainingTypesList() throws Exception {
         when(facade.getAllTrainingTypes()).thenReturn(List.of());
 
-        String actualResponseBody = mockMvc.perform(get(BASE_URI + "/types"))
+        String actualResponseBody = mockMvc.perform(get(TRAININGS_TYPES_ENDPOINT))
                 .andExpect(status().isOk())
                 .andReturn()
                 .getResponse()
@@ -266,7 +266,7 @@ class TrainingRestControllerTest extends AbstractRestControllerTest {
 
         doThrow(exception).when(facade).createTraining(validRequest);
 
-        String actualResponseBody = mockMvc.perform(post(BASE_URI)
+        String actualResponseBody = mockMvc.perform(post(TRAININGS_ENDPOINT)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isBadRequest())
@@ -284,7 +284,7 @@ class TrainingRestControllerTest extends AbstractRestControllerTest {
     void shouldReturn401WhenAddTrainingAnonymous() throws Exception {
         String requestBody = readJson("json/training/add_training_request.json");
 
-        String actualResponseBody = mockMvc.perform(post(BASE_URI)
+        String actualResponseBody = mockMvc.perform(post(TRAININGS_ENDPOINT)
                         .contentType(APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isUnauthorized())
@@ -300,7 +300,7 @@ class TrainingRestControllerTest extends AbstractRestControllerTest {
     @Test
     @WithAnonymousUser
     void shouldReturn401WhenGetTrainingTypesAnonymous() throws Exception {
-        String actualResponseBody = mockMvc.perform(get(BASE_URI + "/types"))
+        String actualResponseBody = mockMvc.perform(get(TRAININGS_TYPES_ENDPOINT))
                 .andExpect(status().isUnauthorized())
                 .andReturn()
                 .getResponse()

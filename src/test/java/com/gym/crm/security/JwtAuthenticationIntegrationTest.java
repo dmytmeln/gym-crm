@@ -32,7 +32,11 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 @Sql(scripts = {"classpath:datasets/cleanup-all.sql", "classpath:datasets/seed-data.sql"})
 class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
 
-    private static final String BASE_PATH = "/api/v1";
+    private static final String LOGIN_ENDPOINT = "/api/v1/auth/login";
+    private static final String PASSWORD_ENDPOINT = "/api/v1/auth/password";
+    private static final String TRAININGS_TYPES_ENDPOINT = "/api/v1/trainings/types";
+    private static final String TRAINEE_PROFILE_ENDPOINT = "/api/v1/trainees/{username}";
+    private static final String TRAINER_PROFILE_ENDPOINT = "/api/v1/trainers/{username}";
     private static final String EXISTING_TRAINEE_USERNAME = "liam.miller";
     private static final String EXISTING_TRAINEE_PASSWORD = "password123";
     private static final String EXISTING_TRAINER_USERNAME = "marcus.stone";
@@ -53,7 +57,7 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
     @Test
     void shouldAuthenticateUserWhenCredentialsAreValid() {
         RequestEntity<LoginRequest> request = RequestEntity
-                .post(BASE_PATH + "/auth/login")
+                .post(LOGIN_ENDPOINT)
                 .body(new LoginRequest(EXISTING_TRAINEE_USERNAME, EXISTING_TRAINEE_PASSWORD));
 
         ResponseEntity<Void> actual = restTemplate.exchange(request, Void.class);
@@ -72,7 +76,7 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
     @Test
     void shouldNotAccessTraineeProtectedEndpointWithoutToken() {
         RequestEntity<Void> request = RequestEntity
-                .get(BASE_PATH + "/trainees/{username}", EXISTING_TRAINEE_USERNAME)
+                .get(TRAINEE_PROFILE_ENDPOINT, EXISTING_TRAINEE_USERNAME)
                 .build();
 
         ResponseEntity<ErrorResponse> actual = restTemplate.exchange(request, ErrorResponse.class);
@@ -84,7 +88,7 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
     @Test
     void shouldNotAccessTrainerProtectedEndpointWithoutToken() {
         RequestEntity<Void> request = RequestEntity
-                .get(BASE_PATH + "/trainers/{username}", EXISTING_TRAINER_USERNAME)
+                .get(TRAINER_PROFILE_ENDPOINT, EXISTING_TRAINER_USERNAME)
                 .build();
 
         ResponseEntity<ErrorResponse> actual = restTemplate.exchange(request, ErrorResponse.class);
@@ -96,7 +100,7 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
     @Test
     void shouldNotAccessTrainingProtectedEndpointWithoutToken() {
         RequestEntity<Void> request = RequestEntity
-                .get(BASE_PATH + "/trainings/types")
+                .get(TRAININGS_TYPES_ENDPOINT)
                 .build();
 
         ResponseEntity<ErrorResponse> actual = restTemplate.exchange(request, ErrorResponse.class);
@@ -109,7 +113,7 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
     void shouldAccessTraineeProtectedEndpointWithValidToken() {
         HttpHeaders headers = createBearerAuthHeadersForTrainee();
         RequestEntity<Void> request = RequestEntity
-                .get(BASE_PATH + "/trainees/{username}", EXISTING_TRAINEE_USERNAME)
+                .get(TRAINEE_PROFILE_ENDPOINT, EXISTING_TRAINEE_USERNAME)
                 .headers(headers)
                 .build();
         TraineeGetResponse expectedTrainee = new TraineeGetResponse()
@@ -132,7 +136,7 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
     void shouldAccessTrainerProtectedEndpointWithValidToken() {
         HttpHeaders headers = createBearerAuthHeadersForTrainer();
         RequestEntity<Void> request = RequestEntity
-                .get(BASE_PATH + "/trainers/{username}", EXISTING_TRAINER_USERNAME)
+                .get(TRAINER_PROFILE_ENDPOINT, EXISTING_TRAINER_USERNAME)
                 .headers(headers)
                 .build();
         TrainerGetResponse expectedTrainer = new TrainerGetResponse()
@@ -154,7 +158,7 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
     void shouldAccessTrainingProtectedEndpointWithValidToken() {
         HttpHeaders headers = createBearerAuthHeadersForTrainer();
         RequestEntity<Void> request = RequestEntity
-                .get(BASE_PATH + "/trainings/types")
+                .get(TRAININGS_TYPES_ENDPOINT)
                 .headers(headers)
                 .build();
         List<TrainingTypeResponse> expectedTrainingTypes = List.of(new TrainingTypeResponse().id(1).name("CARDIO"),
@@ -173,7 +177,7 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
     void shouldChangePasswordAndReturn401ForLoginWithOldPassword() {
         HttpHeaders headers = createBearerAuthHeadersForTrainee();
         RequestEntity<LoginChangeRequest> request = RequestEntity
-                .put(BASE_PATH + "/auth/password")
+                .put(PASSWORD_ENDPOINT)
                 .headers(headers)
                 .body(new LoginChangeRequest(EXISTING_TRAINEE_USERNAME, EXISTING_TRAINEE_PASSWORD, "newPassword"));
 
@@ -181,7 +185,7 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
 
         assertThat(actual.getStatusCode().is2xxSuccessful()).isTrue();
         RequestEntity<LoginRequest> loginRequest = RequestEntity
-                .post(BASE_PATH + "/auth/login")
+                .post(LOGIN_ENDPOINT)
                 .body(new LoginRequest(EXISTING_TRAINEE_USERNAME, EXISTING_TRAINEE_PASSWORD));
         ResponseEntity<Void> loginResponse = restTemplate.exchange(loginRequest, Void.class);
         assertThat(loginResponse.getStatusCode()).isEqualTo(AUTHENTICATION_ERROR.getStatus());
@@ -192,7 +196,7 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
         HttpHeaders headers = createBearerAuthHeadersForTrainee();
         String newPassword = "newPassword";
         RequestEntity<LoginChangeRequest> request = RequestEntity
-                .put(BASE_PATH + "/auth/password")
+                .put(PASSWORD_ENDPOINT)
                 .headers(headers)
                 .body(new LoginChangeRequest(EXISTING_TRAINEE_USERNAME, EXISTING_TRAINEE_PASSWORD, newPassword));
 
@@ -200,7 +204,7 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
 
         assertThat(actual.getStatusCode().is2xxSuccessful()).isTrue();
         RequestEntity<LoginRequest> loginRequest = RequestEntity
-                .post(BASE_PATH + "/auth/login")
+                .post(LOGIN_ENDPOINT)
                 .body(new LoginRequest(EXISTING_TRAINEE_USERNAME, newPassword));
         ResponseEntity<Void> loginResponse = restTemplate.exchange(loginRequest, Void.class);
         assertThat(loginResponse.getStatusCode().is2xxSuccessful()).isTrue();

@@ -33,7 +33,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RestControllerUnitTest(AuthRestController.class)
 class AuthRestControllerTest extends AbstractRestControllerTest {
 
-    private static final String BASE_URI = BASE_PATH + "/auth";
+    private static final String LOGIN_ENDPOINT = AUTH_ENDPOINT + "/login";
+    private static final String PASSWORD_ENDPOINT = AUTH_ENDPOINT + "/password";
     private static final String USERNAME = "liam.miller";
     private static final String PASSWORD = "password123";
     private static final String NEW_PASSWORD = "newPassword123";
@@ -46,7 +47,7 @@ class AuthRestControllerTest extends AbstractRestControllerTest {
 
         when(facade.login(expectedRequest)).thenReturn(expectedToken);
 
-        mockMvc.perform(post(BASE_URI + "/login")
+        mockMvc.perform(post(LOGIN_ENDPOINT)
                         .contentType(APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk())
@@ -60,7 +61,7 @@ class AuthRestControllerTest extends AbstractRestControllerTest {
         String requestBody = readJson("json/auth/login_invalid_request.json");
         String expectedResponseBody = readJson("json/auth/login_username_null_error.json");
 
-        String actualResponseBody = mockMvc.perform(post(BASE_URI + "/login")
+        String actualResponseBody = mockMvc.perform(post(LOGIN_ENDPOINT)
                         .contentType(APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isBadRequest())
@@ -76,7 +77,7 @@ class AuthRestControllerTest extends AbstractRestControllerTest {
     void shouldFailLoginWhenPasswordIsNull() throws Exception {
         LoginRequest invalidRequest = buildLoginRequest(null);
 
-        String actualResponseBody = mockMvc.perform(post(BASE_URI + "/login")
+        String actualResponseBody = mockMvc.perform(post(LOGIN_ENDPOINT)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest())
@@ -97,7 +98,7 @@ class AuthRestControllerTest extends AbstractRestControllerTest {
 
         doThrow(exception).when(facade).login(any());
 
-        String actualResponseBody = mockMvc.perform(post(BASE_URI + "/login")
+        String actualResponseBody = mockMvc.perform(post(LOGIN_ENDPOINT)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isNotFound())
@@ -116,7 +117,7 @@ class AuthRestControllerTest extends AbstractRestControllerTest {
 
         doThrow(new RuntimeException("Unexpected failure")).when(facade).login(any());
 
-        String actualResponseBody = mockMvc.perform(post(BASE_URI + "/login")
+        String actualResponseBody = mockMvc.perform(post(LOGIN_ENDPOINT)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isInternalServerError())
@@ -135,7 +136,7 @@ class AuthRestControllerTest extends AbstractRestControllerTest {
 
         doThrow(new HibernateException("Database connectivity failure")).when(facade).login(any());
 
-        String actualResponseBody = mockMvc.perform(post(BASE_URI + "/login")
+        String actualResponseBody = mockMvc.perform(post(LOGIN_ENDPOINT)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isInternalServerError())
@@ -152,7 +153,7 @@ class AuthRestControllerTest extends AbstractRestControllerTest {
     void shouldChangePasswordWhenRequestIsValid() throws Exception {
         LoginChangeRequest validRequest = buildLoginChangeRequest(USERNAME, PASSWORD, NEW_PASSWORD);
 
-        mockMvc.perform(put(BASE_URI + "/password")
+        mockMvc.perform(put(PASSWORD_ENDPOINT)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isOk());
@@ -164,7 +165,7 @@ class AuthRestControllerTest extends AbstractRestControllerTest {
     void shouldFailChangePasswordWhenUsernameIsNull() throws Exception {
         LoginChangeRequest invalidRequest = buildLoginChangeRequest(null, PASSWORD, NEW_PASSWORD);
 
-        String actualResponseBody = mockMvc.perform(put(BASE_URI + "/password")
+        String actualResponseBody = mockMvc.perform(put(PASSWORD_ENDPOINT)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest())
@@ -182,7 +183,7 @@ class AuthRestControllerTest extends AbstractRestControllerTest {
     void shouldFailChangePasswordWhenOldPasswordIsNull() throws Exception {
         LoginChangeRequest invalidRequest = buildLoginChangeRequest(USERNAME, null, NEW_PASSWORD);
 
-        String actualResponseBody = mockMvc.perform(put(BASE_URI + "/password")
+        String actualResponseBody = mockMvc.perform(put(PASSWORD_ENDPOINT)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest())
@@ -200,7 +201,7 @@ class AuthRestControllerTest extends AbstractRestControllerTest {
     void shouldFailChangePasswordWhenNewPasswordIsNull() throws Exception {
         LoginChangeRequest invalidRequest = buildLoginChangeRequest(USERNAME, PASSWORD, null);
 
-        String actualResponseBody = mockMvc.perform(put(BASE_URI + "/password")
+        String actualResponseBody = mockMvc.perform(put(PASSWORD_ENDPOINT)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest())
@@ -220,7 +221,7 @@ class AuthRestControllerTest extends AbstractRestControllerTest {
 
         doThrow(new AuthenticationException("User is not authenticated")).when(facade).changePassword(any(LoginChangeRequest.class));
 
-        String actualResponseBody = mockMvc.perform(put(BASE_URI + "/password")
+        String actualResponseBody = mockMvc.perform(put(PASSWORD_ENDPOINT)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isUnauthorized())
@@ -240,7 +241,7 @@ class AuthRestControllerTest extends AbstractRestControllerTest {
 
         doThrow(exception).when(facade).login(any());
 
-        String actualResponseBody = mockMvc.perform(post(BASE_URI + "/login")
+        String actualResponseBody = mockMvc.perform(post(LOGIN_ENDPOINT)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isBadRequest())

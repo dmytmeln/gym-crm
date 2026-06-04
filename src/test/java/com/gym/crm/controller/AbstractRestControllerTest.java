@@ -13,6 +13,10 @@ public abstract class AbstractRestControllerTest {
 
     protected static final String EXPECTED_ERROR_MESSAGE_TEMPLATE = "%s: %s";
     protected static final String BASE_PATH = "/api/v1";
+    protected static final String TRAINEES_ENDPOINT = BASE_PATH + "/trainees";
+    protected static final String TRAINERS_ENDPOINT = BASE_PATH + "/trainers";
+    protected static final String TRAININGS_ENDPOINT = BASE_PATH + "/trainings";
+    protected static final String AUTH_ENDPOINT = BASE_PATH + "/auth";
 
     @MockitoBean
     protected GymFacade facade;

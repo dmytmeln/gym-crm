@@ -45,7 +45,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RestControllerUnitTest(TrainerRestController.class)
 class TrainerRestControllerTest extends AbstractRestControllerTest {
 
-    private static final String BASE_URI = BASE_PATH + "/trainers";
+    private static final String TRAINER_RESOURCE_ENDPOINT = TRAINERS_ENDPOINT + "/{username}";
+    private static final String REGISTER_ENDPOINT = TRAINERS_ENDPOINT + "/register";
+    private static final String ACTIVATION_ENDPOINT = TRAINER_RESOURCE_ENDPOINT + "/activation";
+    private static final String TRAINER_TRAININGS_ENDPOINT = TRAINER_RESOURCE_ENDPOINT + "/trainings";
     private static final String USERNAME = "liam.miller";
     private static final String FIRST_NAME = "Liam";
     private static final String LAST_NAME = "Miller";
@@ -61,7 +64,7 @@ class TrainerRestControllerTest extends AbstractRestControllerTest {
 
         when(facade.createTrainer(any(TrainerCreateRequest.class))).thenReturn(mockResponse);
 
-        String actualResponseBody = mockMvc.perform(post(BASE_URI + "/register")
+        String actualResponseBody = mockMvc.perform(post(REGISTER_ENDPOINT)
                         .contentType(APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk())
@@ -77,7 +80,7 @@ class TrainerRestControllerTest extends AbstractRestControllerTest {
     void shouldFailRegisterTrainerWhenFirstNameIsNull() throws Exception {
         TrainerCreateRequest invalidRequest = buildTrainerCreateRequest(null, LAST_NAME, SPECIALIZATION);
 
-        String actualResponseBody = mockMvc.perform(post(BASE_URI + "/register")
+        String actualResponseBody = mockMvc.perform(post(REGISTER_ENDPOINT)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest())
@@ -95,7 +98,7 @@ class TrainerRestControllerTest extends AbstractRestControllerTest {
     void shouldFailRegisterTrainerWhenLastNameIsNull() throws Exception {
         TrainerCreateRequest invalidRequest = buildTrainerCreateRequest(FIRST_NAME, null, SPECIALIZATION);
 
-        String actualResponseBody = mockMvc.perform(post(BASE_URI + "/register")
+        String actualResponseBody = mockMvc.perform(post(REGISTER_ENDPOINT)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest())
@@ -113,7 +116,7 @@ class TrainerRestControllerTest extends AbstractRestControllerTest {
     void shouldFailRegisterTrainerWhenSpecializationIsNull() throws Exception {
         TrainerCreateRequest invalidRequest = buildTrainerCreateRequest(FIRST_NAME, LAST_NAME, null);
 
-        String actualResponseBody = mockMvc.perform(post(BASE_URI + "/register")
+        String actualResponseBody = mockMvc.perform(post(REGISTER_ENDPOINT)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest())
@@ -134,7 +137,7 @@ class TrainerRestControllerTest extends AbstractRestControllerTest {
 
         when(facade.getTrainerByUsername(USERNAME)).thenReturn(mockResponse);
 
-        String actualResponseBody = mockMvc.perform(get(BASE_URI + "/{username}", USERNAME))
+        String actualResponseBody = mockMvc.perform(get(TRAINER_RESOURCE_ENDPOINT, USERNAME))
                 .andExpect(status().isOk())
                 .andReturn()
                 .getResponse()
@@ -150,7 +153,7 @@ class TrainerRestControllerTest extends AbstractRestControllerTest {
 
         doThrow(exception).when(facade).getTrainerByUsername(USERNAME);
 
-        String actualResponseBody = mockMvc.perform(get(BASE_URI + "/{username}", USERNAME))
+        String actualResponseBody = mockMvc.perform(get(TRAINER_RESOURCE_ENDPOINT, USERNAME))
                 .andExpect(status().isNotFound())
                 .andReturn()
                 .getResponse()
@@ -165,7 +168,7 @@ class TrainerRestControllerTest extends AbstractRestControllerTest {
     void shouldReturn401WhenAuthenticationFailsOnGetTrainerProfile() throws Exception {
         doThrow(new AuthenticationException("User is not authenticated")).when(facade).getTrainerByUsername(USERNAME);
 
-        String actualResponseBody = mockMvc.perform(get(BASE_URI + "/{username}", USERNAME))
+        String actualResponseBody = mockMvc.perform(get(TRAINER_RESOURCE_ENDPOINT, USERNAME))
                 .andExpect(status().isUnauthorized())
                 .andReturn()
                 .getResponse()
@@ -180,7 +183,7 @@ class TrainerRestControllerTest extends AbstractRestControllerTest {
     void shouldReturn500WhenUnexpectedErrorOccursOnGetTrainerProfile() throws Exception {
         doThrow(new RuntimeException("Unexpected failure")).when(facade).getTrainerByUsername(USERNAME);
 
-        String actualResponseBody = mockMvc.perform(get(BASE_URI + "/{username}", USERNAME))
+        String actualResponseBody = mockMvc.perform(get(TRAINER_RESOURCE_ENDPOINT, USERNAME))
                 .andExpect(status().isInternalServerError())
                 .andReturn()
                 .getResponse()
@@ -195,7 +198,7 @@ class TrainerRestControllerTest extends AbstractRestControllerTest {
     void shouldReturn500WhenHibernateExceptionOccursOnGetTrainerProfile() throws Exception {
         doThrow(new HibernateException("Database connectivity failure")).when(facade).getTrainerByUsername(USERNAME);
 
-        String actualResponseBody = mockMvc.perform(get(BASE_URI + "/{username}", USERNAME))
+        String actualResponseBody = mockMvc.perform(get(TRAINER_RESOURCE_ENDPOINT, USERNAME))
                 .andExpect(status().isInternalServerError())
                 .andReturn()
                 .getResponse()
@@ -217,7 +220,7 @@ class TrainerRestControllerTest extends AbstractRestControllerTest {
 
         when(facade.getTrainerTrainings(any())).thenReturn(List.of(trainingResponse));
 
-        String actualResponseBody = mockMvc.perform(get(BASE_URI + "/{username}/trainings", USERNAME)
+        String actualResponseBody = mockMvc.perform(get(TRAINER_TRAININGS_ENDPOINT, USERNAME)
                         .param("fromDate", "2025-07-01")
                         .param("toDate", "2025-07-31")
                         .param("traineeName", "billy.herrington"))
@@ -239,7 +242,7 @@ class TrainerRestControllerTest extends AbstractRestControllerTest {
     void shouldGetTrainerTrainingsWithNoOptionalFilters() throws Exception {
         when(facade.getTrainerTrainings(any())).thenReturn(List.of());
 
-        mockMvc.perform(get(BASE_URI + "/{username}/trainings", USERNAME))
+        mockMvc.perform(get(TRAINER_TRAININGS_ENDPOINT, USERNAME))
                 .andExpect(status().isOk());
 
         verify(facade).getTrainerTrainings(any());
@@ -257,7 +260,7 @@ class TrainerRestControllerTest extends AbstractRestControllerTest {
 
         when(facade.updateTrainer(eq(USERNAME), any(TrainerUpdateRequest.class))).thenReturn(mockResponse);
 
-        String actualResponseBody = mockMvc.perform(put(BASE_URI + "/{username}", USERNAME)
+        String actualResponseBody = mockMvc.perform(put(TRAINER_RESOURCE_ENDPOINT, USERNAME)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isOk())
@@ -276,7 +279,7 @@ class TrainerRestControllerTest extends AbstractRestControllerTest {
     void shouldFailUpdateTrainerProfileWhenFirstNameIsNull() throws Exception {
         TrainerUpdateRequest invalidRequest = buildTrainerUpdateRequest(null, LAST_NAME);
 
-        String actualResponseBody = mockMvc.perform(put(BASE_URI + "/{username}", USERNAME)
+        String actualResponseBody = mockMvc.perform(put(TRAINER_RESOURCE_ENDPOINT, USERNAME)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest())
@@ -294,7 +297,7 @@ class TrainerRestControllerTest extends AbstractRestControllerTest {
     void shouldFailUpdateTrainerProfileWhenLastNameIsNull() throws Exception {
         TrainerUpdateRequest invalidRequest = buildTrainerUpdateRequest(FIRST_NAME, null);
 
-        String actualResponseBody = mockMvc.perform(put(BASE_URI + "/{username}", USERNAME)
+        String actualResponseBody = mockMvc.perform(put(TRAINER_RESOURCE_ENDPOINT, USERNAME)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest())
@@ -314,7 +317,7 @@ class TrainerRestControllerTest extends AbstractRestControllerTest {
         invalidRequest.firstName(FIRST_NAME);
         invalidRequest.lastName(LAST_NAME);
 
-        String actualResponseBody = mockMvc.perform(put(BASE_URI + "/{username}", USERNAME)
+        String actualResponseBody = mockMvc.perform(put(TRAINER_RESOURCE_ENDPOINT, USERNAME)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest())
@@ -332,7 +335,7 @@ class TrainerRestControllerTest extends AbstractRestControllerTest {
     void shouldChangeTrainerActivationStatusWhenRequestIsValid() throws Exception {
         ActivationStatusRequest validRequest = new ActivationStatusRequest(true);
 
-        mockMvc.perform(patch(BASE_URI + "/{username}/activation", USERNAME)
+        mockMvc.perform(patch(ACTIVATION_ENDPOINT, USERNAME)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isOk());
@@ -344,7 +347,7 @@ class TrainerRestControllerTest extends AbstractRestControllerTest {
     void shouldFailChangeTrainerActivationStatusWhenIsActiveIsNull() throws Exception {
         ActivationStatusRequest invalidRequest = new ActivationStatusRequest(null);
 
-        String actualResponseBody = mockMvc.perform(patch(BASE_URI + "/{username}/activation", USERNAME)
+        String actualResponseBody = mockMvc.perform(patch(ACTIVATION_ENDPOINT, USERNAME)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest())
@@ -365,7 +368,7 @@ class TrainerRestControllerTest extends AbstractRestControllerTest {
 
         doThrow(exception).when(facade).updateTrainerActivationStatus(USERNAME, true);
 
-        String actualResponseBody = mockMvc.perform(patch(BASE_URI + "/{username}/activation", USERNAME)
+        String actualResponseBody = mockMvc.perform(patch(ACTIVATION_ENDPOINT, USERNAME)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict())
@@ -386,7 +389,7 @@ class TrainerRestControllerTest extends AbstractRestControllerTest {
 
         doThrow(exception).when(facade).createTrainer(any(TrainerCreateRequest.class));
 
-        String actualResponseBody = mockMvc.perform(post(BASE_URI + "/register")
+        String actualResponseBody = mockMvc.perform(post(REGISTER_ENDPOINT)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isBadRequest())
@@ -402,7 +405,7 @@ class TrainerRestControllerTest extends AbstractRestControllerTest {
     @Test
     @WithAnonymousUser
     void shouldReturn401WhenGetTrainerProfileAnonymous() throws Exception {
-        String actualResponseBody = mockMvc.perform(get(BASE_URI + "/{username}", USERNAME))
+        String actualResponseBody = mockMvc.perform(get(TRAINER_RESOURCE_ENDPOINT, USERNAME))
                 .andExpect(status().isUnauthorized())
                 .andReturn()
                 .getResponse()
