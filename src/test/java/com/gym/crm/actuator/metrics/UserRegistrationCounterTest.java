@@ -22,32 +22,32 @@ class UserRegistrationCounterTest {
     void shouldIncrementTraineeSuccess() {
         counter.incrementTrainee(true);
 
-        double count = registry.counter("gym_crm_user_registrations_total", "role", "trainee", "status", "success").count();
-        assertEquals(1.0, count);
+        double actual = registry.counter("gym_crm_user_registrations_total", "role", "trainee", "status", "success").count();
+        assertEquals(1.0, actual);
     }
 
     @Test
     void shouldIncrementTraineeFailure() {
         counter.incrementTrainee(false);
 
-        double count = registry.counter("gym_crm_user_registrations_total", "role", "trainee", "status", "failure").count();
-        assertEquals(1.0, count);
+        double actual = registry.counter("gym_crm_user_registrations_total", "role", "trainee", "status", "failure").count();
+        assertEquals(1.0, actual);
     }
 
     @Test
     void shouldIncrementTrainerSuccess() {
         counter.incrementTrainer(true);
 
-        double count = registry.counter("gym_crm_user_registrations_total", "role", "trainer", "status", "success").count();
-        assertEquals(1.0, count);
+        double actual = registry.counter("gym_crm_user_registrations_total", "role", "trainer", "status", "success").count();
+        assertEquals(1.0, actual);
     }
 
     @Test
     void shouldIncrementTrainerFailure() {
         counter.incrementTrainer(false);
 
-        double count = registry.counter("gym_crm_user_registrations_total", "role", "trainer", "status", "failure").count();
-        assertEquals(1.0, count);
+        double actual = registry.counter("gym_crm_user_registrations_total", "role", "trainer", "status", "failure").count();
+        assertEquals(1.0, actual);
     }
 
 }

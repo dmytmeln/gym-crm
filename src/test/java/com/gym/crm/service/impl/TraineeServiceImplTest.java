@@ -126,12 +126,13 @@ class TraineeServiceImplTest {
 
     @Test
     void shouldThrowEntityNotFoundWhenTraineeUsernameNotFound() {
-        when(repository.findByUsernameWithUserAndTrainersDetails("unknown")).thenReturn(Optional.empty());
+        String nonExistentUsername = "unknown";
+        when(repository.findByUsernameWithUserAndTrainersDetails(nonExistentUsername)).thenReturn(Optional.empty());
 
-        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> service.getTraineeByUsername("unknown"));
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> service.getTraineeByUsername(nonExistentUsername));
 
-        assertEquals("Trainee not found with username: unknown", exception.getMessage());
-        verify(repository).findByUsernameWithUserAndTrainersDetails("unknown");
+        assertEquals(buildNotFoundMessage(nonExistentUsername), exception.getMessage());
+        verify(repository).findByUsernameWithUserAndTrainersDetails(nonExistentUsername);
     }
 
     @Test
@@ -162,7 +163,7 @@ class TraineeServiceImplTest {
 
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> service.getAvailableTrainers(DEFAULT_USERNAME));
 
-        assertEquals("Trainee not found with username: " + DEFAULT_USERNAME, exception.getMessage());
+        assertEquals(buildNotFoundMessage(DEFAULT_USERNAME), exception.getMessage());
         verify(repository).existsByUserUsername(DEFAULT_USERNAME);
         verify(trainerRepository, never()).findTraineeAvailableTrainers(any());
     }
@@ -258,7 +259,7 @@ class TraineeServiceImplTest {
 
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> service.updateTrainee(trainee));
 
-        assertEquals("Trainee not found with username: " + DEFAULT_USERNAME, exception.getMessage());
+        assertEquals(buildNotFoundMessage(DEFAULT_USERNAME), exception.getMessage());
         verify(repository, never()).save(any(Trainee.class));
     }
 
@@ -288,7 +289,7 @@ class TraineeServiceImplTest {
 
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> service.updateTraineeTrainers(DEFAULT_USERNAME, trainerUsernames));
 
-        assertEquals("Trainee not found with username: " + DEFAULT_USERNAME, exception.getMessage());
+        assertEquals(buildNotFoundMessage(DEFAULT_USERNAME), exception.getMessage());
         verify(trainerRepository, never()).findTraineeTrainersByUsernames(any());
         verify(repository, never()).save(any(Trainee.class));
     }
@@ -343,7 +344,7 @@ class TraineeServiceImplTest {
 
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> service.updateActivationStatus(DEFAULT_USERNAME, true));
 
-        assertEquals("Trainee not found with username: " + DEFAULT_USERNAME, exception.getMessage());
+        assertEquals(buildNotFoundMessage(DEFAULT_USERNAME), exception.getMessage());
         verify(repository, never()).save(any(Trainee.class));
     }
 
@@ -369,6 +370,10 @@ class TraineeServiceImplTest {
 
         assertFalse(result);
         verify(repository, never()).delete(any());
+    }
+
+    private String buildNotFoundMessage(String username) {
+        return "Trainee not found with username: " + username;
     }
 
 }

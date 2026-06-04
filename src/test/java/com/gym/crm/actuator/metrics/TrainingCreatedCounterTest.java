@@ -22,8 +22,8 @@ class TrainingCreatedCounterTest {
     void shouldIncrementTrainingCreatedType() {
         counter.increment("cardio");
 
-        double count = registry.counter("gym_crm_trainings_created_total", "training_type", "cardio").count();
-        assertEquals(1.0, count);
+        double actual = registry.counter("gym_crm_trainings_created_total", "training_type", "cardio").count();
+        assertEquals(1.0, actual);
     }
 
     @Test
@@ -31,8 +31,8 @@ class TrainingCreatedCounterTest {
         counter.increment("yoga");
         counter.increment("yoga");
 
-        double count = registry.counter("gym_crm_trainings_created_total", "training_type", "yoga").count();
-        assertEquals(2.0, count);
+        double actual = registry.counter("gym_crm_trainings_created_total", "training_type", "yoga").count();
+        assertEquals(2.0, actual);
     }
 
     @Test
@@ -41,10 +41,10 @@ class TrainingCreatedCounterTest {
         counter.increment("yoga");
         counter.increment("yoga");
 
-        double cardioCount = registry.counter("gym_crm_trainings_created_total", "training_type", "cardio").count();
-        double yogaCount = registry.counter("gym_crm_trainings_created_total", "training_type", "yoga").count();
-        assertEquals(1.0, cardioCount);
-        assertEquals(2.0, yogaCount);
+        double actualCardio = registry.counter("gym_crm_trainings_created_total", "training_type", "cardio").count();
+        double actualYoga = registry.counter("gym_crm_trainings_created_total", "training_type", "yoga").count();
+        assertEquals(1.0, actualCardio);
+        assertEquals(2.0, actualYoga);
     }
 
 }

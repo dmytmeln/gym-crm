@@ -43,3 +43,6 @@ server:
 app:
   api:
     base-path: /api/v1
+  security:
+    jwt:
+      access-expiration-ms: 86400000

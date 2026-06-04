@@ -48,6 +48,10 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class TrainerServiceImplTest {
 
+    private static final String NULL_MSG = "Trainer cannot be null";
+    private static final String USERNAME_NULL_MSG = "Trainer username cannot be null";
+    private static final String USER_NULL_MSG = "Trainer user cannot be null";
+
     @Mock
     private TrainerRepository trainerRepository;
 
@@ -102,7 +106,7 @@ class TrainerServiceImplTest {
     void shouldThrowNullPointerWhenCreatingNullTrainer() {
         NullPointerException exception = assertThrows(NullPointerException.class, () -> service.createTrainer(null));
 
-        assertEquals("Trainer cannot be null", exception.getMessage());
+        assertEquals(NULL_MSG, exception.getMessage());
         verifyNoInteractions(trainerRepository, generator);
     }
 
@@ -125,7 +129,7 @@ class TrainerServiceImplTest {
 
         NullPointerException exception = assertThrows(NullPointerException.class, () -> service.createTrainer(trainer));
 
-        assertEquals("Trainer user cannot be null", exception.getMessage());
+        assertEquals(USER_NULL_MSG, exception.getMessage());
         verifyNoInteractions(trainingTypeRepository, generator, trainerRepository);
     }
 
@@ -147,7 +151,7 @@ class TrainerServiceImplTest {
 
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> service.getTrainerByUsername(DEFAULT_USERNAME));
 
-        assertEquals("Trainer not found with username: " + DEFAULT_USERNAME, exception.getMessage());
+        assertEquals(buildNotFoundMsg(), exception.getMessage());
     }
 
     @Test
@@ -215,27 +219,19 @@ class TrainerServiceImplTest {
     void shouldThrowNullPointerWhenMatchingWithNullUsername() {
         NullPointerException exception = assertThrows(NullPointerException.class, () -> service.doesUsernameAndPasswordMatch(null, DEFAULT_PASSWORD));
 
-        assertEquals("Trainer username cannot be null", exception.getMessage());
+        assertEquals(USERNAME_NULL_MSG, exception.getMessage());
     }
 
     @Test
     void shouldMergeUpdatedFieldsAndPreserveExistingUsernameWhenUpdatingTrainer() {
         Trainer existingTrainer = buildTrainerWithId(DEFAULT_TRAINER_ID);
-        Trainer updateRequest = getDefaultTrainerBuilder()
-                .id(DEFAULT_TRAINER_ID)
-                .user(getDefaultTrainerBuilder().build().getUser().toBuilder()
-                        .firstName("Elena")
-                        .lastName("Rodriguez")
-                        .password("newPassword")
-                        .isActive(false)
-                        .build())
-                .specialization(getDefaultTrainingTypeBuilder().id(2L).trainingTypeName("Strength").build())
-                .build();
+        String firstName = "Elena";
+        String lastName = "Rodriguez";
         Trainer expected = getDefaultTrainerBuilder()
                 .id(DEFAULT_TRAINER_ID)
                 .user(getDefaultTrainerBuilder().build().getUser().toBuilder()
-                        .firstName("Elena")
-                        .lastName("Rodriguez")
+                        .firstName(firstName)
+                        .lastName(lastName)
                         .password("newPassword")
                         .isActive(false)
                         .build())
@@ -246,7 +242,7 @@ class TrainerServiceImplTest {
                 .thenReturn(Optional.of(existingTrainer));
         when(trainerRepository.save(any(Trainer.class))).thenReturn(expected);
 
-        Trainer actual = service.updateTrainer(updateRequest);
+        Trainer actual = service.updateTrainer(expected);
 
         verify(trainerRepository).findByUsernameWithUserAndTraineesDetails(DEFAULT_USERNAME);
         ArgumentCaptor<Trainer> trainerCaptor = ArgumentCaptor.forClass(Trainer.class);
@@ -254,8 +250,8 @@ class TrainerServiceImplTest {
         Trainer mergedTrainer = trainerCaptor.getValue();
         assertEquals(DEFAULT_TRAINER_ID, mergedTrainer.getId());
         assertEquals(DEFAULT_USERNAME, mergedTrainer.getUser().getUsername());
-        assertEquals("Elena", mergedTrainer.getUser().getFirstName());
-        assertEquals("Rodriguez", mergedTrainer.getUser().getLastName());
+        assertEquals(firstName, mergedTrainer.getUser().getFirstName());
+        assertEquals(lastName, mergedTrainer.getUser().getLastName());
         assertEquals(expected, actual);
     }
 
@@ -267,7 +263,7 @@ class TrainerServiceImplTest {
 
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> service.updateTrainer(updateRequest));
 
-        assertEquals("Trainer not found with username: " + DEFAULT_USERNAME, exception.getMessage());
+        assertEquals(buildNotFoundMsg(), exception.getMessage());
         verify(trainerRepository).findByUsernameWithUserAndTraineesDetails(DEFAULT_USERNAME);
         verify(trainerRepository, never()).save(any(Trainer.class));
     }
@@ -276,7 +272,7 @@ class TrainerServiceImplTest {
     void shouldThrowNullPointerWhenUpdatingNullTrainer() {
         NullPointerException exception = assertThrows(NullPointerException.class, () -> service.updateTrainer(null));
 
-        assertEquals("Trainer cannot be null", exception.getMessage());
+        assertEquals(NULL_MSG, exception.getMessage());
         verifyNoInteractions(trainerRepository, generator);
     }
 
@@ -286,8 +282,7 @@ class TrainerServiceImplTest {
         User updatedUser = existingTrainer.getUser().toBuilder().firstName("NewName").build();
         Trainer updateRequest = existingTrainer.toBuilder().user(updatedUser).build();
 
-        when(trainerRepository.findByUsernameWithUserAndTraineesDetails(DEFAULT_USERNAME))
-                .thenReturn(Optional.of(existingTrainer));
+        when(trainerRepository.findByUsernameWithUserAndTraineesDetails(DEFAULT_USERNAME)).thenReturn(Optional.of(existingTrainer));
         when(trainerRepository.save(any(Trainer.class))).thenReturn(updateRequest);
 
         service.updateTrainer(updateRequest);
@@ -303,7 +298,7 @@ class TrainerServiceImplTest {
 
         NullPointerException exception = assertThrows(NullPointerException.class, () -> service.updateTrainer(trainer));
 
-        assertEquals("Trainer user cannot be null", exception.getMessage());
+        assertEquals(USER_NULL_MSG, exception.getMessage());
     }
 
     @Test
@@ -312,10 +307,9 @@ class TrainerServiceImplTest {
                 .user(getDefaultUserBuilder().username(null).build())
                 .build();
 
-        NullPointerException exception = assertThrows(NullPointerException.class,
-                () -> service.updateTrainer(trainer));
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> service.updateTrainer(trainer));
 
-        assertEquals("Trainer username cannot be null", exception.getMessage());
+        assertEquals(USERNAME_NULL_MSG, exception.getMessage());
     }
 
     @Test
@@ -384,7 +378,7 @@ class TrainerServiceImplTest {
     void shouldThrowNullPointerWhenUpdatingActivationStatusWithNullUsername() {
         NullPointerException exception = assertThrows(NullPointerException.class, () -> service.updateActivationStatus(null, true));
 
-        assertEquals("Trainer username cannot be null", exception.getMessage());
+        assertEquals(USERNAME_NULL_MSG, exception.getMessage());
         verifyNoInteractions(trainerRepository);
     }
 
@@ -394,8 +388,12 @@ class TrainerServiceImplTest {
 
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> service.updateActivationStatus(DEFAULT_USERNAME, true));
 
-        assertEquals("Trainer not found with username: " + DEFAULT_USERNAME, exception.getMessage());
+        assertEquals(buildNotFoundMsg(), exception.getMessage());
         verify(trainerRepository).findByUsernameWithUser(DEFAULT_USERNAME);
+    }
+
+    private static String buildNotFoundMsg() {
+        return "Trainer not found with username: " + DEFAULT_USERNAME;
     }
 
 }

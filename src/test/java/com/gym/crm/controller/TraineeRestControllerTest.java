@@ -1,6 +1,5 @@
 package com.gym.crm.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gia.openapi.model.ActivationStatusRequest;
 import com.gia.openapi.model.AssignedTrainerResponse;
 import com.gia.openapi.model.ErrorResponse;
@@ -12,20 +11,14 @@ import com.gia.openapi.model.TraineeCreateResponse;
 import com.gia.openapi.model.TraineeGetResponse;
 import com.gia.openapi.model.TraineeUpdateRequest;
 import com.gia.openapi.model.TraineeUpdateResponse;
-import com.gym.crm.exception.ApiError;
 import com.gym.crm.exception.AuthenticationException;
 import com.gym.crm.exception.ConflictException;
 import com.gym.crm.exception.EntityNotFoundException;
 import com.gym.crm.exception.ValidationException;
-import com.gym.crm.facade.GymFacade;
 import org.hibernate.HibernateException;
 import org.junit.jupiter.api.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.security.test.context.support.WithAnonymousUser;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -53,27 +46,21 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(TraineeRestController.class)
-@AutoConfigureMockMvc(addFilters = false)
-class TraineeRestControllerTest {
+@RestControllerUnitTest(TraineeRestController.class)
+class TraineeRestControllerTest extends AbstractRestControllerTest {
 
-    private static final String EXPECTED_ERROR_MESSAGE_TEMPLATE = "%s: %s";
-    private static final String BASE_PATH = "/api/v1";
+    private static final String TRAINEE_RESOURCE_ENDPOINT = TRAINEES_ENDPOINT + "/{username}";
+    private static final String REGISTER_ENDPOINT = TRAINEES_ENDPOINT + "/register";
+    private static final String TRAINEE_TRAININGS_ENDPOINT = TRAINEE_RESOURCE_ENDPOINT + "/trainings";
+    private static final String TRAINEE_TRAINERS_ENDPOINT = TRAINEE_RESOURCE_ENDPOINT + "/trainers";
+    private static final String ACTIVATION_ENDPOINT = TRAINEE_RESOURCE_ENDPOINT + "/activation";
     private static final String USERNAME = "liam.miller";
     private static final String FIRST_NAME = "Liam";
     private static final String LAST_NAME = "Miller";
     private static final String SPECIALIZATION = "Yoga";
 
-    @MockitoBean
-    private GymFacade facade;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
-    private MockMvc mockMvc;
-
     @Test
+    @WithAnonymousUser
     void shouldRegisterTraineeWhenRequestIsValid() throws Exception {
         String requestBody = readJson("json/trainee/register_request.json");
         String expectedResponseBody = readJson("json/trainee/register_response.json");
@@ -82,7 +69,7 @@ class TraineeRestControllerTest {
 
         when(facade.createTrainee(any(TraineeCreateRequest.class))).thenReturn(mockResponse);
 
-        String actualResponseBody = mockMvc.perform(post(BASE_PATH + "/trainees/register")
+        String actualResponseBody = mockMvc.perform(post(REGISTER_ENDPOINT)
                         .contentType(APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk())
@@ -99,7 +86,7 @@ class TraineeRestControllerTest {
         String requestBody = readJson("json/trainee/register_invalid_request.json");
         String expectedResponseBody = readJson("json/trainee/register_firstname_null_error.json");
 
-        String actualResponseBody = mockMvc.perform(post(BASE_PATH + "/trainees/register")
+        String actualResponseBody = mockMvc.perform(post(REGISTER_ENDPOINT)
                         .contentType(APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isBadRequest())
@@ -115,7 +102,7 @@ class TraineeRestControllerTest {
     void shouldFailRegisterTraineeWhenLastNameIsNull() throws Exception {
         TraineeCreateRequest invalidRequest = buildTraineeCreateRequest(null);
 
-        String actualResponseBody = mockMvc.perform(post(BASE_PATH + "/trainees/register")
+        String actualResponseBody = mockMvc.perform(post(REGISTER_ENDPOINT)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest())
@@ -138,7 +125,7 @@ class TraineeRestControllerTest {
 
         when(facade.getTraineeByUsername(USERNAME)).thenReturn(mockResponse);
 
-        String actualResponseBody = mockMvc.perform(get(BASE_PATH + "/trainees/{username}", USERNAME))
+        String actualResponseBody = mockMvc.perform(get(TRAINEE_RESOURCE_ENDPOINT, USERNAME))
                 .andExpect(status().isOk())
                 .andReturn()
                 .getResponse()
@@ -157,7 +144,7 @@ class TraineeRestControllerTest {
 
         doThrow(exception).when(facade).getTraineeByUsername(USERNAME);
 
-        String actualResponseBody = mockMvc.perform(get(BASE_PATH + "/trainees/{username}", USERNAME))
+        String actualResponseBody = mockMvc.perform(get(TRAINEE_RESOURCE_ENDPOINT, USERNAME))
                 .andExpect(status().isNotFound())
                 .andReturn()
                 .getResponse()
@@ -172,7 +159,7 @@ class TraineeRestControllerTest {
     void shouldReturn401WhenAuthenticationFailsOnGetTraineeProfile() throws Exception {
         doThrow(new AuthenticationException("User is not authenticated")).when(facade).getTraineeByUsername(USERNAME);
 
-        String actualResponseBody = mockMvc.perform(get(BASE_PATH + "/trainees/{username}", USERNAME))
+        String actualResponseBody = mockMvc.perform(get(TRAINEE_RESOURCE_ENDPOINT, USERNAME))
                 .andExpect(status().isUnauthorized())
                 .andReturn()
                 .getResponse()
@@ -187,7 +174,7 @@ class TraineeRestControllerTest {
     void shouldReturn500WhenUnexpectedErrorOccursOnGetTraineeProfile() throws Exception {
         doThrow(new RuntimeException("Unexpected failure")).when(facade).getTraineeByUsername(USERNAME);
 
-        String actualResponseBody = mockMvc.perform(get(BASE_PATH + "/trainees/{username}", USERNAME))
+        String actualResponseBody = mockMvc.perform(get(TRAINEE_RESOURCE_ENDPOINT, USERNAME))
                 .andExpect(status().isInternalServerError())
                 .andReturn()
                 .getResponse()
@@ -202,7 +189,7 @@ class TraineeRestControllerTest {
     void shouldReturn500WhenHibernateExceptionOccursOnGetTraineeProfile() throws Exception {
         doThrow(new HibernateException("Database connectivity failure")).when(facade).getTraineeByUsername(USERNAME);
 
-        String actualResponseBody = mockMvc.perform(get(BASE_PATH + "/trainees/{username}", USERNAME))
+        String actualResponseBody = mockMvc.perform(get(TRAINEE_RESOURCE_ENDPOINT, USERNAME))
                 .andExpect(status().isInternalServerError())
                 .andReturn()
                 .getResponse()
@@ -223,7 +210,7 @@ class TraineeRestControllerTest {
 
         when(facade.getAvailableTrainersForTrainee(USERNAME)).thenReturn(List.of(trainerResponse));
 
-        String actualResponseBody = mockMvc.perform(get(BASE_PATH + "/trainees/{username}/available-trainers", USERNAME))
+        String actualResponseBody = mockMvc.perform(get(TRAINEE_RESOURCE_ENDPOINT + "/available-trainers", USERNAME))
                 .andExpect(status().isOk())
                 .andReturn()
                 .getResponse()
@@ -232,9 +219,9 @@ class TraineeRestControllerTest {
         List<AssignedTrainerResponse> actualResponse = objectMapper.readValue(actualResponseBody,
                 objectMapper.getTypeFactory().constructCollectionType(List.class, AssignedTrainerResponse.class));
         assertThat(actualResponse).hasSize(1);
-        assertThat(actualResponse.get(0).getUsername()).isEqualTo("ricardo.milos");
-        assertThat(actualResponse.get(0).getFirstName()).isEqualTo("Ricardo");
-        assertThat(actualResponse.get(0).getSpecialization()).isEqualTo(SPECIALIZATION);
+        assertThat(actualResponse.getFirst().getUsername()).isEqualTo("ricardo.milos");
+        assertThat(actualResponse.getFirst().getFirstName()).isEqualTo("Ricardo");
+        assertThat(actualResponse.getFirst().getSpecialization()).isEqualTo(SPECIALIZATION);
         verify(facade).getAvailableTrainersForTrainee(USERNAME);
     }
 
@@ -249,7 +236,7 @@ class TraineeRestControllerTest {
 
         when(facade.getTraineeTrainings(any())).thenReturn(List.of(trainingResponse));
 
-        String actualResponseBody = mockMvc.perform(get(BASE_PATH + "/trainees/{username}/trainings", USERNAME)
+        String actualResponseBody = mockMvc.perform(get(TRAINEE_TRAININGS_ENDPOINT, USERNAME)
                         .param("fromDate", "2025-07-01")
                         .param("toDate", "2025-07-31")
                         .param("trainerName", "ronnie.coleman")
@@ -262,9 +249,9 @@ class TraineeRestControllerTest {
         List<GetTraineeTrainingResponse> actualResponse = objectMapper.readValue(actualResponseBody,
                 objectMapper.getTypeFactory().constructCollectionType(List.class, GetTraineeTrainingResponse.class));
         assertThat(actualResponse).hasSize(1);
-        assertThat(actualResponse.get(0).getTrainingName()).isEqualTo("Morning Cardio");
-        assertThat(actualResponse.get(0).getTrainingType()).isEqualTo("Cardio");
-        assertThat(actualResponse.get(0).getTrainerName()).isEqualTo("ronnie.coleman");
+        assertThat(actualResponse.getFirst().getTrainingName()).isEqualTo("Morning Cardio");
+        assertThat(actualResponse.getFirst().getTrainingType()).isEqualTo("Cardio");
+        assertThat(actualResponse.getFirst().getTrainerName()).isEqualTo("ronnie.coleman");
         verify(facade).getTraineeTrainings(any());
     }
 
@@ -272,7 +259,7 @@ class TraineeRestControllerTest {
     void shouldGetTraineeTrainingsWithNoOptionalFilters() throws Exception {
         when(facade.getTraineeTrainings(any())).thenReturn(List.of());
 
-        mockMvc.perform(get(BASE_PATH + "/trainees/{username}/trainings", USERNAME))
+        mockMvc.perform(get(TRAINEE_TRAININGS_ENDPOINT, USERNAME))
                 .andExpect(status().isOk());
 
         verify(facade).getTraineeTrainings(any());
@@ -289,7 +276,7 @@ class TraineeRestControllerTest {
 
         when(facade.updateTrainee(eq(USERNAME), any(TraineeUpdateRequest.class))).thenReturn(mockResponse);
 
-        String actualResponseBody = mockMvc.perform(put(BASE_PATH + "/trainees/{username}", USERNAME)
+        String actualResponseBody = mockMvc.perform(put(TRAINEE_RESOURCE_ENDPOINT, USERNAME)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isOk())
@@ -308,7 +295,7 @@ class TraineeRestControllerTest {
     void shouldFailUpdateTraineeProfileWhenFirstNameIsNull() throws Exception {
         TraineeUpdateRequest invalidRequest = buildTraineeUpdateRequest(null, LAST_NAME);
 
-        String actualResponseBody = mockMvc.perform(put(BASE_PATH + "/trainees/{username}", USERNAME)
+        String actualResponseBody = mockMvc.perform(put(TRAINEE_RESOURCE_ENDPOINT, USERNAME)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest())
@@ -326,7 +313,7 @@ class TraineeRestControllerTest {
     void shouldFailUpdateTraineeProfileWhenLastNameIsNull() throws Exception {
         TraineeUpdateRequest invalidRequest = buildTraineeUpdateRequest(FIRST_NAME, null);
 
-        String actualResponseBody = mockMvc.perform(put(BASE_PATH + "/trainees/{username}", USERNAME)
+        String actualResponseBody = mockMvc.perform(put(TRAINEE_RESOURCE_ENDPOINT, USERNAME)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest())
@@ -344,7 +331,7 @@ class TraineeRestControllerTest {
     void shouldFailUpdateTraineeProfileWhenIsActiveIsNull() throws Exception {
         TraineeUpdateRequest invalidRequest = new TraineeUpdateRequest(FIRST_NAME, LAST_NAME, null);
 
-        String actualResponseBody = mockMvc.perform(put(BASE_PATH + "/trainees/{username}", USERNAME)
+        String actualResponseBody = mockMvc.perform(put(TRAINEE_RESOURCE_ENDPOINT, USERNAME)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest())
@@ -371,7 +358,7 @@ class TraineeRestControllerTest {
 
         when(facade.updateTraineeTrainers(eq(USERNAME), any())).thenReturn(mockResponse);
 
-        String actualResponseBody = mockMvc.perform(put(BASE_PATH + "/trainees/{username}/trainers", USERNAME)
+        String actualResponseBody = mockMvc.perform(put(TRAINEE_TRAINERS_ENDPOINT, USERNAME)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isOk())
@@ -381,8 +368,8 @@ class TraineeRestControllerTest {
 
         TraineeAssignedTrainersUpdateResponse actualResponse = objectMapper.readValue(actualResponseBody, TraineeAssignedTrainersUpdateResponse.class);
         assertThat(actualResponse.getTrainers()).hasSize(1);
-        assertThat(actualResponse.getTrainers().get(0).getUsername()).isEqualTo("ricardo.milos");
-        assertThat(actualResponse.getTrainers().get(0).getSpecialization()).isEqualTo(SPECIALIZATION);
+        assertThat(actualResponse.getTrainers().getFirst().getUsername()).isEqualTo("ricardo.milos");
+        assertThat(actualResponse.getTrainers().getFirst().getSpecialization()).isEqualTo(SPECIALIZATION);
         verify(facade).updateTraineeTrainers(eq(USERNAME), any());
     }
 
@@ -390,7 +377,7 @@ class TraineeRestControllerTest {
     void shouldFailUpdateTraineeTrainersWhenTrainerUsernamesIsNull() throws Exception {
         TraineeAssignedTrainersUpdateRequest invalidRequest = new TraineeAssignedTrainersUpdateRequest(null);
 
-        String actualResponseBody = mockMvc.perform(put(BASE_PATH + "/trainees/{username}/trainers", USERNAME)
+        String actualResponseBody = mockMvc.perform(put(TRAINEE_TRAINERS_ENDPOINT, USERNAME)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest())
@@ -408,7 +395,7 @@ class TraineeRestControllerTest {
     void shouldFailUpdateTraineeTrainersWhenTrainerUsernamesIsEmpty() throws Exception {
         TraineeAssignedTrainersUpdateRequest invalidRequest = buildTraineeAssignedTrainersUpdateRequest(List.of());
 
-        String actualResponseBody = mockMvc.perform(put(BASE_PATH + "/trainees/{username}/trainers", USERNAME)
+        String actualResponseBody = mockMvc.perform(put(TRAINEE_TRAINERS_ENDPOINT, USERNAME)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest())
@@ -426,7 +413,7 @@ class TraineeRestControllerTest {
     void shouldChangeTraineeActivationStatusWhenRequestIsValid() throws Exception {
         ActivationStatusRequest validRequest = new ActivationStatusRequest(true);
 
-        mockMvc.perform(patch(BASE_PATH + "/trainees/{username}/activation", USERNAME)
+        mockMvc.perform(patch(ACTIVATION_ENDPOINT, USERNAME)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isOk());
@@ -438,7 +425,7 @@ class TraineeRestControllerTest {
     void shouldFailChangeTraineeActivationStatusWhenIsActiveIsNull() throws Exception {
         ActivationStatusRequest invalidRequest = new ActivationStatusRequest(null);
 
-        String actualResponseBody = mockMvc.perform(patch(BASE_PATH + "/trainees/{username}/activation", USERNAME)
+        String actualResponseBody = mockMvc.perform(patch(ACTIVATION_ENDPOINT, USERNAME)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest())
@@ -459,7 +446,7 @@ class TraineeRestControllerTest {
 
         doThrow(exception).when(facade).updateTraineeActivationStatus(eq(USERNAME), any());
 
-        String actualResponseBody = mockMvc.perform(patch(BASE_PATH + "/trainees/{username}/activation", USERNAME)
+        String actualResponseBody = mockMvc.perform(patch(ACTIVATION_ENDPOINT, USERNAME)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict())
@@ -475,7 +462,7 @@ class TraineeRestControllerTest {
 
     @Test
     void shouldDeleteTraineeProfileWhenUsernameIsValid() throws Exception {
-        mockMvc.perform(delete(BASE_PATH + "/trainees/{username}", USERNAME))
+        mockMvc.perform(delete(TRAINEE_RESOURCE_ENDPOINT, USERNAME))
                 .andExpect(status().isOk());
 
         verify(facade).deleteTraineeByUsername(USERNAME);
@@ -487,7 +474,7 @@ class TraineeRestControllerTest {
 
         doThrow(exception).when(facade).deleteTraineeByUsername(USERNAME);
 
-        String actualResponseBody = mockMvc.perform(delete(BASE_PATH + "/trainees/{username}", USERNAME))
+        String actualResponseBody = mockMvc.perform(delete(TRAINEE_RESOURCE_ENDPOINT, USERNAME))
                 .andExpect(status().isNotFound())
                 .andReturn()
                 .getResponse()
@@ -505,7 +492,7 @@ class TraineeRestControllerTest {
 
         doThrow(exception).when(facade).createTrainee(any(TraineeCreateRequest.class));
 
-        String actualResponseBody = mockMvc.perform(post(BASE_PATH + "/trainees/register")
+        String actualResponseBody = mockMvc.perform(post(REGISTER_ENDPOINT)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isBadRequest())
@@ -516,6 +503,20 @@ class TraineeRestControllerTest {
         ErrorResponse actualErrorResponse = objectMapper.readValue(actualResponseBody, ErrorResponse.class);
         assertThat(actualErrorResponse.getErrorCode()).isEqualTo(VALIDATION_ERROR.getCode());
         assertThat(actualErrorResponse.getErrorMessage()).isEqualTo(buildExpectedErrorMessage(VALIDATION_ERROR, exception));
+    }
+
+    @Test
+    @WithAnonymousUser
+    void shouldReturn401WhenGetTraineeProfileAnonymous() throws Exception {
+        String actualResponseBody = mockMvc.perform(get(TRAINEE_RESOURCE_ENDPOINT, USERNAME))
+                .andExpect(status().isUnauthorized())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        ErrorResponse actualErrorResponse = objectMapper.readValue(actualResponseBody, ErrorResponse.class);
+        assertThat(actualErrorResponse.getErrorCode()).isEqualTo(AUTHENTICATION_ERROR.getCode());
+        assertThat(actualErrorResponse.getErrorMessage()).isEqualTo(AUTHENTICATION_ERROR.getMessage());
     }
 
     private TraineeCreateRequest buildTraineeCreateRequest(String lastName) {
@@ -534,10 +535,6 @@ class TraineeRestControllerTest {
     private TraineeAssignedTrainersUpdateRequest buildTraineeAssignedTrainersUpdateRequest(List<String> trainerUsernames) {
         return new TraineeAssignedTrainersUpdateRequest()
                 .trainerUsernames(trainerUsernames);
-    }
-
-    private String buildExpectedErrorMessage(ApiError apiError, Exception exception) {
-        return String.format(EXPECTED_ERROR_MESSAGE_TEMPLATE, apiError.getMessage(), exception.getMessage());
     }
 
 }

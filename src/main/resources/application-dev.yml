@@ -9,6 +9,11 @@ spring:
       hibernate:
         format_sql: true
 
+app:
+  security:
+    jwt:
+      secret-key: ${JWT_SECRET_KEY}
+
 logging:
   level:
     root: INFO

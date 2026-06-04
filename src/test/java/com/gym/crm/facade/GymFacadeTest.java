@@ -5,6 +5,7 @@ import com.gia.openapi.model.AssignedTrainerResponse;
 import com.gia.openapi.model.GetTraineeTrainingResponse;
 import com.gia.openapi.model.GetTrainerTrainingResponse;
 import com.gia.openapi.model.LoginChangeRequest;
+import com.gia.openapi.model.LoginRequest;
 import com.gia.openapi.model.TraineeAssignedTrainersUpdateRequest;
 import com.gia.openapi.model.TraineeAssignedTrainersUpdateResponse;
 import com.gia.openapi.model.TraineeCreateRequest;
@@ -20,6 +21,7 @@ import com.gia.openapi.model.TrainerUpdateResponse;
 import com.gia.openapi.model.TrainingCreateRequest;
 import com.gia.openapi.model.TrainingTypeResponse;
 import com.gym.crm.dto.LoginChangeDto;
+import com.gym.crm.dto.LoginRequestDto;
 import com.gym.crm.dto.filter.TraineeTrainingSearchFilter;
 import com.gym.crm.dto.filter.TrainerTrainingSearchFilter;
 import com.gym.crm.entity.Trainee;
@@ -78,6 +80,7 @@ import static org.mockito.Mockito.when;
 class GymFacadeTest {
 
     private static final String USERNAME = "username";
+    private static final String USERNAME_NULL_MSG = "Username cannot be null";
 
     @Mock
     private TraineeService traineeService;
@@ -174,7 +177,7 @@ class GymFacadeTest {
     void shouldThrowNullPointerWhenGettingTraineeByNullUsername() {
         NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.getTraineeByUsername(null));
 
-        assertEquals("Username cannot be null", exception.getMessage());
+        assertEquals(USERNAME_NULL_MSG, exception.getMessage());
         verifyNoInteractions(traineeService, traineeMapper);
     }
 
@@ -230,7 +233,7 @@ class GymFacadeTest {
         NullPointerException exception = assertThrows(NullPointerException.class,
                 () -> facade.getAvailableTrainersForTrainee(null));
 
-        assertEquals("Username cannot be null", exception.getMessage());
+        assertEquals(USERNAME_NULL_MSG, exception.getMessage());
         verifyNoInteractions(traineeService, traineeMapper);
     }
 
@@ -298,7 +301,7 @@ class GymFacadeTest {
         NullPointerException exception = assertThrows(NullPointerException.class,
                 () -> facade.updateTraineeTrainers(null, request));
 
-        assertEquals("Username cannot be null", exception.getMessage());
+        assertEquals(USERNAME_NULL_MSG, exception.getMessage());
         verifyNoInteractions(traineeService, traineeMapper);
     }
 
@@ -327,7 +330,7 @@ class GymFacadeTest {
         NullPointerException exception = assertThrows(NullPointerException.class,
                 () -> facade.updateTraineeActivationStatus(null, request));
 
-        assertEquals("Username cannot be null", exception.getMessage());
+        assertEquals(USERNAME_NULL_MSG, exception.getMessage());
         verifyNoInteractions(traineeService);
     }
 
@@ -357,7 +360,7 @@ class GymFacadeTest {
     void shouldThrowNullPointerWhenDeletingNullTraineeUsername() {
         NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.deleteTraineeByUsername(null));
 
-        assertEquals("Username cannot be null", exception.getMessage());
+        assertEquals(USERNAME_NULL_MSG, exception.getMessage());
         verifyNoInteractions(traineeService);
     }
 
@@ -366,9 +369,9 @@ class GymFacadeTest {
         LoginChangeRequest request = new LoginChangeRequest(USERNAME, "oldPassword123", "newPassword123");
         LoginChangeDto dto = new LoginChangeDto(USERNAME, "oldPassword123", "newPassword123");
 
-        when(authMapper.toDto(request)).thenReturn(dto);
         doNothing().when(businessValidator).validate(request);
         doNothing().when(businessValidator).validate(dto);
+        when(authMapper.toDto(request)).thenReturn(dto);
 
         facade.changePassword(request);
 
@@ -383,8 +386,8 @@ class GymFacadeTest {
         LoginChangeRequest request = new LoginChangeRequest(USERNAME, "oldPassword", "newPassword");
         LoginChangeDto dto = new LoginChangeDto(USERNAME, "oldPassword", "newPassword");
 
-        when(authMapper.toDto(request)).thenReturn(dto);
         doNothing().when(businessValidator).validate(request);
+        when(authMapper.toDto(request)).thenReturn(dto);
         doThrow(new ValidationException("Validation error")).when(businessValidator).validate(dto);
 
         assertThrows(ValidationException.class, () -> facade.changePassword(request));
@@ -400,6 +403,26 @@ class GymFacadeTest {
 
         assertEquals("LoginChangeRequest cannot be null", exception.getMessage());
         verifyNoInteractions(authMapper, businessValidator, authenticationService);
+    }
+
+    @Test
+    void shouldLoginAndReturnToken() {
+        LoginRequest request = new LoginRequest().username(USERNAME).password("password123");
+        LoginRequestDto dto = new LoginRequestDto(USERNAME, "password123");
+        String expectedToken = "mocked-jwt-token";
+
+        doNothing().when(businessValidator).validate(request);
+        doNothing().when(businessValidator).validate(dto);
+        when(authMapper.toDto(request)).thenReturn(dto);
+        when(authenticationService.login(dto)).thenReturn(expectedToken);
+
+        String actual = facade.login(request);
+
+        assertEquals(expectedToken, actual);
+        verify(businessValidator).validate(request);
+        verify(authMapper).toDto(request);
+        verify(businessValidator).validate(dto);
+        verify(authenticationService).login(dto);
     }
 
     @Test
@@ -488,7 +511,7 @@ class GymFacadeTest {
     void shouldThrowNullPointerWhenGettingTrainerProfileByNullUsername() {
         NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.getTrainerByUsername(null));
 
-        assertEquals("Username cannot be null", exception.getMessage());
+        assertEquals(USERNAME_NULL_MSG, exception.getMessage());
         verifyNoInteractions(trainerService, trainerMapper);
     }
 
@@ -563,7 +586,7 @@ class GymFacadeTest {
     void shouldThrowNullPointerWhenChangingTrainerActivationStatusWithNullUsername() {
         NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.updateTrainerActivationStatus(null, true));
 
-        assertEquals("Username cannot be null", exception.getMessage());
+        assertEquals(USERNAME_NULL_MSG, exception.getMessage());
         verifyNoInteractions(trainerService);
     }
 

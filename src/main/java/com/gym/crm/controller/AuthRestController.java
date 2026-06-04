@@ -5,6 +5,7 @@ import com.gia.openapi.model.LoginChangeRequest;
 import com.gia.openapi.model.LoginRequest;
 import com.gym.crm.facade.GymFacade;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -17,6 +18,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
 @RestController
 @RequestMapping("${app.api.base-path}/auth")
@@ -45,7 +48,8 @@ public class AuthRestController {
 
     @PostMapping("/login")
     @Operation(summary = "Login with username and password", description = "Authenticates user by username and password", responses = {
-            @ApiResponse(responseCode = "200", description = "Successful login"),
+            @ApiResponse(responseCode = "200", description = "Successful login",
+                    headers = @Header(name = AUTHORIZATION, description = "JWT Token", schema = @Schema(type = "string"))),
             @ApiResponse(responseCode = "400", description = "Invalid input data",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "Invalid user credentials",
@@ -53,9 +57,11 @@ public class AuthRestController {
             @ApiResponse(responseCode = "500", description = "Internal server error",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))})
     public ResponseEntity<Void> login(@Valid @RequestBody LoginRequest loginRequest) {
-        facade.login(loginRequest);
+        String token = facade.login(loginRequest);
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok()
+                .header(AUTHORIZATION, "Bearer " + token)
+                .build();
     }
 
 }

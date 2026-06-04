@@ -49,7 +49,8 @@ class TransactionLoggingFilterTest {
 
         filter.doFilter(request, response, filterChain);
 
-        assertThat(mdcValueInsideChain.get()).isEqualTo(validTxId);
+        String actual = mdcValueInsideChain.get();
+        assertThat(actual).isEqualTo(validTxId);
         assertThat(response.getHeader(TRANSACTION_HEADER)).isEqualTo(validTxId);
         assertThat(MDC.get(TRANSACTION_ID)).isNull();
     }
@@ -61,9 +62,9 @@ class TransactionLoggingFilterTest {
 
         filter.doFilter(request, response, filterChain);
 
-        String generatedTxId = mdcValueInsideChain.get();
-        assertThat(generatedTxId).isNotNull().isNotBlank();
-        assertThat(response.getHeader(TRANSACTION_HEADER)).isEqualTo(generatedTxId);
+        String actual = mdcValueInsideChain.get();
+        assertThat(actual).isNotNull().isNotBlank();
+        assertThat(response.getHeader(TRANSACTION_HEADER)).isEqualTo(actual);
         assertThat(MDC.get(TRANSACTION_ID)).isNull();
     }
 
@@ -76,12 +77,12 @@ class TransactionLoggingFilterTest {
 
         filter.doFilter(request, response, filterChain);
 
-        String generatedTxId = mdcValueInsideChain.get();
-        assertThat(generatedTxId)
+        String actual = mdcValueInsideChain.get();
+        assertThat(actual)
                 .isNotNull()
                 .isNotBlank()
                 .isNotEqualTo(invalidTxId);
-        assertThat(response.getHeader(TRANSACTION_HEADER)).isEqualTo(generatedTxId);
+        assertThat(response.getHeader(TRANSACTION_HEADER)).isEqualTo(actual);
         assertThat(MDC.get(TRANSACTION_ID)).isNull();
     }
 
@@ -94,12 +95,12 @@ class TransactionLoggingFilterTest {
 
         filter.doFilter(request, response, filterChain);
 
-        String generatedTxId = mdcValueInsideChain.get();
-        assertThat(generatedTxId)
+        String actual = mdcValueInsideChain.get();
+        assertThat(actual)
                 .isNotNull()
                 .isNotBlank()
                 .isNotEqualTo(invalidTxId);
-        assertThat(response.getHeader(TRANSACTION_HEADER)).isEqualTo(generatedTxId);
+        assertThat(response.getHeader(TRANSACTION_HEADER)).isEqualTo(actual);
         assertThat(MDC.get(TRANSACTION_ID)).isNull();
     }
 

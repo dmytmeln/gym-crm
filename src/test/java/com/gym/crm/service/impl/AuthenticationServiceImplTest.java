@@ -5,6 +5,7 @@ import com.gym.crm.dto.LoginRequestDto;
 import com.gym.crm.entity.User;
 import com.gym.crm.exception.AuthenticationException;
 import com.gym.crm.repository.UserRepository;
+import com.gym.crm.security.JwtService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -18,6 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -41,6 +43,9 @@ class AuthenticationServiceImplTest {
     @Mock
     private AuthenticationManager authenticationManager;
 
+    @Mock
+    private JwtService jwtService;
+
     @InjectMocks
     private AuthenticationServiceImpl service;
 
@@ -49,12 +54,16 @@ class AuthenticationServiceImplTest {
         LoginRequestDto loginRequestDto = buildLoginRequestDto();
         Authentication authentication = mock(Authentication.class);
         UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(USERNAME, PASSWORD);
+        String expectedToken = "mocked-jwt-token";
 
         when(authenticationManager.authenticate(token)).thenReturn(authentication);
+        when(jwtService.generateAccessToken(USERNAME)).thenReturn(expectedToken);
 
-        service.login(loginRequestDto);
+        String actual = service.login(loginRequestDto);
 
+        assertThat(actual).isEqualTo(expectedToken);
         verify(authenticationManager).authenticate(token);
+        verify(jwtService).generateAccessToken(USERNAME);
     }
 
     @Test

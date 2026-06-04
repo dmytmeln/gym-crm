@@ -16,4 +16,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u.username FROM User u WHERE u.username LIKE concat(:username, '%')")
     List<String> findUsernamesStartingWith(String username);
 
+    @Query("SELECT u.isActive FROM User u WHERE u.username = :username")
+    Optional<Boolean> isActive(String username);
+
 }

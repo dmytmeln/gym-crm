@@ -5,7 +5,7 @@ import com.gym.crm.dto.LoginRequestDto;
 
 public interface AuthenticationService {
 
-    void login(LoginRequestDto loginRequestDto);
+    String login(LoginRequestDto loginRequestDto);
 
     void changePassword(LoginChangeDto loginChangeDto);
 

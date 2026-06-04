@@ -59,13 +59,13 @@ public class GymFacade {
     private final TrainingMapper trainingMapper;
     private final AuthMapper authMapper;
 
-    public void login(LoginRequest loginRequest) {
+    public String login(LoginRequest loginRequest) {
         Objects.requireNonNull(loginRequest, "LoginRequestDto cannot be null");
         validator.validate(loginRequest);
         LoginRequestDto dto = authMapper.toDto(loginRequest);
         validator.validate(dto);
 
-        authenticationService.login(dto);
+        return authenticationService.login(dto);
     }
 
     public void changePassword(LoginChangeRequest loginChangeRequest) {
