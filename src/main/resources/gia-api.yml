@@ -698,6 +698,11 @@ paths:
       responses:
         '200':
           description: Successful login
+          headers:
+            Authorization:
+              description: Bearer JWT token
+              schema:
+                type: string
         '400':
           description: Invalid input data
           content:
@@ -1228,9 +1233,10 @@ components:
           type: string
           example: "Validation error: firstName must not be empty"
   securitySchemes:
-    basicAuth:
+    bearerAuth:
       type: http
-      scheme: basic
-      description: Basic authentication using username and password
+      scheme: bearer
+      bearerFormat: JWT
+      description: Bearer token authentication (JWT)
 security:
-  - basicAuth: [ ]
+  - bearerAuth: [ ]

@@ -38,7 +38,7 @@ public class SecurityConfig {
                 .requestCache(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
                         .requestMatchers(POST, basePath + "/*/register", basePath + "/auth/login").permitAll()
-                        .requestMatchers(GET, "/v3/api-docs", "/swagger-ui/index.html").permitAll()
+                        .requestMatchers(GET, "/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**").permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
                 .exceptionHandling(exceptionHandling -> exceptionHandling
