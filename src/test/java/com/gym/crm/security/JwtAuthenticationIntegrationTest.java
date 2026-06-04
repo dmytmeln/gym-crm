@@ -5,8 +5,10 @@ import com.gia.openapi.model.LoginChangeRequest;
 import com.gia.openapi.model.LoginRequest;
 import com.gia.openapi.model.TraineeGetResponse;
 import com.gia.openapi.model.TrainerGetResponse;
+import com.gia.openapi.model.TrainingCreateRequest;
 import com.gia.openapi.model.TrainingTypeResponse;
 import com.gym.crm.config.BaseDbIntegrationTest;
+import com.gym.crm.config.TestDataset;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,26 +19,27 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.jdbc.Sql;
 
 import java.time.LocalDate;
 import java.util.List;
 
 import static com.gym.crm.exception.ApiError.AUTHENTICATION_ERROR;
+import static com.gym.crm.exception.ApiError.AUTHORIZATION_ERROR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @ActiveProfiles("test")
-@Sql(scripts = {"classpath:datasets/cleanup-all.sql", "classpath:datasets/seed-data.sql"})
+@TestDataset
 class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
 
     private static final String LOGIN_ENDPOINT = "/api/v1/auth/login";
     private static final String PASSWORD_ENDPOINT = "/api/v1/auth/password";
-    private static final String TRAININGS_TYPES_ENDPOINT = "/api/v1/trainings/types";
-    private static final String TRAINEE_PROFILE_ENDPOINT = "/api/v1/trainees/{username}";
-    private static final String TRAINER_PROFILE_ENDPOINT = "/api/v1/trainers/{username}";
+    private static final String TRAININGS_ENDPOINT = "/api/v1/trainings";
+    private static final String TRAINING_TYPES_ENDPOINT = TRAININGS_ENDPOINT + "/types";
+    private static final String TRAINEE_RESOURCE_ENDPOINT = "/api/v1/trainees/{username}";
+    private static final String TRAINER_RESOURCE_ENDPOINT = "/api/v1/trainers/{username}";
     private static final String EXISTING_TRAINEE_USERNAME = "liam.miller";
     private static final String EXISTING_TRAINEE_PASSWORD = "password123";
     private static final String EXISTING_TRAINER_USERNAME = "marcus.stone";
@@ -76,7 +79,7 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
     @Test
     void shouldNotAccessTraineeProtectedEndpointWithoutToken() {
         RequestEntity<Void> request = RequestEntity
-                .get(TRAINEE_PROFILE_ENDPOINT, EXISTING_TRAINEE_USERNAME)
+                .get(TRAINEE_RESOURCE_ENDPOINT, EXISTING_TRAINEE_USERNAME)
                 .build();
 
         ResponseEntity<ErrorResponse> actual = restTemplate.exchange(request, ErrorResponse.class);
@@ -88,7 +91,7 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
     @Test
     void shouldNotAccessTrainerProtectedEndpointWithoutToken() {
         RequestEntity<Void> request = RequestEntity
-                .get(TRAINER_PROFILE_ENDPOINT, EXISTING_TRAINER_USERNAME)
+                .get(TRAINER_RESOURCE_ENDPOINT, EXISTING_TRAINER_USERNAME)
                 .build();
 
         ResponseEntity<ErrorResponse> actual = restTemplate.exchange(request, ErrorResponse.class);
@@ -100,7 +103,7 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
     @Test
     void shouldNotAccessTrainingProtectedEndpointWithoutToken() {
         RequestEntity<Void> request = RequestEntity
-                .get(TRAININGS_TYPES_ENDPOINT)
+                .get(TRAINING_TYPES_ENDPOINT)
                 .build();
 
         ResponseEntity<ErrorResponse> actual = restTemplate.exchange(request, ErrorResponse.class);
@@ -113,7 +116,7 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
     void shouldAccessTraineeProtectedEndpointWithValidToken() {
         HttpHeaders headers = createBearerAuthHeadersForTrainee();
         RequestEntity<Void> request = RequestEntity
-                .get(TRAINEE_PROFILE_ENDPOINT, EXISTING_TRAINEE_USERNAME)
+                .get(TRAINEE_RESOURCE_ENDPOINT, EXISTING_TRAINEE_USERNAME)
                 .headers(headers)
                 .build();
         TraineeGetResponse expectedTrainee = new TraineeGetResponse()
@@ -133,10 +136,25 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
     }
 
     @Test
+    void shouldFailAccessTraineeProfileWhenRequestingOtherTrainee() {
+        HttpHeaders headers = createBearerAuthHeadersForTrainee();
+        RequestEntity<Void> request = RequestEntity
+                .get(TRAINEE_RESOURCE_ENDPOINT, "sophia.wilson")
+                .headers(headers)
+                .build();
+        ErrorResponse expectedError = new ErrorResponse(AUTHORIZATION_ERROR.getCode(), AUTHORIZATION_ERROR.getMessage());
+
+        ResponseEntity<ErrorResponse> actual = restTemplate.exchange(request, ErrorResponse.class);
+
+        assertThat(actual.getStatusCode()).isEqualTo(AUTHORIZATION_ERROR.getStatus());
+        assertThat(actual.getBody()).isEqualTo(expectedError);
+    }
+
+    @Test
     void shouldAccessTrainerProtectedEndpointWithValidToken() {
         HttpHeaders headers = createBearerAuthHeadersForTrainer();
         RequestEntity<Void> request = RequestEntity
-                .get(TRAINER_PROFILE_ENDPOINT, EXISTING_TRAINER_USERNAME)
+                .get(TRAINER_RESOURCE_ENDPOINT, EXISTING_TRAINER_USERNAME)
                 .headers(headers)
                 .build();
         TrainerGetResponse expectedTrainer = new TrainerGetResponse()
@@ -155,10 +173,25 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
     }
 
     @Test
+    void shouldFailAccessTrainerProfileWhenRequestingOtherTrainer() {
+        HttpHeaders headers = createBearerAuthHeadersForTrainer();
+        RequestEntity<Void> request = RequestEntity
+                .get(TRAINER_RESOURCE_ENDPOINT, "sophia.wilson")
+                .headers(headers)
+                .build();
+        ErrorResponse expectedError = new ErrorResponse(AUTHORIZATION_ERROR.getCode(), AUTHORIZATION_ERROR.getMessage());
+
+        ResponseEntity<ErrorResponse> actual = restTemplate.exchange(request, ErrorResponse.class);
+
+        assertThat(actual.getStatusCode()).isEqualTo(AUTHORIZATION_ERROR.getStatus());
+        assertThat(actual.getBody()).isEqualTo(expectedError);
+    }
+
+    @Test
     void shouldAccessTrainingProtectedEndpointWithValidToken() {
         HttpHeaders headers = createBearerAuthHeadersForTrainer();
         RequestEntity<Void> request = RequestEntity
-                .get(TRAININGS_TYPES_ENDPOINT)
+                .get(TRAINING_TYPES_ENDPOINT)
                 .headers(headers)
                 .build();
         List<TrainingTypeResponse> expectedTrainingTypes = List.of(new TrainingTypeResponse().id(1).name("CARDIO"),
@@ -171,6 +204,27 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
         assertThat(actual.getBody())
                 .usingRecursiveComparison()
                 .isEqualTo(expectedTrainingTypes);
+    }
+
+    @Test
+    void shouldFailAccessTrainingCreationWhenRequestingAsTrainee() {
+        HttpHeaders headers = createBearerAuthHeadersForTrainee();
+        TrainingCreateRequest trainingCreateRequest = new TrainingCreateRequest()
+                .trainerUsername(EXISTING_TRAINER_USERNAME)
+                .traineeUsername(EXISTING_TRAINEE_USERNAME)
+                .trainingName("dummy")
+                .trainingDate(LocalDate.now())
+                .trainingDuration(10);
+        RequestEntity<TrainingCreateRequest> request = RequestEntity
+                .post(TRAININGS_ENDPOINT)
+                .headers(headers)
+                .body(trainingCreateRequest);
+        ErrorResponse expectedError = new ErrorResponse(AUTHORIZATION_ERROR.getCode(), AUTHORIZATION_ERROR.getMessage());
+
+        ResponseEntity<ErrorResponse> actual = restTemplate.exchange(request, ErrorResponse.class);
+
+        assertThat(actual.getStatusCode()).isEqualTo(AUTHORIZATION_ERROR.getStatus());
+        assertThat(actual.getBody()).isEqualTo(expectedError);
     }
 
     @Test

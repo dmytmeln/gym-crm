@@ -12,6 +12,7 @@ import com.gym.crm.repository.TrainingTypeRepository;
 import com.gym.crm.service.TrainingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +34,7 @@ public class TrainingServiceImpl implements TrainingService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasRole('TRAINER') and #training.trainer.user.username == authentication.name")
     public Training createTraining(Training training) {
         Objects.requireNonNull(training, "Training cannot be null");
         Objects.requireNonNull(training.getTrainee(), "Trainee cannot be null");
