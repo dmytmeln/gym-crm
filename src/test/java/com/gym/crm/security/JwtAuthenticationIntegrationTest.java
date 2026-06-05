@@ -9,23 +9,30 @@ import com.gia.openapi.model.TrainingCreateRequest;
 import com.gia.openapi.model.TrainingTypeResponse;
 import com.gym.crm.config.BaseDbIntegrationTest;
 import com.gym.crm.config.TestDataset;
+import com.gym.crm.entity.User;
+import com.gym.crm.repository.UserRepository;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.time.LocalDate;
 import java.util.List;
 
 import static com.gym.crm.exception.ApiError.AUTHENTICATION_ERROR;
 import static com.gym.crm.exception.ApiError.AUTHORIZATION_ERROR;
+import static com.gym.crm.exception.ApiError.USER_DEACTIVATED_ERROR;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
@@ -46,11 +53,17 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
 
     private static ErrorResponse authenticationErrorResponse;
 
+    @MockitoBean
+    private StringRedisTemplate redisTemplate;
+
     @Autowired
     private TestRestTemplate restTemplate;
 
     @Autowired
     private JwtService jwtService;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @BeforeAll
     static void setUp() {
@@ -64,6 +77,8 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
                 .body(new LoginRequest(EXISTING_TRAINEE_USERNAME, EXISTING_TRAINEE_PASSWORD));
 
         ResponseEntity<Void> actual = restTemplate.exchange(request, Void.class);
+
+        when(redisTemplate.hasKey(anyString())).thenReturn(false);
 
         assertThat(actual.getStatusCode().is2xxSuccessful()).isTrue();
         assertThat(actual.getHeaders().get(AUTHORIZATION))
@@ -82,6 +97,8 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
                 .get(TRAINEE_RESOURCE_ENDPOINT, EXISTING_TRAINEE_USERNAME)
                 .build();
 
+        when(redisTemplate.hasKey(anyString())).thenReturn(false);
+
         ResponseEntity<ErrorResponse> actual = restTemplate.exchange(request, ErrorResponse.class);
 
         assertThat(actual.getStatusCode()).isEqualTo(AUTHENTICATION_ERROR.getStatus());
@@ -94,6 +111,8 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
                 .get(TRAINER_RESOURCE_ENDPOINT, EXISTING_TRAINER_USERNAME)
                 .build();
 
+        when(redisTemplate.hasKey(anyString())).thenReturn(false);
+
         ResponseEntity<ErrorResponse> actual = restTemplate.exchange(request, ErrorResponse.class);
 
         assertThat(actual.getStatusCode()).isEqualTo(AUTHENTICATION_ERROR.getStatus());
@@ -105,6 +124,8 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
         RequestEntity<Void> request = RequestEntity
                 .get(TRAINING_TYPES_ENDPOINT)
                 .build();
+
+        when(redisTemplate.hasKey(anyString())).thenReturn(false);
 
         ResponseEntity<ErrorResponse> actual = restTemplate.exchange(request, ErrorResponse.class);
 
@@ -126,6 +147,8 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
                 .dateOfBirth(LocalDate.of(1990, 5, 15))
                 .address("NYC");
 
+        when(redisTemplate.hasKey(anyString())).thenReturn(false);
+
         ResponseEntity<TraineeGetResponse> actual = restTemplate.exchange(request, TraineeGetResponse.class);
 
         assertThat(actual.getStatusCode().is2xxSuccessful()).isTrue();
@@ -136,6 +159,22 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
     }
 
     @Test
+    void shouldReturn401WhenTokenIsBlacklisted() {
+        HttpHeaders headers = createBearerAuthHeadersForTrainee();
+        RequestEntity<Void> request = RequestEntity
+                .get(TRAINEE_RESOURCE_ENDPOINT, EXISTING_TRAINEE_USERNAME)
+                .headers(headers)
+                .build();
+
+        when(redisTemplate.hasKey(anyString())).thenReturn(true);
+
+        ResponseEntity<ErrorResponse> actual = restTemplate.exchange(request, ErrorResponse.class);
+
+        assertThat(actual.getStatusCode()).isEqualTo(AUTHENTICATION_ERROR.getStatus());
+        assertThat(actual.getBody()).isEqualTo(authenticationErrorResponse);
+    }
+
+    @Test
     void shouldFailAccessTraineeProfileWhenRequestingOtherTrainee() {
         HttpHeaders headers = createBearerAuthHeadersForTrainee();
         RequestEntity<Void> request = RequestEntity
@@ -143,6 +182,8 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
                 .headers(headers)
                 .build();
         ErrorResponse expectedError = new ErrorResponse(AUTHORIZATION_ERROR.getCode(), AUTHORIZATION_ERROR.getMessage());
+
+        when(redisTemplate.hasKey(anyString())).thenReturn(false);
 
         ResponseEntity<ErrorResponse> actual = restTemplate.exchange(request, ErrorResponse.class);
 
@@ -163,6 +204,8 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
                 .isActive(true)
                 .specialization("CARDIO");
 
+        when(redisTemplate.hasKey(anyString())).thenReturn(false);
+
         ResponseEntity<TrainerGetResponse> actual = restTemplate.exchange(request, TrainerGetResponse.class);
 
         assertThat(actual.getStatusCode().is2xxSuccessful()).isTrue();
@@ -181,6 +224,8 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
                 .build();
         ErrorResponse expectedError = new ErrorResponse(AUTHORIZATION_ERROR.getCode(), AUTHORIZATION_ERROR.getMessage());
 
+        when(redisTemplate.hasKey(anyString())).thenReturn(false);
+
         ResponseEntity<ErrorResponse> actual = restTemplate.exchange(request, ErrorResponse.class);
 
         assertThat(actual.getStatusCode()).isEqualTo(AUTHORIZATION_ERROR.getStatus());
@@ -197,6 +242,8 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
         List<TrainingTypeResponse> expectedTrainingTypes = List.of(new TrainingTypeResponse().id(1).name("CARDIO"),
                 new TrainingTypeResponse().id(2).name("STRENGTH"),
                 new TrainingTypeResponse().id(3).name("YOGA"));
+
+        when(redisTemplate.hasKey(anyString())).thenReturn(false);
 
         ResponseEntity<List<TrainingTypeResponse>> actual = restTemplate.exchange(request, new ParameterizedTypeReference<>() {});
 
@@ -221,6 +268,8 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
                 .body(trainingCreateRequest);
         ErrorResponse expectedError = new ErrorResponse(AUTHORIZATION_ERROR.getCode(), AUTHORIZATION_ERROR.getMessage());
 
+        when(redisTemplate.hasKey(anyString())).thenReturn(false);
+
         ResponseEntity<ErrorResponse> actual = restTemplate.exchange(request, ErrorResponse.class);
 
         assertThat(actual.getStatusCode()).isEqualTo(AUTHORIZATION_ERROR.getStatus());
@@ -234,6 +283,8 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
                 .put(PASSWORD_ENDPOINT)
                 .headers(headers)
                 .body(new LoginChangeRequest(EXISTING_TRAINEE_USERNAME, EXISTING_TRAINEE_PASSWORD, "newPassword"));
+
+        when(redisTemplate.hasKey(anyString())).thenReturn(false);
 
         ResponseEntity<Void> actual = restTemplate.exchange(request, Void.class);
 
@@ -253,6 +304,8 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
                 .put(PASSWORD_ENDPOINT)
                 .headers(headers)
                 .body(new LoginChangeRequest(EXISTING_TRAINEE_USERNAME, EXISTING_TRAINEE_PASSWORD, newPassword));
+
+        when(redisTemplate.hasKey(anyString())).thenReturn(false);
 
         ResponseEntity<Void> actual = restTemplate.exchange(request, Void.class);
 
@@ -282,9 +335,30 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
                 .body(new LoginChangeRequest(otherUserUsername, EXISTING_TRAINEE_PASSWORD, "newPassword"));
         ErrorResponse expectedError = new ErrorResponse(AUTHORIZATION_ERROR.getCode(), AUTHORIZATION_ERROR.getMessage());
 
+        when(redisTemplate.hasKey(anyString())).thenReturn(false);
+
         ResponseEntity<ErrorResponse> actual = restTemplate.exchange(request, ErrorResponse.class);
 
         assertThat(actual.getStatusCode()).isEqualTo(AUTHORIZATION_ERROR.getStatus());
+        assertThat(actual.getBody()).isEqualTo(expectedError);
+    }
+
+    @Test
+    void shouldReturn403ForDeactivatedUser() {
+        User user = userRepository.findByUsername(EXISTING_TRAINEE_USERNAME).orElseThrow();
+        userRepository.save(user.toBuilder().isActive(false).build());
+        HttpHeaders headers = createBearerAuthHeadersForTrainee();
+        RequestEntity<Void> request = RequestEntity
+                .get(TRAINEE_RESOURCE_ENDPOINT, EXISTING_TRAINEE_USERNAME)
+                .headers(headers)
+                .build();
+        ErrorResponse expectedError = new ErrorResponse(USER_DEACTIVATED_ERROR.getCode(), USER_DEACTIVATED_ERROR.getMessage());
+
+        when(redisTemplate.hasKey(anyString())).thenReturn(false);
+
+        ResponseEntity<ErrorResponse> actual = restTemplate.exchange(request, ErrorResponse.class);
+
+        assertThat(actual.getStatusCode()).isEqualTo(USER_DEACTIVATED_ERROR.getStatus());
         assertThat(actual.getBody()).isEqualTo(expectedError);
     }
 

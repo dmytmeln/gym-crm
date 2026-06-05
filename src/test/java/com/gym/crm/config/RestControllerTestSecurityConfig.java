@@ -26,8 +26,8 @@ public class RestControllerTestSecurityConfig {
 
     @Bean
     @Primary
-    public JwtAuthenticationFilter jwtAuthenticationFilter() {
-        return new FakeJwtAuthenticationFilter();
+    public JwtAuthenticationFilter jwtAuthenticationFilter(JwtAuthenticationEntryPoint entryPoint) {
+        return new FakeJwtAuthenticationFilter(entryPoint);
     }
 
     @Bean
@@ -40,8 +40,8 @@ public class RestControllerTestSecurityConfig {
 
     private static class FakeJwtAuthenticationFilter extends JwtAuthenticationFilter {
 
-        public FakeJwtAuthenticationFilter() {
-            super(mock(AuthenticationManager.class));
+        public FakeJwtAuthenticationFilter(JwtAuthenticationEntryPoint entryPoint) {
+            super(mock(AuthenticationManager.class), entryPoint);
         }
 
         @Override

@@ -9,4 +9,6 @@ public interface AuthenticationService {
 
     void changePassword(LoginChangeDto loginChangeDto);
 
+    void logout(String token);
+
 }

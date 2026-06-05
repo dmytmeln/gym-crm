@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -22,25 +23,47 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    private static final String BEARER_PREFIX = "Bearer ";
+
     private final AuthenticationManager authenticationManager;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
-        getJwtTokenFromAuthHeader(request).ifPresent(this::authenticateUser);
+        Optional<String> jwtToken = getJwtTokenFromAuthHeader(request);
+        if (jwtToken.isEmpty()) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        try {
+            authenticateUser(jwtToken.get());
+        } catch (AuthenticationException e) {
+            handleAuthenticationFailure(request, response, e);
+            return;
+        }
 
         filterChain.doFilter(request, response);
     }
 
-    private void authenticateUser(String jwtToken) {
-        JwtTokenAuthentication auth = JwtTokenAuthentication.unauthenticated(jwtToken);
+    private void authenticateUser(String token) throws AuthenticationException {
+        Authentication authenticated = authenticateToken(token);
+
         SecurityContext context = SecurityContextHolder.createEmptyContext();
-
-        Authentication tokenAuthentication = authenticationManager.authenticate(auth);
-        context.setAuthentication(tokenAuthentication);
-
+        context.setAuthentication(authenticated);
         SecurityContextHolder.setContext(context);
+    }
+
+    private Authentication authenticateToken(String token) {
+        JwtTokenAuthentication unauthenticated = JwtTokenAuthentication.unauthenticated(token);
+        return authenticationManager.authenticate(unauthenticated);
+    }
+
+    private void handleAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException e) throws IOException {
+        SecurityContextHolder.clearContext();
+        jwtAuthenticationEntryPoint.commence(request, response, e);
     }
 
     private Optional<String> getJwtTokenFromAuthHeader(HttpServletRequest request) {
@@ -50,11 +73,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private boolean isBearerAuthHeader(String header) {
-        return header.startsWith("Bearer ");
+        return header.startsWith(BEARER_PREFIX);
     }
 
     private String extractBearerToken(String header) {
-        return header.substring(7);
+        return header.substring(BEARER_PREFIX.length());
     }
 
 }

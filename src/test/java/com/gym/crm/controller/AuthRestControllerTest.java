@@ -254,6 +254,42 @@ class AuthRestControllerTest extends AbstractRestControllerTest {
         assertThat(actualErrorResponse.getErrorMessage()).isEqualTo(buildExpectedErrorMessage(VALIDATION_ERROR, exception));
     }
 
+    @Test
+    void shouldLogoutWhenTokenIsValid() throws Exception {
+        String token = "valid-token";
+
+        mockMvc.perform(post(AUTH_ENDPOINT + "/logout")
+                        .header(AUTHORIZATION, "Bearer " + token))
+                .andExpect(status().isOk());
+
+        verify(facade).logout(token);
+    }
+
+    @Test
+    void shouldFailLogoutWhenTokenIsMissing() throws Exception {
+        mockMvc.perform(post(AUTH_ENDPOINT + "/logout"))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(facade);
+    }
+
+    @Test
+    void shouldFailLogoutWhenTokenIsInvalidHeader() throws Exception {
+        ValidationException exception = new ValidationException("Invalid authorization header format");
+
+        String actualResponseBody = mockMvc.perform(post(AUTH_ENDPOINT + "/logout")
+                        .header(AUTHORIZATION, "Basic abc"))
+                .andExpect(status().isBadRequest())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        ErrorResponse actualErrorResponse = objectMapper.readValue(actualResponseBody, ErrorResponse.class);
+        assertThat(actualErrorResponse.getErrorCode()).isEqualTo(VALIDATION_ERROR.getCode());
+        assertThat(actualErrorResponse.getErrorMessage()).isEqualTo(buildExpectedErrorMessage(VALIDATION_ERROR, exception));
+        verifyNoInteractions(facade);
+    }
+
     private LoginRequest buildLoginRequest(String password) {
         return new LoginRequest()
                 .username(USERNAME)

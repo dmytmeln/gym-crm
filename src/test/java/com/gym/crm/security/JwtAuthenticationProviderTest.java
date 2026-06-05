@@ -16,8 +16,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
+import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
 
+import static java.time.ZoneOffset.UTC;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -30,12 +33,18 @@ class JwtAuthenticationProviderTest {
 
     private static final String USERNAME = "liam.miller";
     private static final String TOKEN = "validToken";
+    private static final String JTI = "test-jti";
+    private static final JwtPayload PAYLOAD = new JwtPayload(USERNAME, JTI,
+            Date.from(LocalDate.of(2024, 1, 1).atStartOfDay(UTC).toInstant()));
 
     @Mock
     private JwtService jwtService;
 
     @Mock
     private UserDetailsServiceImpl userDetailsService;
+
+    @Mock
+    private TokenBlacklistService tokenBlacklistService;
 
     @InjectMocks
     private JwtAuthenticationProvider tokenProvider;
@@ -46,7 +55,8 @@ class JwtAuthenticationProviderTest {
         SimpleUserDetails userDetails = new SimpleUserDetails(USERNAME, true, List.of());
 
         when(jwtService.isTokenValid(TOKEN)).thenReturn(true);
-        when(jwtService.extractUsername(TOKEN)).thenReturn(USERNAME);
+        when(jwtService.getPayload(TOKEN)).thenReturn(PAYLOAD);
+        when(tokenBlacklistService.isBlacklisted(JTI)).thenReturn(false);
         when(userDetailsService.loadSimpleUserByUsername(USERNAME)).thenReturn(userDetails);
 
         Authentication result = tokenProvider.authenticate(authentication);
@@ -68,12 +78,24 @@ class JwtAuthenticationProviderTest {
     }
 
     @Test
+    void shouldThrowBadCredentialsExceptionWhenTokenIsBlacklisted() {
+        JwtTokenAuthentication authentication = JwtTokenAuthentication.unauthenticated(TOKEN);
+
+        when(jwtService.isTokenValid(TOKEN)).thenReturn(true);
+        when(jwtService.getPayload(TOKEN)).thenReturn(PAYLOAD);
+        when(tokenBlacklistService.isBlacklisted(JTI)).thenReturn(true);
+
+        assertThrows(BadCredentialsException.class, () -> tokenProvider.authenticate(authentication));
+    }
+
+    @Test
     void shouldThrowDisabledExceptionWhenUserIsDeactivated() {
         JwtTokenAuthentication authentication = JwtTokenAuthentication.unauthenticated(TOKEN);
         SimpleUserDetails userDetails = new SimpleUserDetails(USERNAME, false, List.of());
 
         when(jwtService.isTokenValid(TOKEN)).thenReturn(true);
-        when(jwtService.extractUsername(TOKEN)).thenReturn(USERNAME);
+        when(jwtService.getPayload(TOKEN)).thenReturn(PAYLOAD);
+        when(tokenBlacklistService.isBlacklisted(JTI)).thenReturn(false);
         when(userDetailsService.loadSimpleUserByUsername(USERNAME)).thenReturn(userDetails);
 
         assertThrows(DisabledException.class, () -> tokenProvider.authenticate(authentication));
@@ -84,7 +106,8 @@ class JwtAuthenticationProviderTest {
         JwtTokenAuthentication authentication = JwtTokenAuthentication.unauthenticated(TOKEN);
 
         when(jwtService.isTokenValid(TOKEN)).thenReturn(true);
-        when(jwtService.extractUsername(TOKEN)).thenReturn(USERNAME);
+        when(jwtService.getPayload(TOKEN)).thenReturn(PAYLOAD);
+        when(tokenBlacklistService.isBlacklisted(JTI)).thenReturn(false);
         when(userDetailsService.loadSimpleUserByUsername(USERNAME)).thenThrow(new UsernameNotFoundException("User not found"));
 
         assertThrows(UsernameNotFoundException.class, () -> tokenProvider.authenticate(authentication));
