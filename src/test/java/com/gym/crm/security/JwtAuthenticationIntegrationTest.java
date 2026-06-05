@@ -213,7 +213,7 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
                 .trainerUsername(EXISTING_TRAINER_USERNAME)
                 .traineeUsername(EXISTING_TRAINEE_USERNAME)
                 .trainingName("dummy")
-                .trainingDate(LocalDate.now())
+                .trainingDate(LocalDate.of(2026, 5, 15))
                 .trainingDuration(10);
         RequestEntity<TrainingCreateRequest> request = RequestEntity
                 .post(TRAININGS_ENDPOINT)
