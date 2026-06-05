@@ -47,4 +47,6 @@ public interface TrainerRepository extends JpaRepository<Trainer, Long> {
     @Query("SELECT COUNT(t) FROM Trainer t WHERE t.user.isActive = true")
     long countActiveTrainers();
 
+    boolean existsByUserUsername(String username);
+
 }

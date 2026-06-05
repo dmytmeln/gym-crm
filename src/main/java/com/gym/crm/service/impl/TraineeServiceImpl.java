@@ -15,6 +15,7 @@ import com.gym.crm.service.TraineeService;
 import com.gym.crm.service.common.ProfileCredentialGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -70,6 +71,7 @@ public class TraineeServiceImpl implements TraineeService {
 
     @Override
     @Transactional(readOnly = true)
+    @PreAuthorize("hasRole('TRAINEE') and #username == authentication.name")
     public Trainee getTraineeByUsername(String username) {
         Objects.requireNonNull(username, USERNAME_NULL_MSG);
 
@@ -79,6 +81,7 @@ public class TraineeServiceImpl implements TraineeService {
 
     @Override
     @Transactional(readOnly = true)
+    @PreAuthorize("hasRole('TRAINEE') and #username == authentication.name")
     public List<Trainer> getAvailableTrainers(String username) {
         Objects.requireNonNull(username, USERNAME_NULL_MSG);
         log.info("Getting available trainers for trainee username: {}", username);
@@ -92,6 +95,7 @@ public class TraineeServiceImpl implements TraineeService {
 
     @Override
     @Transactional(readOnly = true)
+    @PreAuthorize("hasRole('TRAINEE') and #filter.username == authentication.name")
     public List<Training> getTraineeTrainings(TraineeTrainingSearchFilter filter) {
         Objects.requireNonNull(filter, "Filter cannot be null");
         log.info("Getting trainings by criteria for trainee: {}", filter.getUsername());
@@ -125,6 +129,7 @@ public class TraineeServiceImpl implements TraineeService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasRole('TRAINEE') and #trainee.user.username == authentication.name")
     public Trainee updateTrainee(Trainee trainee) {
         Objects.requireNonNull(trainee, "Trainee cannot be null");
         Objects.requireNonNull(trainee.getUser(), "User cannot be null");
@@ -154,6 +159,7 @@ public class TraineeServiceImpl implements TraineeService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasRole('TRAINEE') and #username == authentication.name")
     public Trainee updateTraineeTrainers(String username, List<String> trainerUsernames) {
         Objects.requireNonNull(username, USERNAME_NULL_MSG);
         Objects.requireNonNull(trainerUsernames, "Trainer usernames cannot be null");
@@ -178,6 +184,7 @@ public class TraineeServiceImpl implements TraineeService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasRole('TRAINEE') and #username == authentication.name")
     public void updateActivationStatus(String username, boolean isActive) {
         Objects.requireNonNull(username, USERNAME_NULL_MSG);
         log.info("Updating activation status for trainee with username: {} to {}", username, isActive);
@@ -202,6 +209,7 @@ public class TraineeServiceImpl implements TraineeService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasRole('TRAINEE') and #username == authentication.name")
     public boolean deleteTraineeByUsername(String username) {
         Objects.requireNonNull(username, USERNAME_NULL_MSG);
         log.info("Deleting trainee with username: {}", username);

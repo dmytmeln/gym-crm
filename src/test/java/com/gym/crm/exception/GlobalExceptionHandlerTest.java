@@ -5,6 +5,7 @@ import jakarta.persistence.PersistenceException;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -213,6 +214,18 @@ class GlobalExceptionHandlerTest {
         assertThat(result.getBody()).isNotNull();
         assertThat(result.getBody().getErrorCode()).isEqualTo(CONFLICT_ERROR.getCode());
         assertThat(result.getBody().getErrorMessage()).isEqualTo(buildExpectedErrorMessage(CONFLICT_ERROR, exception));
+    }
+
+    @Test
+    void shouldHandleAccessDeniedException() {
+        AccessDeniedException exception = new AccessDeniedException("Test access denied message");
+
+        ResponseEntity<ErrorResponse> result = handler.handleAccessDeniedException(exception);
+
+        assertThat(result.getStatusCode()).isEqualTo(AUTHORIZATION_ERROR.getStatus());
+        assertThat(result.getBody()).isNotNull();
+        assertThat(result.getBody().getErrorCode()).isEqualTo(AUTHORIZATION_ERROR.getCode());
+        assertThat(result.getBody().getErrorMessage()).isEqualTo(AUTHORIZATION_ERROR.getMessage());
     }
 
     private String buildExpectedErrorMessage(ApiError apiError, Exception exception) {

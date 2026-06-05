@@ -18,13 +18,14 @@ import com.gia.openapi.model.TrainerUpdateResponse;
 import com.gia.openapi.model.TrainingCreateRequest;
 import com.gia.openapi.model.TrainingTypeResponse;
 import com.gym.crm.config.BaseDbIntegrationTest;
+import com.gym.crm.config.TestDataset;
 import com.gym.crm.dto.filter.TraineeTrainingSearchFilter;
 import com.gym.crm.dto.filter.TrainerTrainingSearchFilter;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.jdbc.Sql;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -36,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@Sql(scripts = {"classpath:datasets/cleanup-all.sql", "classpath:datasets/seed-data.sql"})
+@TestDataset
 class GymFacadeIntegrationTest extends BaseDbIntegrationTest {
 
     private static final String TRAINEE_USERNAME = "liam.miller";
@@ -47,6 +48,7 @@ class GymFacadeIntegrationTest extends BaseDbIntegrationTest {
     private GymFacade facade;
 
     @Test
+    @WithMockUser(username = TRAINEE_USERNAME, roles = "TRAINEE")
     void shouldGetTraineeByUsername() {
         TraineeGetResponse actual = facade.getTraineeByUsername(TRAINEE_USERNAME);
 
@@ -57,6 +59,7 @@ class GymFacadeIntegrationTest extends BaseDbIntegrationTest {
     }
 
     @Test
+    @WithMockUser(username = TRAINEE_USERNAME, roles = "TRAINEE")
     void shouldGetAvailableTrainersForTrainee() {
         List<AssignedTrainerResponse> actual = facade.getAvailableTrainersForTrainee(TRAINEE_USERNAME);
 
@@ -64,6 +67,7 @@ class GymFacadeIntegrationTest extends BaseDbIntegrationTest {
     }
 
     @Test
+    @WithMockUser(username = TRAINEE_USERNAME, roles = "TRAINEE")
     void shouldGetTraineeTrainings() {
         TraineeTrainingSearchFilter filter = TraineeTrainingSearchFilter.builder()
                 .username(TRAINEE_USERNAME)
@@ -72,7 +76,7 @@ class GymFacadeIntegrationTest extends BaseDbIntegrationTest {
         List<GetTraineeTrainingResponse> actual = facade.getTraineeTrainings(filter);
 
         assertEquals(1, actual.size());
-        assertEquals("Morning HIIT", actual.get(0).getTrainingName());
+        assertEquals("Morning HIIT", actual.getFirst().getTrainingName());
     }
 
     @Test
@@ -88,6 +92,7 @@ class GymFacadeIntegrationTest extends BaseDbIntegrationTest {
     }
 
     @Test
+    @WithMockUser(username = TRAINEE_USERNAME, roles = "TRAINEE")
     void shouldUpdateTrainee() {
         TraineeUpdateRequest request = new TraineeUpdateRequest("Updated", "Name", true)
                 .address("Updated Address")
@@ -102,6 +107,7 @@ class GymFacadeIntegrationTest extends BaseDbIntegrationTest {
     }
 
     @Test
+    @WithMockUser(username = TRAINEE_USERNAME, roles = "TRAINEE")
     void shouldUpdateTraineeTrainers() {
         TraineeAssignedTrainersUpdateRequest request = new TraineeAssignedTrainersUpdateRequest()
                 .trainerUsernames(List.of("sarah.adams", "alex.morgan"));
@@ -113,6 +119,7 @@ class GymFacadeIntegrationTest extends BaseDbIntegrationTest {
     }
 
     @Test
+    @WithMockUser(username = TRAINEE_USERNAME, roles = "TRAINEE")
     void shouldUpdateTraineeActivationStatus() {
         ActivationStatusRequest request = new ActivationStatusRequest(false);
 
@@ -123,6 +130,7 @@ class GymFacadeIntegrationTest extends BaseDbIntegrationTest {
     }
 
     @Test
+    @WithMockUser(username = TRAINEE_USERNAME, roles = "TRAINEE")
     void shouldDeleteTraineeByUsername() {
         boolean actual = facade.deleteTraineeByUsername(TRAINEE_USERNAME);
 
@@ -130,6 +138,7 @@ class GymFacadeIntegrationTest extends BaseDbIntegrationTest {
     }
 
     @Test
+    @WithMockUser(username = TRAINER_USERNAME, roles = "TRAINER")
     void shouldGetTrainerByUsername() {
         TrainerGetResponse actual = facade.getTrainerByUsername(TRAINER_USERNAME);
 
@@ -152,6 +161,7 @@ class GymFacadeIntegrationTest extends BaseDbIntegrationTest {
     }
 
     @Test
+    @WithMockUser(username = TRAINER_USERNAME, roles = "TRAINER")
     void shouldUpdateTrainer() {
         TrainerUpdateRequest request = new TrainerUpdateRequest()
                 .firstName("Updated")
@@ -166,6 +176,7 @@ class GymFacadeIntegrationTest extends BaseDbIntegrationTest {
     }
 
     @Test
+    @WithMockUser(username = TRAINER_USERNAME, roles = "TRAINER")
     void shouldUpdateTrainerActivationStatus() {
         facade.updateTrainerActivationStatus(TRAINER_USERNAME, false);
 
@@ -177,6 +188,7 @@ class GymFacadeIntegrationTest extends BaseDbIntegrationTest {
     }
 
     @Test
+    @WithMockUser(username = TRAINER_USERNAME, roles = "TRAINER")
     void shouldCreateTraining() {
         TrainingCreateRequest request = new TrainingCreateRequest();
         request.setTraineeUsername(TRAINEE_USERNAME);
@@ -205,6 +217,7 @@ class GymFacadeIntegrationTest extends BaseDbIntegrationTest {
     }
 
     @Test
+    @WithMockUser(username = TRAINER_USERNAME, roles = "TRAINER")
     void shouldGetTrainerTrainings() {
         TrainerTrainingSearchFilter filter = TrainerTrainingSearchFilter.builder()
                 .username(TRAINER_USERNAME)
@@ -213,10 +226,11 @@ class GymFacadeIntegrationTest extends BaseDbIntegrationTest {
         List<GetTrainerTrainingResponse> actual = facade.getTrainerTrainings(filter);
 
         assertEquals(1, actual.size());
-        assertEquals(TRAINING_NAME, actual.get(0).getTrainingName());
+        assertEquals(TRAINING_NAME, actual.getFirst().getTrainingName());
     }
 
     @Test
+    @WithMockUser(username = TRAINER_USERNAME, roles = "TRAINER")
     void shouldGetEmptyTrainerTrainingsWhenFilterDoesNotMatch() {
         TrainerTrainingSearchFilter filter = TrainerTrainingSearchFilter.builder()
                 .username(TRAINER_USERNAME)

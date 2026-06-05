@@ -15,6 +15,7 @@ import com.gym.crm.service.TrainerService;
 import com.gym.crm.service.common.ProfileCredentialGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -77,6 +78,7 @@ public class TrainerServiceImpl implements TrainerService {
 
     @Override
     @Transactional(readOnly = true)
+    @PreAuthorize("hasRole('TRAINER') and #username == authentication.name")
     public Trainer getTrainerByUsername(String username) {
         Objects.requireNonNull(username, USERNAME_NULL_MSG);
 
@@ -86,6 +88,7 @@ public class TrainerServiceImpl implements TrainerService {
 
     @Override
     @Transactional(readOnly = true)
+    @PreAuthorize("hasRole('TRAINER') and #filter.username == authentication.name")
     public List<Training> getTrainerTrainings(TrainerTrainingSearchFilter filter) {
         Objects.requireNonNull(filter, "Filter cannot be null");
         log.info("Getting trainings for trainer with username: {}", filter.getUsername());
@@ -119,6 +122,7 @@ public class TrainerServiceImpl implements TrainerService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasRole('TRAINER') and #trainer.user.username == authentication.name")
     public Trainer updateTrainer(Trainer trainer) {
         Objects.requireNonNull(trainer, "Trainer cannot be null");
         Objects.requireNonNull(trainer.getUser(), "Trainer user cannot be null");
@@ -146,6 +150,7 @@ public class TrainerServiceImpl implements TrainerService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasRole('TRAINER') and #username == authentication.name")
     public void updateActivationStatus(String username, boolean isActive) {
         Objects.requireNonNull(username, USERNAME_NULL_MSG);
         log.info("Updating activation status for trainer with username: {} to {}", username, isActive);

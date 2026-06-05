@@ -10,6 +10,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
@@ -36,6 +37,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         ErrorResponse errorResponse = switch (authException) {
             case InsufficientAuthenticationException ignored -> handleInvalidToken(response);
             case BadCredentialsException ignored -> handleInvalidToken(response);
+            case UsernameNotFoundException ignored -> handleInvalidToken(response);
             case DisabledException ignored -> handleDeactivatedUser(response);
             default -> defaultHandler(response, authException);
         };

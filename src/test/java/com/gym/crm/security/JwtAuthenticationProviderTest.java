@@ -1,6 +1,6 @@
 package com.gym.crm.security;
 
-import com.gym.crm.repository.UserRepository;
+import com.gym.crm.security.UserDetailsServiceImpl.SimpleUserDetails;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -14,8 +14,9 @@ import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
-import java.util.Optional;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -34,7 +35,7 @@ class JwtAuthenticationProviderTest {
     private JwtService jwtService;
 
     @Mock
-    private UserRepository userRepository;
+    private UserDetailsServiceImpl userDetailsService;
 
     @InjectMocks
     private JwtAuthenticationProvider tokenProvider;
@@ -42,10 +43,11 @@ class JwtAuthenticationProviderTest {
     @Test
     void shouldAuthenticateSuccessfullyWhenTokenIsValid() {
         JwtTokenAuthentication authentication = JwtTokenAuthentication.unauthenticated(TOKEN);
+        SimpleUserDetails userDetails = new SimpleUserDetails(USERNAME, true, List.of());
 
         when(jwtService.isTokenValid(TOKEN)).thenReturn(true);
         when(jwtService.extractUsername(TOKEN)).thenReturn(USERNAME);
-        when(userRepository.isActive(USERNAME)).thenReturn(Optional.of(true));
+        when(userDetailsService.loadSimpleUserByUsername(USERNAME)).thenReturn(userDetails);
 
         Authentication result = tokenProvider.authenticate(authentication);
 
@@ -68,23 +70,24 @@ class JwtAuthenticationProviderTest {
     @Test
     void shouldThrowDisabledExceptionWhenUserIsDeactivated() {
         JwtTokenAuthentication authentication = JwtTokenAuthentication.unauthenticated(TOKEN);
+        SimpleUserDetails userDetails = new SimpleUserDetails(USERNAME, false, List.of());
 
         when(jwtService.isTokenValid(TOKEN)).thenReturn(true);
         when(jwtService.extractUsername(TOKEN)).thenReturn(USERNAME);
-        when(userRepository.isActive(USERNAME)).thenReturn(Optional.of(false));
+        when(userDetailsService.loadSimpleUserByUsername(USERNAME)).thenReturn(userDetails);
 
         assertThrows(DisabledException.class, () -> tokenProvider.authenticate(authentication));
     }
 
     @Test
-    void shouldThrowBadCredentialsExceptionWhenUserNotFound() {
+    void shouldThrowUsernameNotFoundExceptionWhenUserNotFound() {
         JwtTokenAuthentication authentication = JwtTokenAuthentication.unauthenticated(TOKEN);
 
         when(jwtService.isTokenValid(TOKEN)).thenReturn(true);
         when(jwtService.extractUsername(TOKEN)).thenReturn(USERNAME);
-        when(userRepository.isActive(USERNAME)).thenReturn(Optional.empty());
+        when(userDetailsService.loadSimpleUserByUsername(USERNAME)).thenThrow(new UsernameNotFoundException("User not found"));
 
-        assertThrows(BadCredentialsException.class, () -> tokenProvider.authenticate(authentication));
+        assertThrows(UsernameNotFoundException.class, () -> tokenProvider.authenticate(authentication));
     }
 
     @Test

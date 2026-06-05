@@ -90,7 +90,7 @@ class TrainingServiceImplTest {
         Training training = Training.builder()
                 .trainer(buildTrainerWithUsername())
                 .trainingName("Test")
-                .trainingDate(LocalDate.now())
+                .trainingDate(LocalDate.of(2026, 4, 15))
                 .trainingDuration(60)
                 .build();
 
@@ -105,7 +105,7 @@ class TrainingServiceImplTest {
         Training training = Training.builder()
                 .trainee(buildTraineeWithUsername())
                 .trainingName("Test")
-                .trainingDate(LocalDate.now())
+                .trainingDate(LocalDate.of(2026, 4, 15))
                 .trainingDuration(60)
                 .build();
 
