@@ -3,6 +3,7 @@ package com.gym.crm.controller;
 import com.gia.openapi.model.ErrorResponse;
 import com.gia.openapi.model.LoginChangeRequest;
 import com.gia.openapi.model.LoginRequest;
+import com.gym.crm.exception.ValidationException;
 import com.gym.crm.facade.GymFacade;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.headers.Header;
@@ -16,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -26,6 +28,8 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 @RequiredArgsConstructor
 @Tag(name = "User Profile", description = "Login and account management")
 public class AuthRestController {
+
+    private static final String BEARER_PREFIX = "Bearer ";
 
     private final GymFacade facade;
 
@@ -62,8 +66,28 @@ public class AuthRestController {
         String token = facade.login(loginRequest);
 
         return ResponseEntity.ok()
-                .header(AUTHORIZATION, "Bearer " + token)
+                .header(AUTHORIZATION, BEARER_PREFIX + token)
                 .build();
+    }
+
+    @PostMapping("/logout")
+    @Operation(summary = "Log out user", description = "Invalidates the active JWT by blacklisting it", responses = {
+            @ApiResponse(responseCode = "200", description = "Successful logout"),
+            @ApiResponse(responseCode = "400", description = "Invalid input data",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized access",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))})
+    public ResponseEntity<Void> logout(@RequestHeader(AUTHORIZATION) String authHeader) {
+        if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
+            throw new ValidationException("Invalid authorization header format");
+        }
+
+        String token = authHeader.substring(BEARER_PREFIX.length());
+        facade.logout(token);
+
+        return ResponseEntity.ok().build();
     }
 
 }

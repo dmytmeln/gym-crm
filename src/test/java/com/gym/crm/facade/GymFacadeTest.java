@@ -426,6 +426,23 @@ class GymFacadeTest {
     }
 
     @Test
+    void shouldLogoutSuccessfully() {
+        String token = "valid-token";
+
+        facade.logout(token);
+
+        verify(authenticationService).logout(token);
+    }
+
+    @Test
+    void shouldThrowNullPointerWhenLoggingOutWithNullToken() {
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> facade.logout(null));
+
+        assertEquals("Token cannot be null", exception.getMessage());
+        verifyNoInteractions(authenticationService);
+    }
+
+    @Test
     void shouldCreateTrainerAndReturnResponse() {
         TrainerCreateRequest request = new TrainerCreateRequest()
                 .firstName(DEFAULT_FIRST_NAME)

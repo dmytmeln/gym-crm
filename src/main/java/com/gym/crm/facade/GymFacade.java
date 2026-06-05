@@ -68,6 +68,12 @@ public class GymFacade {
         return authenticationService.login(dto);
     }
 
+    public void logout(String token) {
+        Objects.requireNonNull(token, "Token cannot be null");
+
+        authenticationService.logout(token);
+    }
+
     public void changePassword(LoginChangeRequest loginChangeRequest) {
         Objects.requireNonNull(loginChangeRequest, "LoginChangeRequest cannot be null");
         validator.validate(loginChangeRequest);

@@ -15,11 +15,11 @@ public class JwtAuthenticationProvider implements AuthenticationProvider {
 
     private final JwtService jwtService;
     private final UserDetailsServiceImpl userDetailsService;
+    private final TokenBlacklistService tokenBlacklistService;
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         JwtTokenAuthentication jwtAuth = (JwtTokenAuthentication) authentication;
-
         String token = jwtAuth.getToken();
         jwtAuth.clearCredentials();
 
@@ -27,9 +27,12 @@ public class JwtAuthenticationProvider implements AuthenticationProvider {
             throw new BadCredentialsException("Invalid token");
         }
 
-        String username = jwtService.extractUsername(token);
-        UserDetails userDetails = userDetailsService.loadSimpleUserByUsername(username);
+        JwtPayload payload = jwtService.getPayload(token);
+        if (tokenBlacklistService.isBlacklisted(payload.jti())) {
+            throw new BadCredentialsException("Token has been revoked");
+        }
 
+        UserDetails userDetails = userDetailsService.loadSimpleUserByUsername(payload.username());
         if (!userDetails.isEnabled()) {
             throw new DisabledException("User account is deactivated. Please contact support.");
         }

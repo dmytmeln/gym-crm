@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import java.security.Key;
 import java.util.Date;
 import java.util.Map;
+import java.util.UUID;
 
 import static io.jsonwebtoken.SignatureAlgorithm.HS256;
 import static io.jsonwebtoken.io.Decoders.BASE64;
@@ -29,13 +30,14 @@ public class JwtService {
         this.accessTokenExpirationMs = accessTokenExpirationMs;
     }
 
-    public String extractUsername(String refreshToken) {
-        Claims claims = extractAllClaims(refreshToken);
-        return claims.getSubject();
-    }
-
     public String generateAccessToken(String username) {
         return generateToken(emptyMap(), username, accessTokenExpirationMs);
+    }
+
+    public JwtPayload getPayload(String token) {
+        Claims claims = extractAllClaims(token);
+
+        return new JwtPayload(claims.getSubject(), claims.getId(), claims.getExpiration());
     }
 
     public boolean isTokenValid(String token) {
@@ -50,6 +52,7 @@ public class JwtService {
     private String generateToken(Map<String, ?> extraClaims, String subject, long expirationMs) {
         return Jwts.builder()
                 .setClaims(extraClaims)
+                .setId(UUID.randomUUID().toString())
                 .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expirationMs))

@@ -27,12 +27,14 @@ class JwtServiceTest {
     }
 
     @Test
-    void shouldGenerateAccessTokenAndExtractUsername() {
+    void shouldGenerateAccessTokenAndGetPayload() {
         String token = service.generateAccessToken(USERNAME);
 
-        String actual = service.extractUsername(token);
+        JwtPayload payload = service.getPayload(token);
 
-        assertEquals(USERNAME, actual);
+        assertEquals(USERNAME, payload.username());
+        assertNotNull(payload.jti());
+        assertNotNull(payload.expiration());
     }
 
     @Test

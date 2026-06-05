@@ -5,7 +5,9 @@ import com.gym.crm.dto.LoginRequestDto;
 import com.gym.crm.entity.User;
 import com.gym.crm.exception.AuthenticationException;
 import com.gym.crm.repository.UserRepository;
+import com.gym.crm.security.JwtPayload;
 import com.gym.crm.security.JwtService;
+import com.gym.crm.security.TokenBlacklistService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -17,8 +19,11 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.LocalDate;
+import java.util.Date;
 import java.util.Optional;
 
+import static java.time.ZoneOffset.UTC;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -45,6 +50,9 @@ class AuthenticationServiceImplTest {
 
     @Mock
     private JwtService jwtService;
+
+    @Mock
+    private TokenBlacklistService tokenBlacklistService;
 
     @InjectMocks
     private AuthenticationServiceImpl service;
@@ -123,6 +131,20 @@ class AuthenticationServiceImplTest {
         assertThrows(AuthenticationException.class, () -> service.changePassword(loginChangeDto));
 
         verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void shouldLogoutSuccessfully() {
+        String token = "valid-token";
+        String jti = "test-jti";
+        Date expiration = Date.from(LocalDate.of(2024, 1, 1).atStartOfDay(UTC).toInstant());
+        JwtPayload payload = new JwtPayload(USERNAME, jti, expiration);
+
+        when(jwtService.getPayload(token)).thenReturn(payload);
+
+        service.logout(token);
+
+        verify(tokenBlacklistService).blacklistToken(jti, expiration.toInstant());
     }
 
     private LoginRequestDto buildLoginRequestDto() {

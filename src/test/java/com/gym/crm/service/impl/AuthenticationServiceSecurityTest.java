@@ -5,6 +5,7 @@ import com.gym.crm.dto.LoginRequestDto;
 import com.gym.crm.entity.User;
 import com.gym.crm.repository.UserRepository;
 import com.gym.crm.security.JwtService;
+import com.gym.crm.security.TokenBlacklistService;
 import com.gym.crm.service.AuthenticationService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +42,9 @@ class AuthenticationServiceSecurityTest {
 
     @MockitoBean
     private JwtService jwtService;
+
+    @MockitoBean
+    private TokenBlacklistService tokenBlacklistService;
 
     @Autowired
     private AuthenticationService service;

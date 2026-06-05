@@ -26,6 +26,7 @@ import static com.gym.crm.exception.ApiError.NOT_FOUND_ERROR;
 import static com.gym.crm.exception.ApiError.SERVICE_ERROR;
 import static com.gym.crm.exception.ApiError.USER_DEACTIVATED_ERROR;
 import static com.gym.crm.exception.ApiError.VALIDATION_ERROR;
+import static java.lang.String.format;
 
 @Slf4j
 @RestControllerAdvice
@@ -35,7 +36,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleEntityNotFoundException(EntityNotFoundException ex) {
-        String message = String.format(RESPONSE_MESSAGE_TEMPLATE, NOT_FOUND_ERROR.getMessage(), ex.getMessage());
+        String message = format(RESPONSE_MESSAGE_TEMPLATE, NOT_FOUND_ERROR.getMessage(), ex.getMessage());
 
         log.warn("Entity not found: {}", ex.getMessage());
         return buildResponse(NOT_FOUND_ERROR, message);
@@ -43,7 +44,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(ValidationException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(ValidationException ex) {
-        String message = String.format(RESPONSE_MESSAGE_TEMPLATE, VALIDATION_ERROR.getMessage(), ex.getMessage());
+        String message = format(RESPONSE_MESSAGE_TEMPLATE, VALIDATION_ERROR.getMessage(), ex.getMessage());
 
         log.warn("Validation error: {}", ex.getMessage());
         return buildResponse(VALIDATION_ERROR, message);
@@ -51,7 +52,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(ConflictException.class)
     public ResponseEntity<ErrorResponse> handleConflictException(ConflictException ex) {
-        String message = String.format(RESPONSE_MESSAGE_TEMPLATE, CONFLICT_ERROR.getMessage(), ex.getMessage());
+        String message = format(RESPONSE_MESSAGE_TEMPLATE, CONFLICT_ERROR.getMessage(), ex.getMessage());
 
         log.warn("Conflict error: {}", ex.getMessage());
         return buildResponse(CONFLICT_ERROR, message);
@@ -93,10 +94,10 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                                                                   @NonNull HttpStatusCode status,
                                                                   @NonNull WebRequest request) {
         String violations = ex.getBindingResult().getFieldErrors().stream()
-                .map(fieldError -> String.format(RESPONSE_MESSAGE_TEMPLATE, fieldError.getField(), fieldError.getDefaultMessage()))
+                .map(fieldError -> format(RESPONSE_MESSAGE_TEMPLATE, fieldError.getField(), fieldError.getDefaultMessage()))
                 .collect(Collectors.joining(", "));
 
-        String message = String.format(RESPONSE_MESSAGE_TEMPLATE, VALIDATION_ERROR.getMessage(), violations);
+        String message = format(RESPONSE_MESSAGE_TEMPLATE, VALIDATION_ERROR.getMessage(), violations);
         ErrorResponse body = new ErrorResponse(VALIDATION_ERROR.getCode(), message);
 
         log.warn("Request body validation failed: {}", ex.getMessage());

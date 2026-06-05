@@ -5,7 +5,9 @@ import com.gym.crm.dto.LoginRequestDto;
 import com.gym.crm.entity.User;
 import com.gym.crm.exception.AuthenticationException;
 import com.gym.crm.repository.UserRepository;
+import com.gym.crm.security.JwtPayload;
 import com.gym.crm.security.JwtService;
+import com.gym.crm.security.TokenBlacklistService;
 import com.gym.crm.service.AuthenticationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +29,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final TokenBlacklistService tokenBlacklistService;
 
     @Override
     public String login(LoginRequestDto loginRequestDto) {
@@ -62,6 +65,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         userRepository.save(updatedUser);
         log.info("Password changed successfully for username: {}", loginChangeDto.username());
+    }
+
+    @Override
+    public void logout(String token) {
+        Objects.requireNonNull(token, "Token cannot be null");
+
+        JwtPayload payload = jwtService.getPayload(token);
+        tokenBlacklistService.blacklistToken(payload.jti(), payload.expiration().toInstant());
     }
 
 }
