@@ -9,6 +9,7 @@ import com.gym.crm.security.JwtService;
 import com.gym.crm.service.AuthenticationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -43,6 +44,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     @Transactional
+    @PreAuthorize("#loginChangeDto.username == authentication.name")
     public void changePassword(LoginChangeDto loginChangeDto) {
         Objects.requireNonNull(loginChangeDto, "LoginChangeDto cannot be null");
         log.info("Change password attempt for username: {}", loginChangeDto.username());

@@ -272,6 +272,22 @@ class JwtAuthenticationIntegrationTest extends BaseDbIntegrationTest {
         assertThat(bearerAuthToken.substring(7)).isNotEmpty();
     }
 
+    @Test
+    void shouldFailChangePasswordWhenRequestingOtherUser() {
+        HttpHeaders headers = createBearerAuthHeadersForTrainee();
+        String otherUserUsername = "sophia.wilson";
+        RequestEntity<LoginChangeRequest> request = RequestEntity
+                .put(PASSWORD_ENDPOINT)
+                .headers(headers)
+                .body(new LoginChangeRequest(otherUserUsername, EXISTING_TRAINEE_PASSWORD, "newPassword"));
+        ErrorResponse expectedError = new ErrorResponse(AUTHORIZATION_ERROR.getCode(), AUTHORIZATION_ERROR.getMessage());
+
+        ResponseEntity<ErrorResponse> actual = restTemplate.exchange(request, ErrorResponse.class);
+
+        assertThat(actual.getStatusCode()).isEqualTo(AUTHORIZATION_ERROR.getStatus());
+        assertThat(actual.getBody()).isEqualTo(expectedError);
+    }
+
     private HttpHeaders createBearerAuthHeadersForTrainee() {
         String token = jwtService.generateAccessToken(EXISTING_TRAINEE_USERNAME);
 
