@@ -10,7 +10,8 @@
 * JDK 17
 * Apache Maven (3.8+)
 * MySQL Server (8.0+) or Docker (to run MySQL inside a container)
-* Docker (Required for running integration tests via Testcontainers, or optionally for running MySQL)
+* Redis Server (6.0+) or Docker (to run Redis inside a container)
+* Docker (Required for running integration tests via Testcontainers, or optionally for running MySQL and Redis)
 
 ## Quick Start Guide
 
@@ -42,7 +43,21 @@ docker run --name gym-mysql -p 3306:3306 -e MYSQL_DATABASE=gym_db -e MYSQL_USER=
 
 > Database tables and initial schemas will be generated automatically by Liquibase on application startup.
 
-### Step 3: Build the Application
+### Step 3: Set Up Redis
+
+You can either use a locally installed Redis server or run it using Docker.
+
+#### Option A: Local Redis Server
+Start your local Redis service on the default port (`6379`).
+
+#### Option B: Using Docker
+If you prefer Docker, you can start a Redis container with the default port setup using this command:
+
+```bash
+docker run --name gym-redis -p 6379:6379 -d redis
+```
+
+### Step 4: Build the Application
 
 ```bash
 mvn clean compile
@@ -54,7 +69,7 @@ To build a packaged executable JAR and run all tests (requires Docker to be runn
 mvn clean install
 ```
 
-### Step 4: Run the Application
+### Step 5: Run the Application
 
 ```bash
 mvn exec:java -Dexec.mainClass=com.gym.crm.GymCrmApplication
