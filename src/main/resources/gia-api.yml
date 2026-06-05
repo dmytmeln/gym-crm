@@ -839,6 +839,43 @@ paths:
         default:
           description: Unexpected error
 
+  /auth/logout:
+    post:
+      tags:
+        - User Profile
+      summary: Log out user
+      description: Invalidates the active JWT by blacklisting it
+      operationId: logout
+      responses:
+        '200':
+          description: Successful logout
+        '400':
+          description: Invalid input data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        default:
+          description: Unexpected error
+
 components:
   parameters:
     Username:
