@@ -86,6 +86,7 @@ The application runs on port 8080 under the context path `/gym-crm`.
 * **Base API Path**: [http://localhost:8080/gym-crm/api/v1](http://localhost:8080/gym-crm/api/v1)
 * **OpenAPI / Swagger UI**: [http://localhost:8080/gym-crm/swagger-ui/index.html](http://localhost:8080/gym-crm/swagger-ui/index.html)
 * **OpenAPI Spec (JSON)**: [http://localhost:8080/gym-crm/v3/api-docs](http://localhost:8080/gym-crm/v3/api-docs)
+* **OpenAPI Spec (YAML)**: [src/main/resources/gia-api.yml](src/main/resources/gia-api.yml) (can be loaded/edited in [Swagger Editor](https://editor.swagger.io/))
 
 ## Postman Collection
 
