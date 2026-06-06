@@ -17,7 +17,7 @@ import com.gia.openapi.model.TrainerUpdateRequest;
 import com.gia.openapi.model.TrainerUpdateResponse;
 import com.gia.openapi.model.TrainingCreateRequest;
 import com.gia.openapi.model.TrainingTypeResponse;
-import com.gym.crm.config.BaseDbIntegrationTest;
+import com.gym.crm.config.DbIntegrationTest;
 import com.gym.crm.config.TestDataset;
 import com.gym.crm.dto.filter.TraineeTrainingSearchFilter;
 import com.gym.crm.dto.filter.TrainerTrainingSearchFilter;
@@ -26,6 +26,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -38,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SpringBootTest
 @ActiveProfiles("test")
 @TestDataset
-class GymFacadeIntegrationTest extends BaseDbIntegrationTest {
+class GymFacadeIntegrationTest {
 
     private static final String TRAINEE_USERNAME = "liam.miller";
     private static final String TRAINER_USERNAME = "marcus.stone";
@@ -46,6 +48,11 @@ class GymFacadeIntegrationTest extends BaseDbIntegrationTest {
 
     @Autowired
     private GymFacade facade;
+
+    @DynamicPropertySource
+    static void setMySqlProperties(DynamicPropertyRegistry registry) {
+        DbIntegrationTest.setMySqlContainerProperties(registry);
+    }
 
     @Test
     @WithMockUser(username = TRAINEE_USERNAME, roles = "TRAINEE")

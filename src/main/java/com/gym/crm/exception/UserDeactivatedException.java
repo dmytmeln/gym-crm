@@ -1,6 +1,6 @@
 package com.gym.crm.exception;
 
-public class UserDeactivatedException extends RuntimeException {
+public class UserDeactivatedException extends AuthenticationException {
 
     public UserDeactivatedException(String message) {
         super(message);

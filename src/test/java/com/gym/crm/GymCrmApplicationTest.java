@@ -1,19 +1,26 @@
 package com.gym.crm;
 
-import com.gym.crm.config.BaseDbIntegrationTest;
+import com.gym.crm.config.DbIntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest
 @ActiveProfiles("test")
-class GymCrmApplicationTest extends BaseDbIntegrationTest {
+class GymCrmApplicationTest {
 
     @Autowired
     private GymCrmApplication app;
+
+    @DynamicPropertySource
+    static void setMySqlProperties(DynamicPropertyRegistry registry) {
+        DbIntegrationTest.setMySqlContainerProperties(registry);
+    }
 
     @Test
     void shouldInitializeGymCrmApplicationInSpringContext() {

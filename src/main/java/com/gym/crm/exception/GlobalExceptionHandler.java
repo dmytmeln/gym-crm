@@ -16,17 +16,17 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import java.util.stream.Collectors;
-
 import static com.gym.crm.exception.ApiError.AUTHENTICATION_ERROR;
 import static com.gym.crm.exception.ApiError.AUTHORIZATION_ERROR;
 import static com.gym.crm.exception.ApiError.CONFLICT_ERROR;
 import static com.gym.crm.exception.ApiError.DATABASE_ERROR;
+import static com.gym.crm.exception.ApiError.IP_BLOCKED_ERROR;
 import static com.gym.crm.exception.ApiError.NOT_FOUND_ERROR;
 import static com.gym.crm.exception.ApiError.SERVICE_ERROR;
 import static com.gym.crm.exception.ApiError.USER_DEACTIVATED_ERROR;
 import static com.gym.crm.exception.ApiError.VALIDATION_ERROR;
 import static java.lang.String.format;
+import static java.util.stream.Collectors.joining;
 
 @Slf4j
 @RestControllerAdvice
@@ -58,6 +58,18 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return buildResponse(CONFLICT_ERROR, message);
     }
 
+    @ExceptionHandler(UserDeactivatedException.class)
+    public ResponseEntity<ErrorResponse> handleUserDeactivatedException(UserDeactivatedException ex) {
+        log.warn("Deactivated user login attempt: {}", ex.getMessage());
+        return buildResponse(USER_DEACTIVATED_ERROR);
+    }
+
+    @ExceptionHandler(IpBlockedException.class)
+    public ResponseEntity<ErrorResponse> handleIpBlockedException(IpBlockedException ex) {
+        log.warn("Blocked IP login attempt: {}", ex.getMessage());
+        return buildResponse(IP_BLOCKED_ERROR);
+    }
+
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ErrorResponse> handleAuthenticationException(AuthenticationException ex) {
         log.warn("Authentication error: {}", ex.getMessage());
@@ -68,12 +80,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException ex) {
         log.warn("Access denied: {}", ex.getMessage());
         return buildResponse(AUTHORIZATION_ERROR);
-    }
-
-    @ExceptionHandler(UserDeactivatedException.class)
-    public ResponseEntity<ErrorResponse> handleUserDeactivatedException(UserDeactivatedException ex) {
-        log.warn("Deactivated user login attempt: {}", ex.getMessage());
-        return buildResponse(USER_DEACTIVATED_ERROR);
     }
 
     @ExceptionHandler(PersistenceException.class)
@@ -95,7 +101,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                                                                   @NonNull WebRequest request) {
         String violations = ex.getBindingResult().getFieldErrors().stream()
                 .map(fieldError -> format(RESPONSE_MESSAGE_TEMPLATE, fieldError.getField(), fieldError.getDefaultMessage()))
-                .collect(Collectors.joining(", "));
+                .collect(joining(", "));
 
         String message = format(RESPONSE_MESSAGE_TEMPLATE, VALIDATION_ERROR.getMessage(), violations);
         ErrorResponse body = new ErrorResponse(VALIDATION_ERROR.getCode(), message);
