@@ -5,6 +5,7 @@ import com.gia.openapi.model.LoginChangeRequest;
 import com.gia.openapi.model.LoginRequest;
 import com.gym.crm.exception.AuthenticationException;
 import com.gym.crm.exception.EntityNotFoundException;
+import com.gym.crm.exception.IpBlockedException;
 import com.gym.crm.exception.ValidationException;
 import org.hibernate.HibernateException;
 import org.junit.jupiter.api.Test;
@@ -13,6 +14,7 @@ import org.skyscreamer.jsonassert.JSONAssert;
 import static com.gym.crm.entity.EntityType.USER;
 import static com.gym.crm.exception.ApiError.AUTHENTICATION_ERROR;
 import static com.gym.crm.exception.ApiError.DATABASE_ERROR;
+import static com.gym.crm.exception.ApiError.IP_BLOCKED_ERROR;
 import static com.gym.crm.exception.ApiError.NOT_FOUND_ERROR;
 import static com.gym.crm.exception.ApiError.SERVICE_ERROR;
 import static com.gym.crm.exception.ApiError.VALIDATION_ERROR;
@@ -109,6 +111,26 @@ class AuthRestControllerTest extends AbstractRestControllerTest {
         ErrorResponse actualErrorResponse = objectMapper.readValue(actualResponseBody, ErrorResponse.class);
         assertThat(actualErrorResponse.getErrorCode()).isEqualTo(NOT_FOUND_ERROR.getCode());
         assertThat(actualErrorResponse.getErrorMessage()).isEqualTo(buildExpectedErrorMessage(NOT_FOUND_ERROR, exception));
+    }
+
+    @Test
+    void shouldReturn429WhenLoginIpBlocked() throws Exception {
+        LoginRequest validRequest = buildLoginRequest(PASSWORD);
+        IpBlockedException exception = new IpBlockedException("IP is temporarily blocked due to too many failed login attempts");
+
+        doThrow(exception).when(facade).login(any());
+
+        String actualResponseBody = mockMvc.perform(post(LOGIN_ENDPOINT)
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validRequest)))
+                .andExpect(status().isTooManyRequests())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        ErrorResponse actualErrorResponse = objectMapper.readValue(actualResponseBody, ErrorResponse.class);
+        assertThat(actualErrorResponse.getErrorCode()).isEqualTo(IP_BLOCKED_ERROR.getCode());
+        assertThat(actualErrorResponse.getErrorMessage()).isEqualTo(IP_BLOCKED_ERROR.getMessage());
     }
 
     @Test
