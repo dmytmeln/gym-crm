@@ -4,7 +4,7 @@ import com.redis.testcontainers.RedisContainer;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.testcontainers.utility.DockerImageName;
 
-public final class RedisIntegrationTest {
+public final class RedisContainerTestConfig {
 
     private static final RedisContainer REDIS_CONTAINER;
 
@@ -13,7 +13,7 @@ public final class RedisIntegrationTest {
         REDIS_CONTAINER.start();
     }
 
-    private RedisIntegrationTest() {
+    private RedisContainerTestConfig() {
     }
 
     public static void setRedisContainerProperties(DynamicPropertyRegistry registry) {

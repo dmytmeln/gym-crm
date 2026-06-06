@@ -3,7 +3,7 @@ package com.gym.crm.config;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.testcontainers.containers.MySQLContainer;
 
-public final class DbIntegrationTest {
+public final class MySqlContainerTestConfig {
 
     private static final MySQLContainer<?> MY_SQL_CONTAINER;
 
@@ -12,7 +12,7 @@ public final class DbIntegrationTest {
         MY_SQL_CONTAINER.start();
     }
 
-    private DbIntegrationTest() {
+    private MySqlContainerTestConfig() {
     }
 
     public static void setMySqlContainerProperties(DynamicPropertyRegistry registry) {

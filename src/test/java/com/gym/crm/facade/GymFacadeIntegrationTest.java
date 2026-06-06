@@ -17,7 +17,7 @@ import com.gia.openapi.model.TrainerUpdateRequest;
 import com.gia.openapi.model.TrainerUpdateResponse;
 import com.gia.openapi.model.TrainingCreateRequest;
 import com.gia.openapi.model.TrainingTypeResponse;
-import com.gym.crm.config.DbIntegrationTest;
+import com.gym.crm.config.MySqlContainerTestConfig;
 import com.gym.crm.config.TestDataset;
 import com.gym.crm.dto.filter.TraineeTrainingSearchFilter;
 import com.gym.crm.dto.filter.TrainerTrainingSearchFilter;
@@ -51,7 +51,7 @@ class GymFacadeIntegrationTest {
 
     @DynamicPropertySource
     static void setMySqlProperties(DynamicPropertyRegistry registry) {
-        DbIntegrationTest.setMySqlContainerProperties(registry);
+        MySqlContainerTestConfig.setMySqlContainerProperties(registry);
     }
 
     @Test

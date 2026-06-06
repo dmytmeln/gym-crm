@@ -1,6 +1,6 @@
 package com.gym.crm;
 
-import com.gym.crm.config.DbIntegrationTest;
+import com.gym.crm.config.MySqlContainerTestConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -19,7 +19,7 @@ class GymCrmApplicationTest {
 
     @DynamicPropertySource
     static void setMySqlProperties(DynamicPropertyRegistry registry) {
-        DbIntegrationTest.setMySqlContainerProperties(registry);
+        MySqlContainerTestConfig.setMySqlContainerProperties(registry);
     }
 
     @Test

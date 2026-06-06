@@ -7,8 +7,8 @@ import com.gia.openapi.model.TraineeGetResponse;
 import com.gia.openapi.model.TrainerGetResponse;
 import com.gia.openapi.model.TrainingCreateRequest;
 import com.gia.openapi.model.TrainingTypeResponse;
-import com.gym.crm.config.DbIntegrationTest;
-import com.gym.crm.config.RedisIntegrationTest;
+import com.gym.crm.config.MySqlContainerTestConfig;
+import com.gym.crm.config.RedisContainerTestConfig;
 import com.gym.crm.config.TestDataset;
 import com.gym.crm.entity.User;
 import com.gym.crm.repository.UserRepository;
@@ -72,8 +72,8 @@ class JwtAuthenticationIntegrationTest {
 
     @DynamicPropertySource
     static void setIntegrationTestProperties(DynamicPropertyRegistry registry) {
-        DbIntegrationTest.setMySqlContainerProperties(registry);
-        RedisIntegrationTest.setRedisContainerProperties(registry);
+        MySqlContainerTestConfig.setMySqlContainerProperties(registry);
+        RedisContainerTestConfig.setRedisContainerProperties(registry);
     }
 
     @BeforeAll

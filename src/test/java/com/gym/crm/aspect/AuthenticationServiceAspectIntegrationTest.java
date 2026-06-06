@@ -154,8 +154,9 @@ class AuthenticationServiceAspectIntegrationTest {
     @Test
     void shouldThrowIllegalStateWhenNoRequestAttributesIsBound() {
         RequestContextHolder.resetRequestAttributes();
+        LoginRequestDto loginRequestDto = new LoginRequestDto("username", "password");
 
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> service.login(new LoginRequestDto("username", "password")));
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> service.login(loginRequestDto));
 
         assertEquals("No request attributes bound to the thread", exception.getMessage());
         verifyNoInteractions(authenticationManager);
@@ -170,10 +171,11 @@ class AuthenticationServiceAspectIntegrationTest {
     void shouldThrowIllegalStateWhenRequestAttributesIsNotServletRequestAttributes() {
         RequestAttributes requestAttributes = mock(RequestAttributes.class);
         RequestContextHolder.setRequestAttributes(requestAttributes);
+        LoginRequestDto loginRequestDto = new LoginRequestDto("username", "password");
 
         when(requestAttributes.resolveReference(REFERENCE_REQUEST)).thenReturn(new Object());
 
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> service.login(new LoginRequestDto("username", "password")));
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> service.login(loginRequestDto));
 
         assertEquals("Request attributes do not contain a ServletRequest", exception.getMessage());
         verifyNoInteractions(authenticationManager);

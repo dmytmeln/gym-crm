@@ -1,7 +1,7 @@
 package com.gym.crm.repository;
 
 import com.gym.crm.config.DaoTestConfig;
-import com.gym.crm.config.DbIntegrationTest;
+import com.gym.crm.config.MySqlContainerTestConfig;
 import com.gym.crm.config.TestDataset;
 import com.gym.crm.repository.specification.TraineeTrainingCriteriaBuilder;
 import com.gym.crm.repository.specification.TrainerTrainingCriteriaBuilder;
@@ -37,7 +37,7 @@ abstract class AbstractRepositoryTest<T> {
 
     @DynamicPropertySource
     static void setMySqlProperties(DynamicPropertyRegistry registry) {
-        DbIntegrationTest.setMySqlContainerProperties(registry);
+        MySqlContainerTestConfig.setMySqlContainerProperties(registry);
     }
 
 }
