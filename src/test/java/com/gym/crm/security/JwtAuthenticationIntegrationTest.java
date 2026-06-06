@@ -84,9 +84,11 @@ class JwtAuthenticationIntegrationTest {
     @BeforeEach
     void cleanRedis() {
         Set<String> keys = redisTemplate.keys("*");
-        if (!keys.isEmpty()) {
-            redisTemplate.delete(keys);
+        if (keys.isEmpty()) {
+            return;
         }
+
+        redisTemplate.delete(keys);
     }
 
     @Test

@@ -1,8 +1,12 @@
 package com.gym.crm.config;
 
+import lombok.NoArgsConstructor;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.testcontainers.containers.MySQLContainer;
 
+import static lombok.AccessLevel.PRIVATE;
+
+@NoArgsConstructor(access = PRIVATE)
 public final class MySqlContainerTestConfig {
 
     private static final MySQLContainer<?> MY_SQL_CONTAINER;
@@ -10,9 +14,6 @@ public final class MySqlContainerTestConfig {
     static {
         MY_SQL_CONTAINER = new MySQLContainer<>("mysql:8.0");
         MY_SQL_CONTAINER.start();
-    }
-
-    private MySqlContainerTestConfig() {
     }
 
     public static void setMySqlContainerProperties(DynamicPropertyRegistry registry) {

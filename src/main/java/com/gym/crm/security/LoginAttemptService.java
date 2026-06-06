@@ -35,11 +35,13 @@ public class LoginAttemptService {
         }
 
         boolean hasExceededMaxAttempts = attempts >= MAX_ATTEMPTS;
-        if (hasExceededMaxAttempts) {
-            String blockedKey = BLOCKED_PREFIX + ip;
-            redisTemplate.opsForValue().set(blockedKey, "true", BLOCK_TTL);
-            redisTemplate.delete(attemptsKey);
+        if (!hasExceededMaxAttempts) {
+            return;
         }
+
+        String blockedKey = BLOCKED_PREFIX + ip;
+        redisTemplate.opsForValue().set(blockedKey, "true", BLOCK_TTL);
+        redisTemplate.delete(attemptsKey);
     }
 
     public void loginSucceeded(String ip) {

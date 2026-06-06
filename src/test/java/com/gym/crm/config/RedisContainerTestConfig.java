@@ -1,9 +1,13 @@
 package com.gym.crm.config;
 
 import com.redis.testcontainers.RedisContainer;
+import lombok.NoArgsConstructor;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.testcontainers.utility.DockerImageName;
 
+import static lombok.AccessLevel.PRIVATE;
+
+@NoArgsConstructor(access = PRIVATE)
 public final class RedisContainerTestConfig {
 
     private static final RedisContainer REDIS_CONTAINER;
@@ -11,9 +15,6 @@ public final class RedisContainerTestConfig {
     static {
         REDIS_CONTAINER = new RedisContainer(DockerImageName.parse("redis:8.8.0"));
         REDIS_CONTAINER.start();
-    }
-
-    private RedisContainerTestConfig() {
     }
 
     public static void setRedisContainerProperties(DynamicPropertyRegistry registry) {
