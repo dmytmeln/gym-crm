@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import lombok.NoArgsConstructor;
 import org.springframework.http.InvalidMediaTypeException;
 import org.springframework.http.MediaType;
 
@@ -14,8 +15,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+import static lombok.AccessLevel.PRIVATE;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
+@NoArgsConstructor(access = PRIVATE)
 public final class JsonBodySanitizer {
 
     private static final int MAX_BODY_CHARS = 5000;
@@ -27,9 +30,6 @@ public final class JsonBodySanitizer {
             new TextTruncationRule());
 
     private static final ObjectMapper mapper = new ObjectMapper();
-
-    private JsonBodySanitizer() {
-    }
 
     public static String sanitize(String body) {
         if (body == null || body.isBlank()) {

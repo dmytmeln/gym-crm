@@ -18,10 +18,12 @@ import static com.gym.crm.exception.ApiError.AUTHENTICATION_ERROR;
 import static com.gym.crm.exception.ApiError.AUTHORIZATION_ERROR;
 import static com.gym.crm.exception.ApiError.CONFLICT_ERROR;
 import static com.gym.crm.exception.ApiError.DATABASE_ERROR;
+import static com.gym.crm.exception.ApiError.IP_BLOCKED_ERROR;
 import static com.gym.crm.exception.ApiError.NOT_FOUND_ERROR;
 import static com.gym.crm.exception.ApiError.SERVICE_ERROR;
 import static com.gym.crm.exception.ApiError.USER_DEACTIVATED_ERROR;
 import static com.gym.crm.exception.ApiError.VALIDATION_ERROR;
+import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -161,6 +163,18 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    void shouldHandleIpBlockedException() {
+        IpBlockedException exception = new IpBlockedException("Test blocked message");
+
+        ResponseEntity<ErrorResponse> result = handler.handleIpBlockedException(exception);
+
+        assertThat(result.getStatusCode()).isEqualTo(IP_BLOCKED_ERROR.getStatus());
+        assertThat(result.getBody()).isNotNull();
+        assertThat(result.getBody().getErrorCode()).isEqualTo(IP_BLOCKED_ERROR.getCode());
+        assertThat(result.getBody().getErrorMessage()).isEqualTo(IP_BLOCKED_ERROR.getMessage());
+    }
+
+    @Test
     void shouldHandleHibernateException() {
         PersistenceException exception = new PersistenceException("Test database message");
 
@@ -201,7 +215,7 @@ class GlobalExceptionHandlerTest {
         ErrorResponse body = (ErrorResponse) result.getBody();
         assertThat(body).isNotNull();
         assertThat(body.getErrorCode()).isEqualTo(VALIDATION_ERROR.getCode());
-        assertThat(body.getErrorMessage()).isEqualTo(String.format("%s: fieldName: defaultMessage", VALIDATION_ERROR.getMessage()));
+        assertThat(body.getErrorMessage()).isEqualTo(format("%s: fieldName: defaultMessage", VALIDATION_ERROR.getMessage()));
     }
 
     @Test
@@ -229,7 +243,7 @@ class GlobalExceptionHandlerTest {
     }
 
     private String buildExpectedErrorMessage(ApiError apiError, Exception exception) {
-        return String.format(EXPECTED_ERROR_MESSAGE_TEMPLATE, apiError.getMessage(), exception.getMessage());
+        return format(EXPECTED_ERROR_MESSAGE_TEMPLATE, apiError.getMessage(), exception.getMessage());
     }
 
 }
