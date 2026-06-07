@@ -34,7 +34,7 @@ public class JwtAuthenticationProvider implements AuthenticationProvider {
 
         UserDetails userDetails = userDetailsService.loadSimpleUserByUsername(payload.username());
         if (!userDetails.isEnabled()) {
-            throw new DisabledException("User account is deactivated. Please contact support.");
+            throw new DisabledException("User account is deactivated");
         }
 
         return JwtTokenAuthentication.authenticated(userDetails);

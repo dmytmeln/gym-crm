@@ -14,15 +14,15 @@ import org.springframework.stereotype.Component;
 public class SecurityExceptionTranslationAspect {
 
     @Pointcut("execution(* com.gym.crm.service.AuthenticationService.login(..))")
-    private void authenticationLogin() {
+    private void loginMethod() {
     }
 
-    @Around("authenticationLogin()")
-    public Object translateSecurityExceptions(ProceedingJoinPoint joinPoint) throws Throwable {
+    @Around("loginMethod()")
+    public Object translateLoginExceptions(ProceedingJoinPoint joinPoint) throws Throwable {
         try {
             return joinPoint.proceed();
         } catch (DisabledException e) {
-            throw new UserDeactivatedException("User account is deactivated. Please contact support.", e);
+            throw new UserDeactivatedException("User account is deactivated", e);
         } catch (org.springframework.security.core.AuthenticationException e) {
             throw new AuthenticationException("Invalid username or password", e);
         }

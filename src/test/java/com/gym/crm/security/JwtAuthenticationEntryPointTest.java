@@ -11,16 +11,12 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import java.io.IOException;
 
 import static com.gym.crm.exception.ApiError.AUTHENTICATION_ERROR;
-import static com.gym.crm.exception.ApiError.USER_DEACTIVATED_ERROR;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.eq;
@@ -40,111 +36,49 @@ class JwtAuthenticationEntryPointTest {
     private JwtAuthenticationEntryPoint entryPoint;
 
     @Test
-    void shouldHandleInsufficientAuthenticationException() throws IOException {
+    void shouldReturn401WithBearerChallengeWhenAnonymousUserAccessesProtectedResource() throws IOException {
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
-        AuthenticationException authException = mock(InsufficientAuthenticationException.class);
+        AuthenticationException authException = new InsufficientAuthenticationException("Full authentication is required");
         ServletOutputStream outputStream = mock(ServletOutputStream.class);
         ArgumentCaptor<ErrorResponse> errorCaptor = ArgumentCaptor.forClass(ErrorResponse.class);
 
+        when(request.getRequestURI()).thenReturn("/api/v1/trainees/user");
         when(response.getOutputStream()).thenReturn(outputStream);
 
         entryPoint.commence(request, response, authException);
 
-        verify(response).setStatus(401);
+        verify(response).setStatus(AUTHENTICATION_ERROR.getStatus().value());
         verify(response).setContentType(APPLICATION_JSON_VALUE);
         verify(response).setHeader(WWW_AUTHENTICATE, "Bearer");
         verify(objectMapper).writeValue(eq(outputStream), errorCaptor.capture());
         ErrorResponse actualError = errorCaptor.getValue();
-        assertNotNull(actualError, "Error response should not be null");
-        assertEquals(AUTHENTICATION_ERROR.getCode(), actualError.getErrorCode(), "Error code should match AUTHENTICATION_ERROR");
-        assertEquals(AUTHENTICATION_ERROR.getMessage(), actualError.getErrorMessage(), "Error message should match AUTHENTICATION_ERROR");
+        assertNotNull(actualError);
+        assertEquals(AUTHENTICATION_ERROR.getCode(), actualError.getErrorCode());
+        assertEquals(AUTHENTICATION_ERROR.getMessage(), actualError.getErrorMessage());
     }
 
     @Test
-    void shouldHandleDisabledException() throws IOException {
-        HttpServletRequest request = mock(HttpServletRequest.class);
-        HttpServletResponse response = mock(HttpServletResponse.class);
-        AuthenticationException authException = mock(DisabledException.class);
-        ServletOutputStream outputStream = mock(ServletOutputStream.class);
-        ArgumentCaptor<ErrorResponse> errorCaptor = ArgumentCaptor.forClass(ErrorResponse.class);
-
-        when(response.getOutputStream()).thenReturn(outputStream);
-
-        entryPoint.commence(request, response, authException);
-
-        verify(response).setStatus(403);
-        verify(response).setContentType(APPLICATION_JSON_VALUE);
-        verify(objectMapper).writeValue(eq(outputStream), errorCaptor.capture());
-        ErrorResponse actualError = errorCaptor.getValue();
-        assertNotNull(actualError, "Error response should not be null");
-        assertEquals(USER_DEACTIVATED_ERROR.getCode(), actualError.getErrorCode(), "Error code should match USER_DEACTIVATED_ERROR");
-        assertEquals(USER_DEACTIVATED_ERROR.getMessage(), actualError.getErrorMessage(), "Error message should match USER_DEACTIVATED_ERROR");
-    }
-
-    @Test
-    void shouldHandleBadCredentialsException() throws IOException {
-        HttpServletRequest request = mock(HttpServletRequest.class);
-        HttpServletResponse response = mock(HttpServletResponse.class);
-        AuthenticationException authException = mock(BadCredentialsException.class);
-        ServletOutputStream outputStream = mock(ServletOutputStream.class);
-        ArgumentCaptor<ErrorResponse> errorCaptor = ArgumentCaptor.forClass(ErrorResponse.class);
-
-        when(response.getOutputStream()).thenReturn(outputStream);
-
-        entryPoint.commence(request, response, authException);
-
-        verify(response).setStatus(401);
-        verify(response).setContentType(APPLICATION_JSON_VALUE);
-        verify(objectMapper).writeValue(eq(outputStream), errorCaptor.capture());
-        ErrorResponse actualError = errorCaptor.getValue();
-        assertNotNull(actualError, "Error response should not be null");
-        assertEquals(AUTHENTICATION_ERROR.getCode(), actualError.getErrorCode(), "Error code should match AUTHENTICATION_ERROR");
-        assertEquals(AUTHENTICATION_ERROR.getMessage(), actualError.getErrorMessage(), "Error message should match AUTHENTICATION_ERROR");
-    }
-
-    @Test
-    void shouldHandleUsernameNotFoundException() throws IOException {
-        HttpServletRequest request = mock(HttpServletRequest.class);
-        HttpServletResponse response = mock(HttpServletResponse.class);
-        AuthenticationException authException = mock(UsernameNotFoundException.class);
-        ServletOutputStream outputStream = mock(ServletOutputStream.class);
-        ArgumentCaptor<ErrorResponse> errorCaptor = ArgumentCaptor.forClass(ErrorResponse.class);
-
-        when(response.getOutputStream()).thenReturn(outputStream);
-
-        entryPoint.commence(request, response, authException);
-
-        verify(response).setStatus(401);
-        verify(response).setContentType(APPLICATION_JSON_VALUE);
-        verify(response).setHeader(WWW_AUTHENTICATE, "Bearer");
-        verify(objectMapper).writeValue(eq(outputStream), errorCaptor.capture());
-        ErrorResponse actualError = errorCaptor.getValue();
-        assertNotNull(actualError, "Error response should not be null");
-        assertEquals(AUTHENTICATION_ERROR.getCode(), actualError.getErrorCode(), "Error code should match AUTHENTICATION_ERROR");
-        assertEquals(AUTHENTICATION_ERROR.getMessage(), actualError.getErrorMessage(), "Error message should match AUTHENTICATION_ERROR");
-    }
-
-    @Test
-    void shouldHandleUnexpectedAuthenticationException() throws IOException {
+    void shouldReturn401WithBearerChallengeForAnySpringAuthenticationException() throws IOException {
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
         AuthenticationException authException = mock(AuthenticationException.class);
         ServletOutputStream outputStream = mock(ServletOutputStream.class);
         ArgumentCaptor<ErrorResponse> errorCaptor = ArgumentCaptor.forClass(ErrorResponse.class);
 
+        when(request.getRequestURI()).thenReturn("/api/v1/trainees/user");
         when(response.getOutputStream()).thenReturn(outputStream);
 
         entryPoint.commence(request, response, authException);
 
-        verify(response).setStatus(401);
+        verify(response).setStatus(AUTHENTICATION_ERROR.getStatus().value());
         verify(response).setContentType(APPLICATION_JSON_VALUE);
+        verify(response).setHeader(WWW_AUTHENTICATE, "Bearer");
         verify(objectMapper).writeValue(eq(outputStream), errorCaptor.capture());
         ErrorResponse actualError = errorCaptor.getValue();
-        assertNotNull(actualError, "Error response should not be null");
-        assertEquals(AUTHENTICATION_ERROR.getCode(), actualError.getErrorCode(), "Error code should match AUTHENTICATION_ERROR");
-        assertEquals(AUTHENTICATION_ERROR.getMessage(), actualError.getErrorMessage(), "Error message should match AUTHENTICATION_ERROR");
+        assertNotNull(actualError);
+        assertEquals(AUTHENTICATION_ERROR.getCode(), actualError.getErrorCode());
+        assertEquals(AUTHENTICATION_ERROR.getMessage(), actualError.getErrorMessage());
     }
 
 }
-

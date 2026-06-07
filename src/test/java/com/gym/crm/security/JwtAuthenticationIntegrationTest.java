@@ -38,6 +38,7 @@ import static com.gym.crm.exception.ApiError.USER_DEACTIVATED_ERROR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
+import static org.springframework.http.HttpHeaders.WWW_AUTHENTICATE;
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @ActiveProfiles("test")
@@ -120,6 +121,10 @@ class JwtAuthenticationIntegrationTest {
 
         assertThat(actual.getStatusCode()).isEqualTo(AUTHENTICATION_ERROR.getStatus());
         assertThat(actual.getBody()).isEqualTo(authenticationErrorResponse);
+        assertThat(actual.getHeaders().get(WWW_AUTHENTICATE))
+                .isNotNull()
+                .hasSize(1)
+                .containsExactly("Bearer");
     }
 
     @Test
@@ -132,6 +137,10 @@ class JwtAuthenticationIntegrationTest {
 
         assertThat(actual.getStatusCode()).isEqualTo(AUTHENTICATION_ERROR.getStatus());
         assertThat(actual.getBody()).isEqualTo(authenticationErrorResponse);
+        assertThat(actual.getHeaders().get(WWW_AUTHENTICATE))
+                .isNotNull()
+                .hasSize(1)
+                .containsExactly("Bearer");
     }
 
     @Test
@@ -144,6 +153,10 @@ class JwtAuthenticationIntegrationTest {
 
         assertThat(actual.getStatusCode()).isEqualTo(AUTHENTICATION_ERROR.getStatus());
         assertThat(actual.getBody()).isEqualTo(authenticationErrorResponse);
+        assertThat(actual.getHeaders().get(WWW_AUTHENTICATE))
+                .isNotNull()
+                .hasSize(1)
+                .containsExactly("Bearer");
     }
 
     @Test
@@ -187,6 +200,10 @@ class JwtAuthenticationIntegrationTest {
 
         assertThat(actual.getStatusCode()).isEqualTo(AUTHENTICATION_ERROR.getStatus());
         assertThat(actual.getBody()).isEqualTo(authenticationErrorResponse);
+        assertThat(actual.getHeaders().get(WWW_AUTHENTICATE))
+                .isNotNull()
+                .hasSize(1)
+                .containsExactly("Bearer");
     }
 
     @Test
@@ -297,6 +314,7 @@ class JwtAuthenticationIntegrationTest {
                 .body(new LoginRequest(EXISTING_TRAINEE_USERNAME, EXISTING_TRAINEE_PASSWORD));
         ResponseEntity<Void> loginResponse = restTemplate.exchange(loginRequest, Void.class);
         assertThat(loginResponse.getStatusCode()).isEqualTo(AUTHENTICATION_ERROR.getStatus());
+        assertThat(actual.getHeaders().get(WWW_AUTHENTICATE)).isNull();
     }
 
     @Test

@@ -27,6 +27,7 @@ import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.springframework.http.HttpHeaders.WWW_AUTHENTICATE;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
@@ -148,6 +149,20 @@ class GlobalExceptionHandlerTest {
         assertThat(result.getBody()).isNotNull();
         assertThat(result.getBody().getErrorCode()).isEqualTo(AUTHENTICATION_ERROR.getCode());
         assertThat(result.getBody().getErrorMessage()).isEqualTo(AUTHENTICATION_ERROR.getMessage());
+        assertThat(result.getHeaders()).isEmpty();
+    }
+
+    @Test
+    void shouldHandleInvalidTokenException() {
+        InvalidTokenException exception = new InvalidTokenException("Test invalid token message");
+
+        ResponseEntity<ErrorResponse> result = handler.handleInvalidTokenException(exception);
+
+        assertThat(result.getStatusCode()).isEqualTo(AUTHENTICATION_ERROR.getStatus());
+        assertThat(result.getBody()).isNotNull();
+        assertThat(result.getBody().getErrorCode()).isEqualTo(AUTHENTICATION_ERROR.getCode());
+        assertThat(result.getBody().getErrorMessage()).isEqualTo(AUTHENTICATION_ERROR.getMessage());
+        assertThat(result.getHeaders()).containsEntry(WWW_AUTHENTICATE, List.of("Bearer"));
     }
 
     @Test
