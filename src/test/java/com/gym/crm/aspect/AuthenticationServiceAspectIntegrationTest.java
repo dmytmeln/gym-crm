@@ -146,7 +146,7 @@ class AuthenticationServiceAspectIntegrationTest {
 
         UserDeactivatedException exception = assertThrows(UserDeactivatedException.class, () -> service.login(loginRequestDto));
 
-        assertEquals("User account is deactivated. Please contact support.", exception.getMessage());
+        assertEquals("User account is deactivated", exception.getMessage());
         verify(loginCounter).increment(false);
         verify(loginAttemptService).loginFailed(TEST_IP_ADDRESS);
     }

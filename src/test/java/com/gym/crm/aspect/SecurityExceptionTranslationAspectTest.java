@@ -9,6 +9,8 @@ import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -23,36 +25,58 @@ class SecurityExceptionTranslationAspectTest {
     private SecurityExceptionTranslationAspect aspect;
 
     @Test
-    void shouldProceedWhenNoExceptionIsThrown() throws Throwable {
+    void shouldProceedWhenNoExceptionIsThrownInLogin() throws Throwable {
         ProceedingJoinPoint joinPoint = mock(ProceedingJoinPoint.class);
         Object expectedResult = new Object();
 
         when(joinPoint.proceed()).thenReturn(expectedResult);
 
-        Object actual = aspect.translateSecurityExceptions(joinPoint);
+        Object actual = aspect.translateLoginExceptions(joinPoint);
 
         assertEquals(expectedResult, actual);
         verify(joinPoint).proceed();
     }
 
     @Test
-    void shouldTranslateDisabledExceptionToUserDeactivatedException() throws Throwable {
+    void shouldTranslateDisabledExceptionToUserDeactivatedExceptionInLogin() throws Throwable {
         ProceedingJoinPoint joinPoint = mock(ProceedingJoinPoint.class);
 
         when(joinPoint.proceed()).thenThrow(new DisabledException("Disabled"));
 
-        UserDeactivatedException exception = assertThrows(UserDeactivatedException.class, () -> aspect.translateSecurityExceptions(joinPoint));
+        UserDeactivatedException exception = assertThrows(UserDeactivatedException.class, () -> aspect.translateLoginExceptions(joinPoint));
 
-        assertEquals("User account is deactivated. Please contact support.", exception.getMessage());
+        assertEquals("User account is deactivated", exception.getMessage());
     }
 
     @Test
-    void shouldTranslateBadCredentialsExceptionToAuthenticationException() throws Throwable {
+    void shouldTranslateBadCredentialsExceptionToAuthenticationExceptionInLogin() throws Throwable {
         ProceedingJoinPoint joinPoint = mock(ProceedingJoinPoint.class);
 
         when(joinPoint.proceed()).thenThrow(new BadCredentialsException("Bad credentials"));
 
-        AuthenticationException exception = assertThrows(AuthenticationException.class, () -> aspect.translateSecurityExceptions(joinPoint));
+        AuthenticationException exception = assertThrows(AuthenticationException.class, () -> aspect.translateLoginExceptions(joinPoint));
+
+        assertEquals("Invalid username or password", exception.getMessage());
+    }
+
+    @Test
+    void shouldTranslateUsernameNotFoundExceptionToAuthenticationExceptionInLogin() throws Throwable {
+        ProceedingJoinPoint joinPoint = mock(ProceedingJoinPoint.class);
+
+        when(joinPoint.proceed()).thenThrow(new UsernameNotFoundException("User not found"));
+
+        AuthenticationException exception = assertThrows(AuthenticationException.class, () -> aspect.translateLoginExceptions(joinPoint));
+
+        assertEquals("Invalid username or password", exception.getMessage());
+    }
+
+    @Test
+    void shouldTranslateInsufficientAuthenticationExceptionToAuthenticationExceptionInLogin() throws Throwable {
+        ProceedingJoinPoint joinPoint = mock(ProceedingJoinPoint.class);
+
+        when(joinPoint.proceed()).thenThrow(new InsufficientAuthenticationException("Insufficient auth"));
+
+        AuthenticationException exception = assertThrows(AuthenticationException.class, () -> aspect.translateLoginExceptions(joinPoint));
 
         assertEquals("Invalid username or password", exception.getMessage());
     }

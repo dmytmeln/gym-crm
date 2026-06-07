@@ -27,6 +27,8 @@ import static com.gym.crm.exception.ApiError.USER_DEACTIVATED_ERROR;
 import static com.gym.crm.exception.ApiError.VALIDATION_ERROR;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
+import static org.springframework.http.HttpHeaders.EMPTY;
+import static org.springframework.http.HttpHeaders.WWW_AUTHENTICATE;
 
 @Slf4j
 @RestControllerAdvice
@@ -68,6 +70,16 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<ErrorResponse> handleIpBlockedException(IpBlockedException ex) {
         log.warn("Blocked IP login attempt: {}", ex.getMessage());
         return buildResponse(IP_BLOCKED_ERROR);
+    }
+
+    @ExceptionHandler(InvalidTokenException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidTokenException(InvalidTokenException ex) {
+        log.warn("Invalid token: {}", ex.getMessage());
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.set(WWW_AUTHENTICATE, "Bearer");
+
+        return buildResponse(AUTHENTICATION_ERROR, httpHeaders);
     }
 
     @ExceptionHandler(AuthenticationException.class)
@@ -139,12 +151,20 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     private ResponseEntity<ErrorResponse> buildResponse(ApiError apiError) {
-        return buildResponse(apiError, apiError.getMessage());
+        return buildResponse(apiError, apiError.getMessage(), EMPTY);
+    }
+
+    private ResponseEntity<ErrorResponse> buildResponse(ApiError apiError, HttpHeaders headers) {
+        return buildResponse(apiError, apiError.getMessage(), headers);
     }
 
     private ResponseEntity<ErrorResponse> buildResponse(ApiError apiError, String message) {
+        return buildResponse(apiError, message, EMPTY);
+    }
+
+    private ResponseEntity<ErrorResponse> buildResponse(ApiError apiError, String message, HttpHeaders headers) {
         ErrorResponse errorResponse = new ErrorResponse(apiError.getCode(), message);
-        return ResponseEntity.status(apiError.getStatus()).body(errorResponse);
+        return ResponseEntity.status(apiError.getStatus()).headers(headers).body(errorResponse);
     }
 
 }

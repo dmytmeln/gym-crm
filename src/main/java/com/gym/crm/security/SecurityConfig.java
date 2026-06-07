@@ -2,6 +2,7 @@ package com.gym.crm.security;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -33,6 +34,7 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
+    private final JwtExceptionHandlerFilter jwtExceptionHandlerFilter;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
 
@@ -64,6 +66,7 @@ public class SecurityConfig {
                 .exceptionHandling(exceptionHandling -> exceptionHandling
                         .authenticationEntryPoint(jwtAuthenticationEntryPoint)
                         .accessDeniedHandler(jwtAccessDeniedHandler))
+                .addFilterAfter(jwtExceptionHandlerFilter, LogoutFilter.class)
                 .addFilterAfter(jwtAuthFilter, LogoutFilter.class);
 
         return http.build();
@@ -81,6 +84,22 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
 
         return source;
+    }
+
+    @Bean
+    public FilterRegistrationBean<JwtAuthenticationFilter> disableJwtAuthFilerRegistrationInServletContainer() {
+        FilterRegistrationBean<JwtAuthenticationFilter> registration = new FilterRegistrationBean<>(jwtAuthFilter);
+        registration.setEnabled(false);
+
+        return registration;
+    }
+
+    @Bean
+    public FilterRegistrationBean<JwtExceptionHandlerFilter> disableJwtExceptionHandlerFilterRegistrationInServletContainer() {
+        FilterRegistrationBean<JwtExceptionHandlerFilter> registration = new FilterRegistrationBean<>(jwtExceptionHandlerFilter);
+        registration.setEnabled(false);
+
+        return registration;
     }
 
 }

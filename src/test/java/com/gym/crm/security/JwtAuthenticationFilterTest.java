@@ -13,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.io.IOException;
@@ -21,6 +22,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -90,6 +93,21 @@ class JwtAuthenticationFilterTest {
         assertInstanceOf(JwtTokenAuthentication.class, capturedAuth);
         assertEquals("validJwtToken", ((JwtTokenAuthentication) capturedAuth).getToken());
         assertEquals(authenticatedResult, SecurityContextHolder.getContext().getAuthentication());
+    }
+
+    @Test
+    void shouldPropagateExceptionWhenAuthenticationFails() {
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        FilterChain filterChain = mock(FilterChain.class);
+        AuthenticationException exception = mock(AuthenticationException.class);
+
+        when(request.getHeader(AUTHORIZATION)).thenReturn("Bearer invalidToken");
+        when(authenticationManager.authenticate(any(Authentication.class))).thenThrow(exception);
+
+        assertThrows(AuthenticationException.class, () -> filter.doFilter(request, response, filterChain));
+
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
     }
 
 }

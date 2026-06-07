@@ -1,6 +1,5 @@
 package com.gym.crm.security;
 
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationEventPublisher;
@@ -38,14 +37,6 @@ public class SecurityComponentsConfig {
         providerManager.setAuthenticationEventPublisher(eventPublisher);
 
         return providerManager;
-    }
-
-    @Bean
-    public FilterRegistrationBean<JwtAuthenticationFilter> disableJwtAuthFilerRegistrationInServletContainer(JwtAuthenticationFilter jwtAuthenticationFilter) {
-        FilterRegistrationBean<JwtAuthenticationFilter> registration = new FilterRegistrationBean<>(jwtAuthenticationFilter);
-        registration.setEnabled(false);
-
-        return registration;
     }
 
 }
